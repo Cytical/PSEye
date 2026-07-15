@@ -117,3 +117,31 @@ Started an unattended, multi-session build-out against the feature backlog above
     than overflowing.
   - Added a root `README.md` (there wasn't one) covering the feature list, stack, repo
     structure, and how to run with/without a database.
+- Kept going past the original backlog with polish passes, each verified with
+  `pnpm typecheck` + `pnpm --filter @pseye/web lint` + a production build + fetching the
+  affected route(s) from the running dev server:
+  - Per-route `<title>`/description via a root title template + `metadataBase`; a shared
+    `SiteFooter` for the standing "not financial advice / delayed data / not a brokerage"
+    disclaimer; `sitemap.xml` + `robots.txt`.
+  - `apps/web/app/opengraph-image.tsx`: a dynamic social-share image of the market map via
+    `next/og` (Satori), reusing `packages/treemap-layout`'s pure functions exactly as that
+    package's doc comments said it was kept dependency-free to allow. This is backlog
+    item #1's "shareable, social-media-friendly aspect ratio export." Needed two real
+    fixes to actually render: Satori requires an explicit `display` on any element with
+    >1 child (the absolutely-positioned box container had none), and the ticker/%-change
+    two-line label was rendering on one line until the `<>` fragment was replaced with a
+    real wrapping `<div>`.
+  - Added a `<details>`-based table view under the foreign-flow bar chart (the dataviz
+    skill's accessibility rule: a chart needs a textual/tabular equivalent — the DCA
+    chart already has this via its stat tiles, foreign-flow didn't).
+  - Fixed a real, pre-existing bug found by inspection: `TreemapChart` hardcoded
+    `pctChangeToColor(pctChange, "light")` at both call sites, so dark-mode viewers saw
+    light-mode box colors even though `color.ts` has always had a dark palette. Fixed
+    with a `useColorMode()` hook — deliberately `useSyncExternalStore`, not
+    `useState`+`useEffect`, since the latter either violates the
+    `react-hooks/set-state-in-effect` lint rule or (if the state's initial value reads
+    `matchMedia` directly) creates a hydration mismatch between server and first client
+    render.
+- Cross-checked at the end that all 7 ETL jobs, their `etl/package.json` scripts, their
+  GitHub Actions workflows, and their DB schema tables/dedupe keys are mutually
+  consistent — no drift found.
