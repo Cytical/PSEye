@@ -6,12 +6,14 @@
   "scripts": {
     "fetch-quotes": "tsx jobs/fetch-quotes.ts",
     "fetch-news": "tsx jobs/fetch-news.ts",
+    "fetch-corporate-actions": "tsx jobs/fetch-corporate-actions.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@pseye/db": "workspace:*",
     "@pseye/source-quotes": "workspace:*",
     "@pseye/source-news": "workspace:*",
+    "@pseye/source-corporate-actions": "workspace:*",
     "drizzle-orm": "^0.36.4"
   },
   "devDependencies": {

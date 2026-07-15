@@ -41,6 +41,9 @@ export default function RootLayout({
             <Link href="/news" className="opacity-80 hover:opacity-100">
               News
             </Link>
+            <Link href="/calendar" className="opacity-80 hover:opacity-100">
+              Calendar
+            </Link>
             <Link href="/dca" className="opacity-80 hover:opacity-100">
               DCA Calculator
             </Link>

@@ -20,6 +20,9 @@ importers:
       '@pseye/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@pseye/source-corporate-actions':
+        specifier: workspace:*
+        version: link:../../packages/sources/corporate-actions
       '@pseye/source-news':
         specifier: workspace:*
         version: link:../../packages/sources/news
@@ -69,6 +72,9 @@ importers:
       '@pseye/db':
         specifier: workspace:*
         version: link:../packages/db
+      '@pseye/source-corporate-actions':
+        specifier: workspace:*
+        version: link:../packages/sources/corporate-actions
       '@pseye/source-news':
         specifier: workspace:*
         version: link:../packages/sources/news
@@ -106,6 +112,15 @@ importers:
       drizzle-kit:
         specifier: ^0.28.1
         version: 0.28.1
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+
+  packages/sources/corporate-actions:
+    devDependencies:
+      '@pseye/config':
+        specifier: workspace:*
+        version: link:../../config
       typescript:
         specifier: ^5.6.0
         version: 5.9.3

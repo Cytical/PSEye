@@ -16,6 +16,7 @@
     "@pseye/db": "workspace:*",
     "@pseye/source-quotes": "workspace:*",
     "@pseye/source-news": "workspace:*",
+    "@pseye/source-corporate-actions": "workspace:*",
     "@pseye/treemap-layout": "workspace:*"
   },
   "devDependencies": {

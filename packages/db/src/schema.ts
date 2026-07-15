@@ -33,3 +33,18 @@ export const newsItems = pgTable("news_items", {
   publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
   tickers: text("tickers").array().notNull().default([]),
 });
+
+export const corporateActions = pgTable(
+  "corporate_actions",
+  {
+    id: serial("id").primaryKey(),
+    ticker: varchar("ticker", { length: 16 }).notNull(),
+    companyName: text("company_name").notNull(),
+    type: varchar("type", { length: 32 }).notNull(),
+    exDate: date("ex_date").notNull(),
+    recordDate: date("record_date").notNull(),
+    paymentDate: date("payment_date"),
+    details: text("details").notNull(),
+  },
+  (table) => [unique().on(table.ticker, table.type, table.exDate)]
+);
