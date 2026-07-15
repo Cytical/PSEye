@@ -41,9 +41,10 @@ interface HierarchyDatum {
 }
 
 /**
- * Pure layout math shared by the interactive web treemap (nivo) and the
- * static social-share image (Satori). Groups stocks by PSE sector, sizes
- * boxes by market cap, and computes pixel rects for a given canvas size.
+ * Pure layout math shared by the interactive web treemap (hand-rolled, absolute-
+ * positioned boxes in TreemapChart.tsx) and the static social-share image
+ * (Satori, in app/opengraph-image.tsx). Groups stocks by PSE sector, sizes boxes
+ * by market cap, and computes pixel rects for a given canvas size.
  */
 export function computeTreemapLayout(
   stocks: TreemapInput[],
