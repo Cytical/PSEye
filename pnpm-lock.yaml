@@ -32,6 +32,9 @@ importers:
       '@pseye/source-news':
         specifier: workspace:*
         version: link:../../packages/sources/news
+      '@pseye/source-offerings':
+        specifier: workspace:*
+        version: link:../../packages/sources/offerings
       '@pseye/source-quotes':
         specifier: workspace:*
         version: link:../../packages/sources/quotes
@@ -90,6 +93,9 @@ importers:
       '@pseye/source-news':
         specifier: workspace:*
         version: link:../packages/sources/news
+      '@pseye/source-offerings':
+        specifier: workspace:*
+        version: link:../packages/sources/offerings
       '@pseye/source-quotes':
         specifier: workspace:*
         version: link:../packages/sources/quotes
@@ -160,6 +166,15 @@ importers:
       rss-parser:
         specifier: ^3.13.0
         version: 3.13.0
+    devDependencies:
+      '@pseye/config':
+        specifier: workspace:*
+        version: link:../../config
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+
+  packages/sources/offerings:
     devDependencies:
       '@pseye/config':
         specifier: workspace:*

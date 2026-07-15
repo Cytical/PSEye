@@ -19,6 +19,7 @@
     "@pseye/source-corporate-actions": "workspace:*",
     "@pseye/source-block-sales": "workspace:*",
     "@pseye/source-disclosures": "workspace:*",
+    "@pseye/source-offerings": "workspace:*",
     "@pseye/treemap-layout": "workspace:*"
   },
   "devDependencies": {

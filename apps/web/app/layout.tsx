@@ -50,6 +50,9 @@ export default function RootLayout({
             <Link href="/disclosures" className="opacity-80 hover:opacity-100">
               Disclosures
             </Link>
+            <Link href="/offerings" className="opacity-80 hover:opacity-100">
+              Offerings
+            </Link>
             <Link href="/dca" className="opacity-80 hover:opacity-100">
               DCA Calculator
             </Link>

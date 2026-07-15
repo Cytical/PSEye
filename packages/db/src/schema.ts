@@ -34,6 +34,23 @@ export const newsItems = pgTable("news_items", {
   tickers: text("tickers").array().notNull().default([]),
 });
 
+export const offerings = pgTable(
+  "offerings",
+  {
+    id: serial("id").primaryKey(),
+    ticker: varchar("ticker", { length: 16 }),
+    companyName: text("company_name").notNull(),
+    sector: varchar("sector", { length: 64 }).notNull(),
+    type: varchar("type", { length: 32 }).notNull(),
+    offerPrice: numeric("offer_price", { precision: 12, scale: 4 }).notNull(),
+    subscriptionStart: date("subscription_start").notNull(),
+    subscriptionEnd: date("subscription_end").notNull(),
+    listingDate: date("listing_date"),
+    summary: text("summary").notNull(),
+  },
+  (table) => [unique().on(table.companyName, table.type, table.subscriptionStart)]
+);
+
 export const disclosures = pgTable("disclosures", {
   id: serial("id").primaryKey(),
   ticker: varchar("ticker", { length: 16 }).notNull(),
