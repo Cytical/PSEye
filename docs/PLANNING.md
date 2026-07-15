@@ -85,3 +85,35 @@ Started an unattended, multi-session build-out against the feature backlog above
   never been committed. Made the initial commit, then began working the backlog in
   roughly the phased order above, following the established pattern: pluggable
   `*Source` interface + mock implementation + Drizzle schema + ETL job + page.
+- In one unattended session, built out backlog items #8, #4, #5, #6, #7, and #3 (DCA
+  calculator, dividend/corporate actions calendar, block sales tracker, insider
+  disclosure digest, IPO/follow-on offering tracker, foreign fund flow tracker) — every
+  feature except #9 (portfolio tracker + watchlist alerts), which the brief itself flags
+  as lowest priority and "build last, only if earlier features have traction." Each
+  followed the same pattern established by the existing quotes/news packages: a
+  `packages/sources/<feature>` package (interface + `Mock*Source` + doc comment naming
+  the real feed/scraper it stands in for), a `packages/db` schema table, an
+  `etl/jobs/*.ts` script + matching GitHub Actions workflow at that feature's real-world
+  publish cadence, and an `apps/web/app/<route>` page. Verified with `pnpm typecheck`,
+  `pnpm --filter @pseye/web lint`, and a production build after every feature; also
+  smoke-tested each route against the already-running local dev server.
+  - Also closed the "`apps/web` doesn't query the DB yet" gap CLAUDE.md flagged: added
+    `apps/web/lib/quotes.ts` (`getDailyQuotes()`), which reads from Postgres when
+    `DATABASE_URL` is configured and populated, falling back to `MockQuoteSource`
+    otherwise or on any DB error. Both the market map and DCA pages now go through it.
+    This surfaced a real gap in the existing schema (`daily_quotes` had no
+    `company_name` column) and a latent bug the wiring would have introduced
+    (`MockHistoricalQuoteSource` anchored to a fixed internal sample list rather than
+    whatever quotes the caller actually has) — both fixed as part of the same change.
+  - **Not done / no live DB to verify against**: `DATABASE_URL` was never set in this
+    sandbox, so `pnpm db:generate`/`pnpm db:push` have never been run and
+    `packages/db/drizzle/` (migrations) doesn't exist yet. The DB-backed read path and
+    every new ETL job are typechecked and logically reviewed but **not** run against a
+    real Postgres instance. Do that once `DATABASE_URL` is available, before trusting
+    the DB path in production.
+  - Nav grew to 8 links; extracted `apps/web/components/NavLinks.tsx` (client component,
+    `usePathname`-based active-link highlighting) since `layout.tsx` needs to stay a
+    Server Component for its `metadata` export. Nav wraps on narrow viewports rather
+    than overflowing.
+  - Added a root `README.md` (there wasn't one) covering the feature list, stack, repo
+    structure, and how to run with/without a database.

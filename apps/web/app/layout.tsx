@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { NavLinks } from "@/components/NavLinks";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,34 +32,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <header className="border-b border-black/10 dark:border-white/10">
-          <nav className="mx-auto flex max-w-5xl items-center gap-6 px-4 py-3 text-sm">
-            <Link href="/" className="font-semibold">
+          <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-3 text-sm">
+            <Link href="/" className="mr-1 font-semibold opacity-100">
               PSEye
             </Link>
-            <Link href="/" className="opacity-80 hover:opacity-100">
-              Market Map
-            </Link>
-            <Link href="/news" className="opacity-80 hover:opacity-100">
-              News
-            </Link>
-            <Link href="/calendar" className="opacity-80 hover:opacity-100">
-              Calendar
-            </Link>
-            <Link href="/block-sales" className="opacity-80 hover:opacity-100">
-              Block Sales
-            </Link>
-            <Link href="/disclosures" className="opacity-80 hover:opacity-100">
-              Disclosures
-            </Link>
-            <Link href="/offerings" className="opacity-80 hover:opacity-100">
-              Offerings
-            </Link>
-            <Link href="/foreign-flow" className="opacity-80 hover:opacity-100">
-              Foreign Flow
-            </Link>
-            <Link href="/dca" className="opacity-80 hover:opacity-100">
-              DCA Calculator
-            </Link>
+            <NavLinks />
           </nav>
         </header>
         <main className="flex-1">{children}</main>
