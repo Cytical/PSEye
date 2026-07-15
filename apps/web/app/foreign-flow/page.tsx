@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MockForeignFlowSource, type StockForeignFlow } from "@pseye/source-foreign-flow";
+import { MockForeignFlowSource, type IndexForeignFlow, type StockForeignFlow } from "@pseye/source-foreign-flow";
 import { ForeignFlowChart } from "@/components/ForeignFlowChart";
 
 export const revalidate = 86400;
@@ -43,6 +43,13 @@ export default async function ForeignFlowPage() {
             Net selling
           </span>
         </div>
+
+        <details className="mt-3 text-sm">
+          <summary className="cursor-pointer text-xs text-black/50 hover:text-black/70 dark:text-white/50 dark:hover:text-white/70">
+            Show as table
+          </summary>
+          <IndexFlowTable periods={indexFlow} />
+        </details>
       </div>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
@@ -55,6 +62,41 @@ export default async function ForeignFlowPage() {
         has not been wired in yet. Figures here are illustrative, not actual flows.
       </p>
     </div>
+  );
+}
+
+function IndexFlowTable({ periods }: { periods: IndexForeignFlow[] }) {
+  return (
+    <table className="mt-2 w-full text-xs">
+      <thead>
+        <tr className="border-b border-black/10 text-left text-black/50 dark:border-white/10 dark:text-white/50">
+          <th className="py-1.5 pr-4 font-medium">Week ending</th>
+          <th className="py-1.5 pr-4 text-right font-medium">Foreign buy</th>
+          <th className="py-1.5 pr-4 text-right font-medium">Foreign sell</th>
+          <th className="py-1.5 text-right font-medium">Net</th>
+        </tr>
+      </thead>
+      <tbody>
+        {periods.map((p) => (
+          <tr key={p.periodEnd} className="border-b border-black/5 dark:border-white/5">
+            <td className="py-1.5 pr-4">
+              {new Date(p.periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", {
+                month: "short",
+                day: "numeric",
+                timeZone: "UTC",
+              })}
+            </td>
+            <td className="py-1.5 pr-4 text-right tabular-nums">{formatPeso(p.foreignBuyValue)}</td>
+            <td className="py-1.5 pr-4 text-right tabular-nums">{formatPeso(p.foreignSellValue)}</td>
+            <td
+              className={`py-1.5 text-right font-medium tabular-nums ${p.netValue >= 0 ? "text-[#006300] dark:text-[#0ca30c]" : "text-[#d03b3b]"}`}
+            >
+              {formatPeso(p.netValue)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
