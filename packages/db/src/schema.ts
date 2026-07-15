@@ -1,0 +1,35 @@
+import {
+  pgTable,
+  serial,
+  text,
+  date,
+  timestamp,
+  numeric,
+  bigint,
+  varchar,
+  unique,
+} from "drizzle-orm/pg-core";
+
+export const dailyQuotes = pgTable(
+  "daily_quotes",
+  {
+    id: serial("id").primaryKey(),
+    ticker: varchar("ticker", { length: 16 }).notNull(),
+    tradeDate: date("trade_date").notNull(),
+    price: numeric("price", { precision: 12, scale: 4 }).notNull(),
+    pctChange: numeric("pct_change", { precision: 8, scale: 4 }).notNull(),
+    marketCap: bigint("market_cap", { mode: "number" }),
+    sector: varchar("sector", { length: 64 }).notNull(),
+  },
+  (table) => [unique().on(table.ticker, table.tradeDate)]
+);
+
+export const newsItems = pgTable("news_items", {
+  id: serial("id").primaryKey(),
+  source: varchar("source", { length: 64 }).notNull(),
+  title: text("title").notNull(),
+  snippet: text("snippet"),
+  url: text("url").notNull().unique(),
+  publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
+  tickers: text("tickers").array().notNull().default([]),
+});

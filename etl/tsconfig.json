@@ -1,0 +1,7 @@
+{
+  "extends": "@pseye/config/base.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["jobs"]
+}

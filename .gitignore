@@ -1,0 +1,12 @@
+node_modules/
+.turbo/
+.next/
+dist/
+.env
+.env.local
+*.tsbuildinfo
+.vercel/
+.DS_Store
+.claude/settings.local.json
+.dev-server.log
+.dev-server.err.log

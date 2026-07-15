@@ -1,0 +1,87 @@
+# PSEye — Product & Technical Planning Brief
+
+> This is the original planning-mode brief the project was scoped from. Kept verbatim
+> as durable context for future work sessions — see `CLAUDE.md` for the current
+> as-built architecture, which supersedes this doc wherever the two disagree.
+
+## Project summary
+Build **PSEye**, a free, community-first web app that tracks the Philippine Stock Exchange (PSE/PSEi). It exists to fill gaps that existing PH tools (PSE EQUIP, Investagrams/Rival, broker platforms, TradingView) either don't cover or gate behind paywalls — most importantly a shareable market map, a foreign fund flow tracker, and a news aggregator built specifically for PSE.
+
+## What I want from this planning session
+This is a **planning-mode pass only** — do not write implementation code yet. I want back:
+1. A recommended tech stack (frontend, backend/ETL, database, hosting) with reasoning.
+2. A data pipeline design per feature below — source, fetch cadence, parsing approach, storage shape.
+3. A suggested repo/project structure.
+4. A phased roadmap: realistic v1 (MVP, solo, spare-time build), v2, and v3/stretch. The map + basic price data should anchor v1.
+5. Open questions or decisions you need from me before implementation starts.
+
+## Builder context (weight the plan toward this)
+- Solo builder. Data Quality Analyst by trade, comfortable with Python (pandas, SQL) and JavaScript/TypeScript, Git. Less experienced with production backend/infra ops — prefer boring, well-documented choices over cutting-edge ones.
+- Goal is users and usefulness, not revenue. No ads or paywall planned. Prefer free-tier/low-cost hosting and static-first architecture wherever it doesn't compromise the product.
+- This will likely double as a public portfolio piece, so clean structure, documentation, and sensible commit history matter.
+
+## Target users
+Filipino retail investors — especially the large recent wave of new PSE accounts opened via GInvest/Maya-type on-ramps who have an account but little context for reading the market. Secondary audience: more experienced investors who want a fast, ad-light utility worth screenshotting and sharing.
+
+## Explicit non-goals for v1
+- No brokerage or trading functionality — read-only and informational only.
+- No claims of true real-time intraday data. Delayed (15–30 min) or end-of-day data is expected and fine.
+- No reproducing full news articles or PSE's PDF reports verbatim — aggregation, linking, and derived/recalculated data only.
+- No financial advice framing, stock picks, or buy/sell signals.
+
+## Feature backlog (treat as backlog to phase, not a v1 requirement list)
+
+1. **PSEi/stock market map (treemap heatmap)** — flagship, most shareable feature.
+   - Boxes sized by market cap, colored by day's % change.
+   - Grouped by PSE's own 6-sector classification: Financials, Industrial, Holding Firms, Property, Services, Mining & Oil.
+   - Should render well as a static, shareable image (social-media-friendly aspect ratio export).
+
+2. **News aggregator**
+   - Pull headlines + short snippets (never full article text) from PH business news RSS feeds (e.g. BusinessWorld, Inquirer Business, Philstar Business, Manila Bulletin Business, GMA News Business) plus the PSE Edge disclosure feed.
+   - Auto-tag each item by the PSE ticker(s) it mentions so users can filter to a personal watchlist.
+
+3. **Foreign fund flow tracker**
+   - Source: PSE's free weekly "Market Watch" PDF and Monthly Report PDF (published at documents.pse.com.ph). These contain index-level foreign buying/selling/net figures, plus per-stock "Net Foreign Buying" / "Net Foreign Selling" rankings.
+   - Pipeline: scheduled fetch → parse PDF tables (e.g. pdfplumber/camelot) → store the extracted numbers in our own database → visualize with our own chart. Do not re-host or reformat PSE's PDF/report itself — these carry a "no reproduction without consent" notice, so treat the underlying figures as the asset, not the document.
+   - v1 scope: weekly/monthly granularity only. True daily/intraday per-stock foreign flow requires a licensed data feed (what powers COL Financial/Investagrams) — out of scope for now.
+
+4. **Dividend & corporate actions calendar**
+   - Ex-date/record date/payment date tracking, plus plain-language explainers distinguishing stock rights offerings, follow-on offerings, and property dividends for beginners.
+
+5. **Block sales tracker**
+   - Surface the "Block Sales" section from PSE's Monthly Report (large negotiated trades outside the normal order book) — currently buried in PDFs, not visualized anywhere.
+
+6. **Insider disclosure digest**
+   - Structured feed built on PSE Edge filings, grouped by company, distilled into a readable "who's filing what" view instead of the raw real-time stream PSE Edge shows today.
+
+7. **IPO / follow-on offering tracker**
+   - Subscription period countdowns plus plain-language context for first-time investors deciding whether to participate.
+
+8. **DCA / dividend-reinvestment calculator**
+   - Historical "what if you cost-averaged into the PSEi or [stock] since [date]" calculator.
+
+9. **Portfolio tracker + watchlist alerts**
+   - Lowest priority — most commoditized feature elsewhere. Build last, only if earlier features have traction.
+
+## Data source & legal constraints to bake into the architecture
+- PSE's published reports restrict reproduction/redistribution; true real-time market data is a licensed, paid product (see PSE EQUIP's premium tier).
+- Default the whole system to delayed/EOD data from legally accessible sources (public PDFs, RSS feeds, free delayed quote sources). Flag clearly in the plan anywhere a paid data license would be required to go further (e.g. true intraday foreign flow).
+- Design the data layer so a source can be swapped later without a rewrite, in case a licensed feed becomes available or a free source disappears.
+
+## Branding
+Working name: **PSEye**. Note in the plan anywhere branding affects structure (repo name, domain, asset naming), but naming isn't the focus of this pass.
+
+---
+
+## Execution log
+
+Started an unattended, multi-session build-out against the feature backlog above on
+2026-07-16. Progress, decisions, and deviations from this brief get appended below
+(newest first) so future sessions — human or Claude — can pick up context fast.
+
+### 2026-07-16
+- Repo scaffold (Turborepo + pnpm, `apps/web`, `packages/db`, `packages/sources/*`,
+  `packages/treemap-layout`, `etl`) already existed from the planning pass but had
+  never been committed. Made the initial commit, then began working the backlog in
+  roughly the phased order above, following the established pattern: pluggable
+  `*Source` interface + mock implementation + Drizzle schema + ETL job + page.

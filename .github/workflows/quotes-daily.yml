@@ -1,0 +1,24 @@
+name: Fetch daily quotes
+
+on:
+  schedule:
+    # ~4:30pm PHT (UTC+8) on weekdays, after PSE market close
+    - cron: "30 8 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-quotes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-quotes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

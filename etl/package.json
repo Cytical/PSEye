@@ -1,0 +1,22 @@
+{
+  "name": "@pseye/etl",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "fetch-quotes": "tsx jobs/fetch-quotes.ts",
+    "fetch-news": "tsx jobs/fetch-news.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pseye/db": "workspace:*",
+    "@pseye/source-quotes": "workspace:*",
+    "@pseye/source-news": "workspace:*",
+    "drizzle-orm": "^0.36.4"
+  },
+  "devDependencies": {
+    "@pseye/config": "workspace:*",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.0"
+  }
+}
