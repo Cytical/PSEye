@@ -21,3 +21,13 @@ export interface Quote {
 export interface QuoteSource {
   getDailyQuotes(): Promise<Quote[]>;
 }
+
+export interface HistoricalClose {
+  date: string; // YYYY-MM-DD
+  close: number;
+}
+
+export interface HistoricalQuoteSource {
+  /** Business-day closes from `fromDate` through today, inclusive, ascending by date. */
+  getHistory(ticker: string, fromDate: string): Promise<HistoricalClose[]>;
+}

@@ -12,7 +12,7 @@ export class MockQuoteSource implements QuoteSource {
   }
 }
 
-const SAMPLE_QUOTES: Quote[] = [
+export const SAMPLE_QUOTES: Quote[] = [
   { ticker: "BDO", companyName: "BDO Unibank", sector: "Financials", price: 145.5, pctChange: 1.2, marketCap: 680_000_000_000 },
   { ticker: "BPI", companyName: "Bank of the Philippine Islands", sector: "Financials", price: 118.3, pctChange: -0.6, marketCap: 430_000_000_000 },
   { ticker: "MBT", companyName: "Metropolitan Bank & Trust", sector: "Financials", price: 68.9, pctChange: 0.4, marketCap: 240_000_000_000 },

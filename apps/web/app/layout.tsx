@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,15 +32,18 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <header className="border-b border-black/10 dark:border-white/10">
           <nav className="mx-auto flex max-w-5xl items-center gap-6 px-4 py-3 text-sm">
-            <a href="/" className="font-semibold">
+            <Link href="/" className="font-semibold">
               PSEye
-            </a>
-            <a href="/" className="opacity-80 hover:opacity-100">
+            </Link>
+            <Link href="/" className="opacity-80 hover:opacity-100">
               Market Map
-            </a>
-            <a href="/news" className="opacity-80 hover:opacity-100">
+            </Link>
+            <Link href="/news" className="opacity-80 hover:opacity-100">
               News
-            </a>
+            </Link>
+            <Link href="/dca" className="opacity-80 hover:opacity-100">
+              DCA Calculator
+            </Link>
           </nav>
         </header>
         <main className="flex-1">{children}</main>
