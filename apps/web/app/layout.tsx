@@ -47,6 +47,9 @@ export default function RootLayout({
             <Link href="/block-sales" className="opacity-80 hover:opacity-100">
               Block Sales
             </Link>
+            <Link href="/disclosures" className="opacity-80 hover:opacity-100">
+              Disclosures
+            </Link>
             <Link href="/dca" className="opacity-80 hover:opacity-100">
               DCA Calculator
             </Link>

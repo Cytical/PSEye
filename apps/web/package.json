@@ -18,6 +18,7 @@
     "@pseye/source-news": "workspace:*",
     "@pseye/source-corporate-actions": "workspace:*",
     "@pseye/source-block-sales": "workspace:*",
+    "@pseye/source-disclosures": "workspace:*",
     "@pseye/treemap-layout": "workspace:*"
   },
   "devDependencies": {

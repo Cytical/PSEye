@@ -34,6 +34,16 @@ export const newsItems = pgTable("news_items", {
   tickers: text("tickers").array().notNull().default([]),
 });
 
+export const disclosures = pgTable("disclosures", {
+  id: serial("id").primaryKey(),
+  ticker: varchar("ticker", { length: 16 }).notNull(),
+  companyName: text("company_name").notNull(),
+  type: varchar("type", { length: 32 }).notNull(),
+  headline: text("headline").notNull(),
+  filedAt: timestamp("filed_at", { withTimezone: true }).notNull(),
+  referenceNo: varchar("reference_no", { length: 64 }).notNull().unique(),
+});
+
 export const blockSales = pgTable(
   "block_sales",
   {
