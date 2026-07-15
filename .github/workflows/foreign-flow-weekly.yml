@@ -1,0 +1,24 @@
+name: Fetch foreign fund flow
+
+on:
+  schedule:
+    # Monday 9am UTC, after PSE's weekly Market Watch PDF is typically published
+    - cron: "0 9 * * 1"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-foreign-flow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-foreign-flow
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

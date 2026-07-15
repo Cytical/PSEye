@@ -10,6 +10,7 @@
     "fetch-block-sales": "tsx jobs/fetch-block-sales.ts",
     "fetch-disclosures": "tsx jobs/fetch-disclosures.ts",
     "fetch-offerings": "tsx jobs/fetch-offerings.ts",
+    "fetch-foreign-flow": "tsx jobs/fetch-foreign-flow.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "@pseye/source-block-sales": "workspace:*",
     "@pseye/source-disclosures": "workspace:*",
     "@pseye/source-offerings": "workspace:*",
+    "@pseye/source-foreign-flow": "workspace:*",
     "drizzle-orm": "^0.36.4"
   },
   "devDependencies": {

@@ -29,6 +29,9 @@ importers:
       '@pseye/source-disclosures':
         specifier: workspace:*
         version: link:../../packages/sources/disclosures
+      '@pseye/source-foreign-flow':
+        specifier: workspace:*
+        version: link:../../packages/sources/foreign-flow
       '@pseye/source-news':
         specifier: workspace:*
         version: link:../../packages/sources/news
@@ -90,6 +93,9 @@ importers:
       '@pseye/source-disclosures':
         specifier: workspace:*
         version: link:../packages/sources/disclosures
+      '@pseye/source-foreign-flow':
+        specifier: workspace:*
+        version: link:../packages/sources/foreign-flow
       '@pseye/source-news':
         specifier: workspace:*
         version: link:../packages/sources/news
@@ -153,6 +159,15 @@ importers:
         version: 5.9.3
 
   packages/sources/disclosures:
+    devDependencies:
+      '@pseye/config':
+        specifier: workspace:*
+        version: link:../../config
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+
+  packages/sources/foreign-flow:
     devDependencies:
       '@pseye/config':
         specifier: workspace:*

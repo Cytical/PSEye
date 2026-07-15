@@ -6,6 +6,7 @@ import {
   timestamp,
   numeric,
   bigint,
+  integer,
   varchar,
   unique,
 } from "drizzle-orm/pg-core";
@@ -33,6 +34,30 @@ export const newsItems = pgTable("news_items", {
   publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
   tickers: text("tickers").array().notNull().default([]),
 });
+
+export const indexForeignFlow = pgTable(
+  "index_foreign_flow",
+  {
+    id: serial("id").primaryKey(),
+    periodEnd: date("period_end").notNull().unique(),
+    foreignBuyValue: bigint("foreign_buy_value", { mode: "number" }).notNull(),
+    foreignSellValue: bigint("foreign_sell_value", { mode: "number" }).notNull(),
+    netValue: bigint("net_value", { mode: "number" }).notNull(),
+  }
+);
+
+export const stockForeignFlow = pgTable(
+  "stock_foreign_flow",
+  {
+    id: serial("id").primaryKey(),
+    periodEnd: date("period_end").notNull(),
+    ticker: varchar("ticker", { length: 16 }).notNull(),
+    companyName: text("company_name").notNull(),
+    netValue: bigint("net_value", { mode: "number" }).notNull(),
+    rank: integer("rank").notNull(),
+  },
+  (table) => [unique().on(table.periodEnd, table.ticker)]
+);
 
 export const offerings = pgTable(
   "offerings",
