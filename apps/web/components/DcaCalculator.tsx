@@ -6,7 +6,6 @@ import { buildCompositeHistory, simulateDca, type DcaFrequency, type DcaResult }
 import { DcaChart } from "./DcaChart";
 
 const COMPOSITE_VALUE = "__PSEI_COMPOSITE__";
-const historySource = new MockHistoricalQuoteSource();
 
 function defaultStartDate(): string {
   const d = new Date();
@@ -31,6 +30,10 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
     return quotes.find((q) => q.ticker === ticker)?.companyName ?? ticker;
   }, [ticker, quotes]);
 
+  // Anchored to `quotes` (whatever the page passed in — DB or mock) so the
+  // simulated history's latest close always matches the price shown elsewhere.
+  const historySource = useMemo(() => new MockHistoricalQuoteSource(quotes), [quotes]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -52,7 +55,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
     return () => {
       cancelled = true;
     };
-  }, [ticker, startDate, contribution, frequency, quotes]);
+  }, [ticker, startDate, contribution, frequency, quotes, historySource]);
 
   return (
     <div className="flex flex-col gap-6">

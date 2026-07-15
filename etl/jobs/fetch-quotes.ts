@@ -21,6 +21,7 @@ async function main() {
 
   const rows = quotes.map((quote) => ({
     ticker: quote.ticker,
+    companyName: quote.companyName,
     tradeDate,
     price: quote.price.toString(),
     pctChange: quote.pctChange.toString(),
@@ -34,6 +35,7 @@ async function main() {
     .onConflictDoUpdate({
       target: [dailyQuotes.ticker, dailyQuotes.tradeDate],
       set: {
+        companyName: sql`excluded.company_name`,
         price: sql`excluded.price`,
         pctChange: sql`excluded.pct_change`,
         marketCap: sql`excluded.market_cap`,

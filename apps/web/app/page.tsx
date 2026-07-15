@@ -1,11 +1,10 @@
-import { MockQuoteSource } from "@pseye/source-quotes";
+import { getDailyQuotes } from "@/lib/quotes";
 import { TreemapChart } from "@/components/TreemapChart";
 
 export const revalidate = 86400; // once daily; matches the EOD ETL cadence
 
 export default async function MarketMapPage() {
-  const source = new MockQuoteSource();
-  const quotes = await source.getDailyQuotes();
+  const quotes = await getDailyQuotes();
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -18,8 +17,9 @@ export default async function MarketMapPage() {
         <TreemapChart stocks={quotes} />
       </div>
       <p className="mt-4 text-xs text-black/40 dark:text-white/40">
-        Sample data — a real quote source has not been wired in yet (see project plan,
-        Open Question #1).
+        Reads from the database when populated by the daily ETL job, otherwise falls back to
+        sample data — a real, legally-sound price feed is still an open question (see project
+        plan, Open Question #1).
       </p>
     </div>
   );

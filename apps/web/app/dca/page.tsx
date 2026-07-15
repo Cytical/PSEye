@@ -1,11 +1,10 @@
-import { MockQuoteSource } from "@pseye/source-quotes";
+import { getDailyQuotes } from "@/lib/quotes";
 import { DcaCalculator } from "@/components/DcaCalculator";
 
 export const revalidate = 86400;
 
 export default async function DcaPage() {
-  const source = new MockQuoteSource();
-  const quotes = await source.getDailyQuotes();
+  const quotes = await getDailyQuotes();
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">

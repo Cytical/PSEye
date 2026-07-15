@@ -16,6 +16,7 @@ export const dailyQuotes = pgTable(
   {
     id: serial("id").primaryKey(),
     ticker: varchar("ticker", { length: 16 }).notNull(),
+    companyName: text("company_name").notNull(),
     tradeDate: date("trade_date").notNull(),
     price: numeric("price", { precision: 12, scale: 4 }).notNull(),
     pctChange: numeric("pct_change", { precision: 8, scale: 4 }).notNull(),

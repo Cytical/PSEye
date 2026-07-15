@@ -1,16 +1,23 @@
-import type { HistoricalClose, HistoricalQuoteSource } from "./types";
+import type { HistoricalClose, HistoricalQuoteSource, Quote } from "./types";
 import { SAMPLE_QUOTES } from "./mockQuoteSource";
 
 /**
  * Placeholder HistoricalQuoteSource until a real EOD price history feed is wired
  * in (same open question as MockQuoteSource). Generates a deterministic
  * pseudo-random daily-close series per ticker, rescaled so the most recent close
- * matches that ticker's current sample price. Swap via the HistoricalQuoteSource
+ * matches that ticker's current price. Swap via the HistoricalQuoteSource
  * interface, not by editing callers.
+ *
+ * Takes the current quotes as a constructor param (defaulting to the static
+ * sample set) rather than looking a ticker's price up internally — callers that
+ * source quotes elsewhere (e.g. the DB) must pass that same list, or this would
+ * silently anchor to a stale/unrelated price.
  */
 export class MockHistoricalQuoteSource implements HistoricalQuoteSource {
+  constructor(private readonly anchorQuotes: Quote[] = SAMPLE_QUOTES) {}
+
   async getHistory(ticker: string, fromDate: string): Promise<HistoricalClose[]> {
-    const anchor = SAMPLE_QUOTES.find((q) => q.ticker === ticker);
+    const anchor = this.anchorQuotes.find((q) => q.ticker === ticker);
     if (!anchor) return [];
 
     const dates = businessDaysBetween(fromDate, todayIso());
