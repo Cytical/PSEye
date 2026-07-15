@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   MockCorporateActionSource,
   CORPORATE_ACTION_LABELS,
@@ -6,6 +7,11 @@ import {
 } from "@pseye/source-corporate-actions";
 
 export const revalidate = 86400;
+
+export const metadata: Metadata = {
+  title: "Calendar",
+  description: "Dividend and corporate actions calendar — ex-date, record date, and payment date.",
+};
 
 function formatDate(iso: string): string {
   return new Date(iso + "T00:00:00Z").toLocaleDateString("en-PH", {

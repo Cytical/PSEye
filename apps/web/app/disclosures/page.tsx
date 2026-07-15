@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   MockDisclosureSource,
   DISCLOSURE_TYPE_LABELS,
@@ -5,6 +6,11 @@ import {
 } from "@pseye/source-disclosures";
 
 export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  title: "Disclosures",
+  description: "PSE Edge filings distilled into a per-company digest.",
+};
 
 function formatRelative(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();

@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { getDailyQuotes } from "@/lib/quotes";
 import { TreemapChart } from "@/components/TreemapChart";
 
 export const revalidate = 86400; // once daily; matches the EOD ETL cadence
+
+export const metadata: Metadata = {
+  title: "Market Map",
+  description:
+    "PSEi stock treemap — box size is market cap, color is today's % change, grouped by PSE sector.",
+};
 
 export default async function MarketMapPage() {
   const quotes = await getDailyQuotes();

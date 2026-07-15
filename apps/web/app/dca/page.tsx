@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { getDailyQuotes } from "@/lib/quotes";
 import { DcaCalculator } from "@/components/DcaCalculator";
 
 export const revalidate = 86400;
+
+export const metadata: Metadata = {
+  title: "DCA Calculator",
+  description: "Simulate dollar-cost-averaging into a PSE stock or an equal-weighted market proxy.",
+};
 
 export default async function DcaPage() {
   const quotes = await getDailyQuotes();

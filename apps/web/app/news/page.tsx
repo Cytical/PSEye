@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { NEWS_SOURCES, type NewsItem } from "@pseye/source-news";
 
 export const revalidate = 3600; // hourly, matches the news ETL cadence
+
+export const metadata: Metadata = {
+  title: "News",
+  description: "PH business news headlines and snippets, auto-tagged by PSE ticker.",
+};
 
 async function fetchAllNews(): Promise<NewsItem[]> {
   const results = await Promise.allSettled(

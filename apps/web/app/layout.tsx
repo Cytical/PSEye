@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { NavLinks } from "@/components/NavLinks";
+import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +16,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PSEye",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  title: {
+    default: "PSEye",
+    template: "%s | PSEye",
+  },
   description: "A free, community-first tracker for the Philippine Stock Exchange.",
 };
 
@@ -40,6 +45,7 @@ export default function RootLayout({
           </nav>
         </header>
         <main className="flex-1">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );

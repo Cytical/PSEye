@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { MockOfferingSource, OFFERING_TYPE_LABELS, type Offering } from "@pseye/source-offerings";
 
 export const revalidate = 86400;
+
+export const metadata: Metadata = {
+  title: "Offerings",
+  description: "IPO, follow-on, and rights offer tracker with subscription-window countdowns.",
+};
 
 function daysBetween(fromIso: string, toIso: string): number {
   const from = new Date(fromIso + "T00:00:00Z").getTime();

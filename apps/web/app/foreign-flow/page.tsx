@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { MockForeignFlowSource, type StockForeignFlow } from "@pseye/source-foreign-flow";
 import { ForeignFlowChart } from "@/components/ForeignFlowChart";
 
 export const revalidate = 86400;
+
+export const metadata: Metadata = {
+  title: "Foreign Fund Flow",
+  description: "Weekly index-level and per-stock net foreign buying/selling on the PSE.",
+};
 
 function formatPeso(n: number): string {
   const abs = Math.abs(n);

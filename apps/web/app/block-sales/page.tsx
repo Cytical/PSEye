@@ -1,6 +1,12 @@
+import type { Metadata } from "next";
 import { MockBlockSaleSource } from "@pseye/source-block-sales";
 
 export const revalidate = 86400;
+
+export const metadata: Metadata = {
+  title: "Block Sales",
+  description: "Large negotiated trades from PSE's Monthly Report, sorted by value.",
+};
 
 function formatDate(iso: string): string {
   return new Date(iso + "T00:00:00Z").toLocaleDateString("en-PH", {
