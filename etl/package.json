@@ -7,6 +7,7 @@
     "fetch-quotes": "tsx jobs/fetch-quotes.ts",
     "fetch-news": "tsx jobs/fetch-news.ts",
     "fetch-corporate-actions": "tsx jobs/fetch-corporate-actions.ts",
+    "fetch-block-sales": "tsx jobs/fetch-block-sales.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -14,6 +15,7 @@
     "@pseye/source-quotes": "workspace:*",
     "@pseye/source-news": "workspace:*",
     "@pseye/source-corporate-actions": "workspace:*",
+    "@pseye/source-block-sales": "workspace:*",
     "drizzle-orm": "^0.36.4"
   },
   "devDependencies": {

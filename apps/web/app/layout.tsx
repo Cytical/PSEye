@@ -44,6 +44,9 @@ export default function RootLayout({
             <Link href="/calendar" className="opacity-80 hover:opacity-100">
               Calendar
             </Link>
+            <Link href="/block-sales" className="opacity-80 hover:opacity-100">
+              Block Sales
+            </Link>
             <Link href="/dca" className="opacity-80 hover:opacity-100">
               DCA Calculator
             </Link>

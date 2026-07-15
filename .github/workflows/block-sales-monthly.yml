@@ -1,0 +1,25 @@
+name: Fetch block sales
+
+on:
+  schedule:
+    # 9am UTC on the 1st of each month — PSE's Monthly Report is published
+    # a few business days after month-end, so this may need manual re-runs.
+    - cron: "0 9 1 * *"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-block-sales:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-block-sales
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

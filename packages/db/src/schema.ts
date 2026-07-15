@@ -34,6 +34,20 @@ export const newsItems = pgTable("news_items", {
   tickers: text("tickers").array().notNull().default([]),
 });
 
+export const blockSales = pgTable(
+  "block_sales",
+  {
+    id: serial("id").primaryKey(),
+    ticker: varchar("ticker", { length: 16 }).notNull(),
+    companyName: text("company_name").notNull(),
+    tradeDate: date("trade_date").notNull(),
+    volume: bigint("volume", { mode: "number" }).notNull(),
+    price: numeric("price", { precision: 12, scale: 4 }).notNull(),
+    value: bigint("value", { mode: "number" }).notNull(),
+  },
+  (table) => [unique().on(table.ticker, table.tradeDate, table.volume, table.price)]
+);
+
 export const corporateActions = pgTable(
   "corporate_actions",
   {
