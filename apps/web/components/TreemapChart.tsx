@@ -1,13 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import {
   computeTreemapLayout,
   pctChangeToColor,
   getContrastText,
   shouldShowLabel,
+  type ColorMode,
   type TreemapInput,
 } from "@pseye/treemap-layout";
+
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+
+function subscribeToColorScheme(callback: () => void) {
+  const query = window.matchMedia(DARK_QUERY);
+  query.addEventListener("change", callback);
+  return () => query.removeEventListener("change", callback);
+}
+
+/**
+ * Tracks the viewer's OS color scheme so box fills match dark mode, not just the
+ * surrounding UI. useSyncExternalStore (not useState+useEffect) so the server
+ * snapshot ("light") and the client's first render agree — no hydration mismatch.
+ */
+function useColorMode(): ColorMode {
+  return useSyncExternalStore(
+    subscribeToColorScheme,
+    () => (window.matchMedia(DARK_QUERY).matches ? "dark" : "light"),
+    () => "light"
+  );
+}
 
 export interface TreemapStock extends TreemapInput {
   companyName: string;
@@ -24,6 +46,7 @@ const LEGEND_STOPS = [-3, -1.5, 0, 1.5, 3];
 
 export function TreemapChart({ stocks, width = 1000, height = 600 }: TreemapChartProps) {
   const [hovered, setHovered] = useState<TreemapStock | null>(null);
+  const colorMode = useColorMode();
   const layout = computeTreemapLayout(stocks, width, height);
   const byTicker = new Map(stocks.map((s) => [s.ticker, s]));
 
@@ -48,7 +71,7 @@ export function TreemapChart({ stocks, width = 1000, height = 600 }: TreemapChar
         {layout.stocks.map((box) => {
           const w = box.x1 - box.x0;
           const h = box.y1 - box.y0;
-          const fill = pctChangeToColor(box.pctChange, "light");
+          const fill = pctChangeToColor(box.pctChange, colorMode);
           const ink = getContrastText(fill);
           const showLabel = shouldShowLabel(w, h);
           const stock = byTicker.get(box.ticker);
@@ -107,7 +130,7 @@ export function TreemapChart({ stocks, width = 1000, height = 600 }: TreemapChar
               key={stop}
               className="flex-1"
               style={{
-                background: `linear-gradient(to right, ${pctChangeToColor(stop, "light")}, ${pctChangeToColor(LEGEND_STOPS[i + 1], "light")})`,
+                background: `linear-gradient(to right, ${pctChangeToColor(stop, colorMode)}, ${pctChangeToColor(LEGEND_STOPS[i + 1], colorMode)})`,
               }}
             />
           ))}
