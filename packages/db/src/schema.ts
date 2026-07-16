@@ -32,6 +32,7 @@ export const newsItems = pgTable("news_items", {
   title: text("title").notNull(),
   snippet: text("snippet"),
   url: text("url").notNull().unique(),
+  imageUrl: text("image_url"),
   publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
   tickers: text("tickers").array().notNull().default([]),
 });
