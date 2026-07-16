@@ -29,6 +29,11 @@ export function ThemeToggle() {
           aria-label={`${label} theme`}
           aria-pressed={active === value}
           title={label}
+          // The active swatch depends on the client's real theme, which the
+          // pre-hydration script may already have changed away from the
+          // server's "light" default (e.g. system dark mode) — expected
+          // per Next's inline-script theming pattern, not a real mismatch.
+          suppressHydrationWarning
           className={`h-5 w-5 shrink-0 rounded-full border transition ${
             active === value
               ? "border-black/60 ring-2 ring-offset-2 ring-offset-background ring-black/50 dark:border-white/70 dark:ring-white/50"
