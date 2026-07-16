@@ -25,12 +25,12 @@ function formatPeriodLabel(periodEnd: string): string {
   });
 }
 
-/** Lives at the bottom of the always-dark filter sidebar (see MarketMap.tsx), so styled to match it rather than the light/dark page theme. */
+/** Lives at the bottom of the market map's filter sidebar (see MarketMap.tsx), styled with the same panel-* vars so it matches whichever theme is active. */
 export function MarketSummaryBar({ snapshot, foreignFlow }: MarketSummaryBarProps) {
   return (
     <div className="group relative cursor-default px-3 py-2">
-      <div className="text-[10px] font-semibold uppercase tracking-wide text-white/35">PSEi</div>
-      <div className="mt-1 text-2xl font-bold tracking-tight tabular-nums text-white">
+      <div className="text-[10px] font-semibold uppercase tracking-wide text-panel-fg/35">PSEi</div>
+      <div className="mt-1 text-2xl font-bold tracking-tight tabular-nums text-panel-fg">
         {snapshot.pseiValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
       <div className={`text-xs font-semibold tabular-nums ${changeColor(snapshot.pseiChange)}`}>
@@ -39,8 +39,8 @@ export function MarketSummaryBar({ snapshot, foreignFlow }: MarketSummaryBarProp
         {snapshot.pseiPctChange.toFixed(2)}%)
       </div>
 
-      <div className="pointer-events-none absolute bottom-full left-3 z-10 mb-2 w-max max-w-[220px] rounded-lg border border-white/10 bg-[#1c212b] px-3 py-2 opacity-0 shadow-2xl transition-opacity duration-100 group-hover:opacity-100">
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-white/35">
+      <div className="pointer-events-none absolute bottom-full left-3 z-10 mb-2 w-max max-w-[220px] rounded-lg border border-panel-border bg-panel-raised px-3 py-2 opacity-0 shadow-2xl transition-opacity duration-100 group-hover:opacity-100">
+        <div className="text-[10px] font-semibold uppercase tracking-wide text-panel-fg/35">
           Foreign flow, week of {formatPeriodLabel(foreignFlow.periodEnd)}
         </div>
         <div className={`text-sm font-semibold tabular-nums ${changeColor(foreignFlow.netValue)}`}>

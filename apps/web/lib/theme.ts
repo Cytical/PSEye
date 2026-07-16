@@ -23,9 +23,13 @@ export const THEME_INIT_SCRIPT = `
 (function () {
   try {
     var stored = localStorage.getItem("${THEME_STORAGE_KEY}");
+    // Sepia is the default for new visitors; an explicit system dark
+    // preference still wins over that default, but not over a light
+    // preference, since sepia is meant to replace plain white as the
+    // "light-ish" default, not just supplement it.
     var theme = stored === "light" || stored === "sepia" || stored === "dark"
       ? stored
-      : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "sepia");
     document.documentElement.dataset.theme = theme;
     if (theme === "dark") document.documentElement.classList.add("dark");
   } catch (e) {}

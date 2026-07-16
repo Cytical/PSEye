@@ -6,14 +6,32 @@
  * data-theme) before first paint. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* "panel" is the market map's own chrome (filter sidebar, treemap canvas,
+ * tooltips, the company detail modal) — it used to be hardcoded to a fixed
+ * dark terminal look regardless of page theme; these vars let it read as a
+ * raised surface that matches whichever theme is active instead. Box fill
+ * colors inside the treemap stay data-driven (pctChangeToColor) and are not
+ * part of this palette. */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --panel-bg: #ffffff;
+  --panel-bg-raised: #f1f1ef;
+  --panel-bg-active: #e7e7e4;
+  --panel-border: rgba(0, 0, 0, 0.1);
+  --panel-fg: #171717;
+  --panel-canvas: #f6f5f3;
+  --panel-grid: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-panel: var(--panel-bg);
+  --color-panel-raised: var(--panel-bg-raised);
+  --color-panel-active: var(--panel-bg-active);
+  --color-panel-border: var(--panel-border);
+  --color-panel-fg: var(--panel-fg);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   /* Scoped to the News route — see apps/web/app/news/fonts.ts. */
@@ -24,12 +42,28 @@
 [data-theme="dark"] {
   --background: #0a0a0a;
   --foreground: #ededed;
+  --panel-bg: #12141a;
+  --panel-bg-raised: #1c212b;
+  --panel-bg-active: #2b3543;
+  --panel-border: rgba(255, 255, 255, 0.1);
+  --panel-fg: #ffffff;
+  --panel-canvas: #0d0f14;
+  --panel-grid: #05060a;
 }
 
-/* Financial Times-style warm paper tone. */
+/* Financial Times-style warm paper tone. Panel surfaces are a deeper cream
+ * than the page background so the sidebar/canvas/modal still read as raised
+ * surfaces rather than blending flat into the page. */
 [data-theme="sepia"] {
   --background: #fff1e5;
   --foreground: #33302e;
+  --panel-bg: #f7e6d2;
+  --panel-bg-raised: #efd6b8;
+  --panel-bg-active: #e6c49a;
+  --panel-border: rgba(51, 48, 46, 0.14);
+  --panel-fg: #33302e;
+  --panel-canvas: #fbeadb;
+  --panel-grid: #fff8ef;
 }
 
 body {
