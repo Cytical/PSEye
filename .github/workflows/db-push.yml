@@ -14,6 +14,6 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: yes | pnpm db:push
+      - run: pnpm --filter @pseye/etl migrate-db
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
