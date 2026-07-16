@@ -13,6 +13,7 @@
     "fetch-foreign-flow": "tsx jobs/fetch-foreign-flow.ts",
     "fetch-market-snapshot": "tsx jobs/fetch-market-snapshot.ts",
     "backfill-company-profiles": "tsx jobs/backfill-company-profiles.ts",
+    "migrate-db": "tsx jobs/migrate-db.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
