@@ -34,6 +34,7 @@ async function main() {
     title: item.title,
     snippet: item.snippet,
     url: item.url,
+    imageUrl: item.imageUrl,
     publishedAt: item.publishedAt,
     tickers: item.tickers,
   }));

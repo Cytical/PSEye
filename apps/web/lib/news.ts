@@ -11,6 +11,24 @@ function sortByDate(items: NewsItem[]): NewsItem[] {
   return [...items].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
 }
 
+export function isToday(date: Date): boolean {
+  const now = new Date();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+}
+
+// Ticker-tagged items (i.e. about a stock this site actually tracks) sort
+// ahead of generic headlines; ties break by recency.
+export function byImportance(a: NewsItem, b: NewsItem): number {
+  const aScore = a.tickers.length > 0 ? 1 : 0;
+  const bScore = b.tickers.length > 0 ? 1 : 0;
+  if (aScore !== bScore) return bScore - aScore;
+  return b.publishedAt.getTime() - a.publishedAt.getTime();
+}
+
 async function fetchFrom(sources: NewsSource[]): Promise<NewsItem[]> {
   const results = await Promise.allSettled(sources.map((source) => source.fetchLatest()));
   return results.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
