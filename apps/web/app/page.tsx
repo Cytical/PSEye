@@ -4,8 +4,6 @@ import { getCompanyProfiles } from "@/lib/companyProfiles";
 import { getMarketSnapshot } from "@/lib/marketSnapshot";
 import { getLatestForeignFlow } from "@/lib/latestForeignFlow";
 import { MarketMap } from "@/components/MarketMap";
-import { MarketSummaryBar } from "@/components/MarketSummaryBar";
-import { MarketMapLegend } from "@/components/MarketMapLegend";
 import { ShareButton } from "@/components/ShareButton";
 
 export const revalidate = 3600; // hourly; matches the intraday ETL cadence
@@ -31,11 +29,7 @@ export default async function MarketMapPage() {
         <ShareButton />
       </div>
       <div className="mt-6">
-        <MarketMap stocks={quotes} profileByTicker={profileByTicker} />
-      </div>
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-        <MarketSummaryBar snapshot={snapshot} foreignFlow={foreignFlow} />
-        <MarketMapLegend />
+        <MarketMap stocks={quotes} profileByTicker={profileByTicker} snapshot={snapshot} foreignFlow={foreignFlow} />
       </div>
     </div>
   );
