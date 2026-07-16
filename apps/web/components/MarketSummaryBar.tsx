@@ -52,15 +52,6 @@ export function MarketSummaryBar({ snapshot, foreignFlow }: MarketSummaryBarProp
           </div>
         </div>
       </div>
-
-      <div className="h-9 w-px bg-black/10 dark:bg-white/10" />
-
-      <div>
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-black/40 dark:text-white/40">
-          USD/PHP
-        </div>
-        <div className="text-lg font-semibold tabular-nums">₱{snapshot.usdPhpRate.toFixed(2)}</div>
-      </div>
     </div>
   );
 }
