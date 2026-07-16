@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Theme switching is manual (see ThemeToggle.tsx), not just prefers-color-scheme,
+ * so `dark:` utilities key off a `.dark` class on <html> rather than the media
+ * query — the pre-hydration script in layout.tsx sets that class (and
+ * data-theme) before first paint. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -15,15 +21,20 @@
   --font-news-sans: var(--font-news-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+/* Financial Times-style warm paper tone. */
+[data-theme="sepia"] {
+  --background: #fff1e5;
+  --foreground: #33302e;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }

@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { NavLinks } from "@/components/NavLinks";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,9 +41,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-theme="light"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Applies the saved/system theme before first paint so there's no
+            flash of the wrong background. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <header className="border-b border-black/10 dark:border-white/10">
           {/* max-w matches page.tsx's widest content container (the market map) so the
@@ -51,6 +59,9 @@ export default function RootLayout({
               PSEye
             </Link>
             <NavLinks />
+            <div className="ml-auto">
+              <ThemeToggle />
+            </div>
           </nav>
         </header>
         <main className="flex-1">{children}</main>
