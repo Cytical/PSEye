@@ -1,68 +1,107 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   computeTreemapLayout,
   pctChangeToColor,
   getContrastText,
   shouldShowLabel,
-  type ColorMode,
+  SECTOR_HEADER_HEIGHT,
+  LEGEND_GRADIENT_CSS,
+  LEGEND_TICKS,
   type TreemapInput,
 } from "@pseye/treemap-layout";
-
-const DARK_QUERY = "(prefers-color-scheme: dark)";
-
-function subscribeToColorScheme(callback: () => void) {
-  const query = window.matchMedia(DARK_QUERY);
-  query.addEventListener("change", callback);
-  return () => query.removeEventListener("change", callback);
-}
-
-/**
- * Tracks the viewer's OS color scheme so box fills match dark mode, not just the
- * surrounding UI. useSyncExternalStore (not useState+useEffect) so the server
- * snapshot ("light") and the client's first render agree — no hydration mismatch.
- */
-function useColorMode(): ColorMode {
-  return useSyncExternalStore(
-    subscribeToColorScheme,
-    () => (window.matchMedia(DARK_QUERY).matches ? "dark" : "light"),
-    () => "light"
-  );
-}
+import { generateSparklineHistory } from "@/lib/syntheticSparkline";
 
 export interface TreemapStock extends TreemapInput {
   companyName: string;
-  price: number;
+  /** null when the source has no current trade to report — render as "N/A". */
+  price: number | null;
+  /** Defaults to PHP (PSE stocks). Nasdaq 100 mock data sets this to USD. */
+  currency?: "PHP" | "USD";
+}
+
+function formatPctChange(pctChange: number | null): string {
+  if (pctChange === null) return "N/A";
+  return `${pctChange >= 0 ? "+" : ""}${pctChange.toFixed(2)}%`;
 }
 
 interface TreemapChartProps {
   stocks: TreemapStock[];
+  /** Fixed width in px. Omit to fill the available container width responsively. */
   width?: number;
   height?: number;
 }
 
-const LEGEND_STOPS = [-3, -1.5, 0, 1.5, 3];
+const DEFAULT_HEIGHT = 640;
+const CANVAS_BG = "#0d0f14";
+const HEADER_BG = "#1c212b";
+const GRID_LINE = "#05060a";
 
-export function TreemapChart({ stocks, width = 1000, height = 600 }: TreemapChartProps) {
+/**
+ * finviz scales ticker text with box size rather than using one fixed size —
+ * a mega-cap's box reads like a headline, a small-cap's like a footnote.
+ * Clamped so text never dips below legible or blows past the box.
+ */
+const TICKER_FONT_MIN = 12;
+const TICKER_FONT_MAX = 28;
+
+function tickerFontSize(width: number, height: number): number {
+  const bySize = Math.min(width, height) / 3.6;
+  return Math.max(TICKER_FONT_MIN, Math.min(TICKER_FONT_MAX, bySize));
+}
+
+/**
+ * Canvas is always dark, finviz-style, regardless of the site's light/dark
+ * toggle — the point is a self-contained, high-contrast poster of bright
+ * saturated colors, not a themed widget.
+ */
+export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT }: TreemapChartProps) {
   const [hovered, setHovered] = useState<TreemapStock | null>(null);
-  const colorMode = useColorMode();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [measuredWidth, setMeasuredWidth] = useState(widthProp ?? 1000);
+
+  useEffect(() => {
+    if (widthProp != null) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width;
+      if (w) setMeasuredWidth(Math.floor(w));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [widthProp]);
+
+  const width = widthProp ?? measuredWidth;
   const layout = computeTreemapLayout(stocks, width, height);
   const byTicker = new Map(stocks.map((s) => [s.ticker, s]));
 
+  const sparkline = useMemo(
+    () => (hovered?.price != null ? generateSparklineHistory(hovered.ticker, hovered.price) : null),
+    [hovered]
+  );
+
   return (
-    <div className="flex flex-col gap-3">
+    <div ref={containerRef} className="flex w-full flex-col gap-3">
       <div
-        className="relative select-none"
-        style={{ width, height, maxWidth: "100%" }}
+        className="relative select-none overflow-hidden rounded-lg ring-1 ring-white/10"
+        style={{ width, height, background: CANVAS_BG }}
         role="img"
         aria-label="PSE market map: box size is market cap, color is today's percent change"
       >
         {layout.sectors.map((sector) => (
           <div
             key={sector.sector}
-            className="absolute text-[11px] font-medium text-black/60 dark:text-white/60"
-            style={{ left: sector.x0, top: sector.y0 - 18, width: sector.x1 - sector.x0 }}
+            className="absolute flex items-center overflow-hidden whitespace-nowrap px-2.5 text-xs font-semibold uppercase tracking-wide text-white/80"
+            style={{
+              left: sector.x0,
+              top: sector.y0,
+              width: sector.x1 - sector.x0,
+              height: SECTOR_HEADER_HEIGHT,
+              background: HEADER_BG,
+              borderBottom: `1px solid ${GRID_LINE}`,
+            }}
           >
             {sector.sector}
           </div>
@@ -71,16 +110,18 @@ export function TreemapChart({ stocks, width = 1000, height = 600 }: TreemapChar
         {layout.stocks.map((box) => {
           const w = box.x1 - box.x0;
           const h = box.y1 - box.y0;
-          const fill = pctChangeToColor(box.pctChange, colorMode);
+          const fill = pctChangeToColor(box.pctChange);
           const ink = getContrastText(fill);
           const showLabel = shouldShowLabel(w, h);
           const stock = byTicker.get(box.ticker);
+          const isHovered = hovered?.ticker === box.ticker;
+          const fontSize = tickerFontSize(w, h);
 
           return (
             <button
               key={box.ticker}
               type="button"
-              className="absolute flex flex-col items-center justify-center overflow-hidden border border-black/5 text-center transition-[filter] hover:brightness-95"
+              className="absolute flex flex-col items-center justify-center overflow-hidden text-center transition-[filter,box-shadow] duration-100 hover:z-10 hover:brightness-125"
               style={{
                 left: box.x0,
                 top: box.y0,
@@ -88,19 +129,22 @@ export function TreemapChart({ stocks, width = 1000, height = 600 }: TreemapChar
                 height: h,
                 backgroundColor: fill,
                 color: ink,
+                border: `1px solid ${GRID_LINE}`,
+                boxShadow: isHovered ? "inset 0 0 0 2px rgba(255,255,255,0.85)" : undefined,
               }}
               onMouseEnter={() => stock && setHovered(stock)}
               onMouseLeave={() => setHovered(null)}
               onFocus={() => stock && setHovered(stock)}
               onBlur={() => setHovered(null)}
-              title={`${box.ticker} ${box.pctChange >= 0 ? "+" : ""}${box.pctChange.toFixed(2)}%`}
+              title={`${box.ticker} ${formatPctChange(box.pctChange)}`}
             >
               {showLabel && (
                 <>
-                  <span className="text-xs font-semibold leading-tight">{box.ticker}</span>
-                  <span className="text-[10px] leading-tight">
-                    {box.pctChange >= 0 ? "+" : ""}
-                    {box.pctChange.toFixed(2)}%
+                  <span className="font-bold leading-tight tracking-tight" style={{ fontSize }}>
+                    {box.ticker}
+                  </span>
+                  <span className="leading-tight opacity-90" style={{ fontSize: Math.max(10, fontSize * 0.52) }}>
+                    {formatPctChange(box.pctChange)}
                   </span>
                 </>
               )}
@@ -109,34 +153,80 @@ export function TreemapChart({ stocks, width = 1000, height = 600 }: TreemapChar
         })}
 
         {hovered && (
-          <div className="pointer-events-none absolute bottom-2 left-2 rounded-md border border-black/10 bg-white/95 px-3 py-2 text-xs shadow-sm dark:border-white/10 dark:bg-black/90">
-            <div className="font-semibold">
-              {hovered.ticker} &middot; {hovered.companyName}
+          <div className="pointer-events-none absolute bottom-3 left-3 min-w-[190px] rounded-lg border border-white/15 bg-[#12141a]/95 px-3.5 py-3 text-xs text-white shadow-2xl backdrop-blur-sm">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-sm font-bold tracking-tight">{hovered.ticker}</span>
+              <span
+                className={`text-sm font-semibold ${
+                  hovered.pctChange == null
+                    ? "text-white/50"
+                    : hovered.pctChange >= 0
+                      ? "text-[#30cc5a]"
+                      : "text-[#f6362f]"
+                }`}
+              >
+                {formatPctChange(hovered.pctChange)}
+              </span>
             </div>
-            <div className="opacity-70">{hovered.sector}</div>
-            <div>
-              ₱{hovered.price.toFixed(2)} ({hovered.pctChange >= 0 ? "+" : ""}
-              {hovered.pctChange.toFixed(2)}%)
+            <div className="mt-0.5 truncate text-white/60">{hovered.companyName}</div>
+            <div className="text-[10px] uppercase tracking-wide text-white/40">{hovered.sector}</div>
+            <div className="mt-1.5 font-semibold">
+              {hovered.price == null
+                ? "N/A"
+                : `${hovered.currency === "USD" ? "$" : "₱"}${hovered.price.toFixed(2)}`}
             </div>
+            {sparkline && (
+              <div className="mt-2 flex items-center gap-1.5 border-t border-white/10 pt-2">
+                <Sparkline closes={sparkline} />
+                <span className="text-[10px] text-white/50">1M</span>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      <div className="flex items-center gap-2 text-[11px] text-black/60 dark:text-white/60">
-        <span>Down</span>
-        <div className="flex h-3 flex-1 max-w-xs overflow-hidden rounded">
-          {LEGEND_STOPS.slice(0, -1).map((stop, i) => (
-            <div
-              key={stop}
-              className="flex-1"
-              style={{
-                background: `linear-gradient(to right, ${pctChangeToColor(stop, colorMode)}, ${pctChangeToColor(LEGEND_STOPS[i + 1], colorMode)})`,
-              }}
-            />
+      <div className="flex flex-col gap-1.5">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-black/40 dark:text-white/40">
+          Day change
+        </span>
+        <div
+          className="h-2.5 w-full max-w-xs rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/10"
+          style={{ background: LEGEND_GRADIENT_CSS }}
+        />
+        <div className="flex w-full max-w-xs justify-between text-[10px] font-medium text-black/60 dark:text-white/60">
+          {LEGEND_TICKS.map((tick) => (
+            <span key={tick}>
+              {tick > 0 ? "+" : ""}
+              {tick}%
+            </span>
           ))}
         </div>
-        <span>Up</span>
       </div>
     </div>
+  );
+}
+
+const SPARKLINE_WIDTH = 110;
+const SPARKLINE_HEIGHT = 34;
+
+function Sparkline({ closes }: { closes: number[] }) {
+  const min = Math.min(...closes);
+  const max = Math.max(...closes);
+  const range = max - min || 1;
+  const trendsUp = closes[closes.length - 1] >= closes[0];
+  const stroke = trendsUp ? "#30cc5a" : "#f6362f";
+
+  const points = closes
+    .map((close, i) => {
+      const x = (i / (closes.length - 1)) * SPARKLINE_WIDTH;
+      const y = SPARKLINE_HEIGHT - ((close - min) / range) * SPARKLINE_HEIGHT;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  return (
+    <svg width={SPARKLINE_WIDTH} height={SPARKLINE_HEIGHT} className="shrink-0">
+      <polyline points={points} fill="none" stroke={stroke} strokeWidth={1.5} />
+    </svg>
   );
 }
