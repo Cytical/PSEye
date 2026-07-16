@@ -2,7 +2,7 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import { TreemapChart, type TreemapStock } from "./TreemapChart";
-import { MarketMapFooter } from "./MarketMapFooter";
+import { MarketSummaryBar } from "./MarketSummaryBar";
 import { MARKET_MAP_FILTERS, filterMarketMapStocks, type MarketMapFilter } from "@/lib/marketMapFilters";
 import { NASDAQ_100_STOCKS } from "@/lib/nasdaq100";
 import type { CompanyProfile } from "@/lib/companyProfiles";
@@ -68,15 +68,15 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
   }, [stocks]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <nav
-          className="flex shrink-0 gap-2 overflow-x-auto rounded-lg bg-[#12141a] p-2 ring-1 ring-white/10 sm:sticky sm:top-4 sm:w-48 sm:flex-col sm:gap-0.5 sm:self-start sm:overflow-visible"
-          aria-label="Market map filters"
-        >
-          <span className="hidden border-b border-white/10 px-2 pb-2 text-[10px] font-semibold uppercase tracking-wide text-white/35 sm:block">
-            Filters
-          </span>
+    <div className="flex flex-col gap-4 sm:flex-row">
+      <nav
+        className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-lg bg-[#12141a] p-2 ring-1 ring-white/10 sm:sticky sm:top-4 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
+        aria-label="Market map filters"
+      >
+        <span className="hidden border-b border-white/10 px-2 pb-2 text-[10px] font-semibold uppercase tracking-wide text-white/35 sm:block">
+          Filters
+        </span>
+        <div className="flex gap-2 sm:flex-col sm:gap-0.5">
           {MARKET_MAP_FILTERS.map((option) => {
             const isActive = option.key === filter;
             return (
@@ -85,7 +85,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
                 type="button"
                 onClick={() => selectFilter(option.key)}
                 aria-pressed={isActive}
-                className={`group relative flex items-center justify-between gap-3 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-medium transition-colors sm:mt-0.5 ${
+                className={`group relative flex items-center justify-between gap-3 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-[#2b3543] text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-[#30cc5a] before:content-['']"
                     : "text-white/55 hover:bg-[#1c212b] hover:text-white"
@@ -102,14 +102,16 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
               </button>
             );
           })}
-        </nav>
-
-        <div className="min-w-0 flex-1">
-          <TreemapChart stocks={filteredStocks} profileByTicker={profileByTicker} />
         </div>
-      </div>
 
-      <MarketMapFooter snapshot={snapshot} foreignFlow={foreignFlow} />
+        <div className="border-t border-white/10 pt-2">
+          <MarketSummaryBar snapshot={snapshot} foreignFlow={foreignFlow} />
+        </div>
+      </nav>
+
+      <div className="min-w-0 flex-1">
+        <TreemapChart stocks={filteredStocks} profileByTicker={profileByTicker} />
+      </div>
     </div>
   );
 }

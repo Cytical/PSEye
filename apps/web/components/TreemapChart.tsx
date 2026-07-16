@@ -7,6 +7,9 @@ import {
   getContrastText,
   shouldShowLabel,
   SECTOR_HEADER_HEIGHT,
+  LEGEND_GRADIENT_CSS,
+  LEGEND_TICKS,
+  NO_DATA_COLOR,
   type TreemapInput,
 } from "@pseye/treemap-layout";
 import { generateSparklineHistory } from "@/lib/syntheticSparkline";
@@ -92,7 +95,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
   }, [stocks]);
 
   return (
-    <div ref={containerRef} className="flex w-full flex-col gap-3">
+    <div ref={containerRef} className="flex w-full flex-col items-center gap-3">
       <div
         className="relative select-none overflow-hidden rounded-lg ring-1 ring-white/10"
         style={{ width, height, background: CANVAS_BG }}
@@ -205,6 +208,33 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
           onClose={() => setSelected(null)}
         />
       )}
+
+      <div className="flex w-full max-w-xs flex-col items-center gap-1.5">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-black/40 dark:text-white/40">
+          Day change
+        </span>
+        <div className="w-full">
+          <div
+            className="h-2.5 w-full rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/10"
+            style={{ background: LEGEND_GRADIENT_CSS }}
+          />
+          <div className="flex w-full justify-between text-[10px] font-medium text-black/60 dark:text-white/60">
+            {LEGEND_TICKS.map((tick) => (
+              <span key={tick}>
+                {tick > 0 ? "+" : ""}
+                {tick}%
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] font-medium text-black/40 dark:text-white/40">
+          <span
+            className="h-2.5 w-2.5 rounded-sm ring-1 ring-inset ring-black/10 dark:ring-white/10"
+            style={{ background: NO_DATA_COLOR }}
+          />
+          No trade today
+        </div>
+      </div>
     </div>
   );
 }
