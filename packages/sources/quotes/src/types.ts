@@ -13,8 +13,9 @@ export interface Quote {
   ticker: string;
   companyName: string;
   sector: PseSector;
-  price: number;
-  pctChange: number;
+  /** null when the source has no current trade to report (e.g. suspended, no fill yet today) — render as "N/A", don't coerce to 0. */
+  price: number | null;
+  pctChange: number | null;
   marketCap: number;
 }
 

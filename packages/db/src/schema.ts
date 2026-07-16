@@ -18,9 +18,12 @@ export const dailyQuotes = pgTable(
     ticker: varchar("ticker", { length: 16 }).notNull(),
     companyName: text("company_name").notNull(),
     tradeDate: date("trade_date").notNull(),
-    price: numeric("price", { precision: 12, scale: 4 }).notNull(),
-    pctChange: numeric("pct_change", { precision: 8, scale: 4 }).notNull(),
-    marketCap: bigint("market_cap", { mode: "number" }),
+    // Nullable: PSE Edge reports no price/change for a suspended ticker or one
+    // with no trade yet today — that's an "N/A" in the UI, not a 0.
+    price: numeric("price", { precision: 12, scale: 4 }),
+    pctChange: numeric("pct_change", { precision: 8, scale: 4 }),
+    // numeric, not bigint: PSE Edge reports market cap to the cent (fractional), not as a whole share count.
+    marketCap: numeric("market_cap", { precision: 20, scale: 2 }),
     sector: varchar("sector", { length: 64 }).notNull(),
   },
   (table) => [unique().on(table.ticker, table.tradeDate)]

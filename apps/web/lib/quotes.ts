@@ -20,9 +20,9 @@ export async function getDailyQuotes(): Promise<Quote[]> {
       ticker: r.ticker,
       companyName: r.companyName,
       sector: r.sector as PseSector,
-      price: Number(r.price),
-      pctChange: Number(r.pctChange),
-      marketCap: r.marketCap ?? 0,
+      price: r.price == null ? null : Number(r.price),
+      pctChange: r.pctChange == null ? null : Number(r.pctChange),
+      marketCap: r.marketCap == null ? 0 : Number(r.marketCap),
     }));
   } catch (err) {
     console.error("getDailyQuotes: DB read failed, falling back to mock data", err);

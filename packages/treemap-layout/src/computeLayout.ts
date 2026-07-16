@@ -4,13 +4,14 @@ export interface TreemapInput {
   ticker: string;
   sector: string;
   marketCap: number;
-  pctChange: number;
+  /** null when the source has no current % change to report — render as "N/A", not 0. */
+  pctChange: number | null;
 }
 
 export interface StockRect {
   ticker: string;
   sector: string;
-  pctChange: number;
+  pctChange: number | null;
   marketCap: number;
   x0: number;
   y0: number;
@@ -39,6 +40,9 @@ interface HierarchyDatum {
   value?: number;
   raw?: TreemapInput;
 }
+
+/** Height (px) reserved at the top of each sector block for its header bar. */
+export const SECTOR_HEADER_HEIGHT = 22;
 
 /**
  * Pure layout math shared by the interactive web treemap (hand-rolled, absolute-
@@ -77,9 +81,9 @@ export function computeTreemapLayout(
   const layout = treemap<HierarchyDatum>()
     .tile(treemapSquarify)
     .size([width, height])
-    .paddingOuter(4)
-    .paddingTop(24)
-    .paddingInner(2)
+    .paddingOuter(2)
+    .paddingTop(SECTOR_HEADER_HEIGHT)
+    .paddingInner(1)
     .round(true);
 
   const laidOut = layout(rootNode);

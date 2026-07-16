@@ -40,7 +40,7 @@ export default async function Image() {
           {layout.stocks.map((box) => {
             const w = box.x1 - box.x0;
             const h = box.y1 - box.y0;
-            const fill = pctChangeToColor(box.pctChange, "light");
+            const fill = pctChangeToColor(box.pctChange);
             const ink = getContrastText(fill);
             const showLabel = shouldShowLabel(w, h);
             return (
@@ -71,8 +71,9 @@ export default async function Image() {
                   >
                     <span style={{ fontSize: 13, fontWeight: 600 }}>{box.ticker}</span>
                     <span style={{ fontSize: 11 }}>
-                      {box.pctChange >= 0 ? "+" : ""}
-                      {box.pctChange.toFixed(2)}%
+                      {box.pctChange == null
+                        ? "N/A"
+                        : `${box.pctChange >= 0 ? "+" : ""}${box.pctChange.toFixed(2)}%`}
                     </span>
                   </div>
                 )}

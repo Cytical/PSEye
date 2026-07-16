@@ -1,0 +1,1 @@
+ALTER TABLE "daily_quotes" ALTER COLUMN "market_cap" SET DATA TYPE numeric(20, 2);

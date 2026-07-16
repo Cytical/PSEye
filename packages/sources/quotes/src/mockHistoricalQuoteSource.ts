@@ -18,7 +18,7 @@ export class MockHistoricalQuoteSource implements HistoricalQuoteSource {
 
   async getHistory(ticker: string, fromDate: string): Promise<HistoricalClose[]> {
     const anchor = this.anchorQuotes.find((q) => q.ticker === ticker);
-    if (!anchor) return [];
+    if (!anchor || anchor.price == null) return [];
 
     const dates = businessDaysBetween(fromDate, todayIso());
     if (dates.length === 0) return [];
@@ -54,8 +54,8 @@ function businessDaysBetween(fromIso: string, toIso: string): string[] {
   return days;
 }
 
-/** FNV-1a string hash to a uniform in [0, 1). */
-function hashToUnit(seed: string): number {
+/** FNV-1a string hash to a uniform in [0, 1). Exported for other synthetic-data generators (e.g. the market map's hover sparkline) that need the same deterministic feel without duplicating the hash. */
+export function hashToUnit(seed: string): number {
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) {
     h ^= seed.charCodeAt(i);
@@ -65,7 +65,7 @@ function hashToUnit(seed: string): number {
 }
 
 /** Deterministic approx-standard-normal via Box-Muller over two hash-derived uniforms. */
-function pseudoNormal(seed: string): number {
+export function pseudoNormal(seed: string): number {
   const u1 = Math.max(hashToUnit(seed + ":a"), Number.EPSILON);
   const u2 = hashToUnit(seed + ":b");
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);

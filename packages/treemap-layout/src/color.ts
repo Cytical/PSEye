@@ -1,63 +1,81 @@
-import { scaleDiverging } from "d3-scale";
-import { interpolateLab, piecewise } from "d3-interpolate";
+import { scaleLinear } from "d3-scale";
+import { interpolateRgb } from "d3-interpolate";
 
 /**
- * Diverging pair is finance convention (green=up, red=down), not the
- * dataviz-skill's generic blue/red default — the domain override is
- * deliberate. Poles reuse the skill's status "good"/"critical" steps since
- * day % change is literally a good/bad measure; midpoint is the skill's
- * neutral diverging gray for each surface.
+ * Bright, continuous finviz-style gradient — finviz's map interpolates
+ * smoothly from a near-black flat color out to saturated red/green at the
+ * extremes, rather than a handful of discrete buckets. Clamped at +/-3% so a
+ * handful of outliers don't wash out the color range for everything else.
+ * The market map's canvas is always dark (see TreemapChart.tsx) so this
+ * doesn't need separate light/dark variants.
  */
-const POLE_UP = "#0ca30c";
-const POLE_DOWN = "#d03b3b";
-const MIDPOINT_LIGHT = "#f0efec";
-const MIDPOINT_DARK = "#383835";
+const COLOR_DOMAIN = [-3, -1, 0, 1, 3];
 
-function buildScale(midpoint: string, maxAbsPct: number) {
-  return scaleDiverging<string>()
-    .domain([-maxAbsPct, 0, maxAbsPct])
-    .interpolator(piecewise(interpolateLab, [POLE_DOWN, midpoint, POLE_UP]))
-    .clamp(true);
+const COLOR_RANGE = [
+  "#f6362f", // <= -3% (bright red)
+  "#7a1f27", // -1%
+  "#33363d", // 0% (flat, near-black/gray)
+  "#1a5c34", // +1%
+  "#30cc5a", // >= +3% (bright green)
+];
+
+export const COLOR_DOMAIN_MIN = COLOR_DOMAIN[0];
+export const COLOR_DOMAIN_MAX = COLOR_DOMAIN[COLOR_DOMAIN.length - 1];
+
+const scale = scaleLinear<string>().domain(COLOR_DOMAIN).range(COLOR_RANGE).interpolate(interpolateRgb).clamp(true);
+
+/** Distinct from the near-black "flat" (0%) color so an N/A tile doesn't read as "unchanged." */
+export const NO_DATA_COLOR = "#5b5e66";
+
+export function pctChangeToColor(pctChange: number | null): string {
+  if (pctChange === null) return NO_DATA_COLOR;
+  return scale(pctChange);
 }
-
-const lightScale = buildScale(MIDPOINT_LIGHT, 3);
-const darkScale = buildScale(MIDPOINT_DARK, 3);
-
-export type ColorMode = "light" | "dark";
 
 /**
- * Maps a day % change to a box fill color. Clamped at +/-3% — most PSE large-caps
- * move well under that on a normal day, so a wider clamp (e.g. +/-6%) leaves nearly
- * every box a barely-tinted near-neutral color and only rare outliers show any hue.
+ * CSS gradient reproducing the exact same scale (same domain/range/interpolation
+ * as `scale` above), for rendering the legend as a smooth bar rather than
+ * discrete swatches. Stop positions are the domain values re-projected onto
+ * [0%, 100%].
  */
-export function pctChangeToColor(pctChange: number, mode: ColorMode = "light"): string {
-  return mode === "dark" ? darkScale(pctChange) : lightScale(pctChange);
-}
+export const LEGEND_GRADIENT_CSS = `linear-gradient(to right, ${COLOR_RANGE.map((color, i) => {
+  const pct = ((COLOR_DOMAIN[i] - COLOR_DOMAIN_MIN) / (COLOR_DOMAIN_MAX - COLOR_DOMAIN_MIN)) * 100;
+  return `${color} ${pct}%`;
+}).join(", ")})`;
+
+export const LEGEND_TICKS = [-3, -1.5, 0, 1.5, 3];
 
 function srgbToLinear(channel: number): number {
   const c = channel / 255;
   return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 }
 
-function relativeLuminance(hex: string): number {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
+/** Parses either "#rrggbb" hex or the "rgb(r, g, b)" strings interpolateRgb produces. */
+function parseColor(color: string): [number, number, number] {
+  if (color.startsWith("#")) {
+    return [parseInt(color.slice(1, 3), 16), parseInt(color.slice(3, 5), 16), parseInt(color.slice(5, 7), 16)];
+  }
+  const match = color.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/);
+  return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : [0, 0, 0];
+}
+
+function relativeLuminance(color: string): number {
+  const [r, g, b] = parseColor(color);
   const [lr, lg, lb] = [r, g, b].map(srgbToLinear);
   return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
 }
 
-function contrastRatio(hexA: string, hexB: string): number {
-  const la = relativeLuminance(hexA);
-  const lb = relativeLuminance(hexB);
+function contrastRatio(colorA: string, colorB: string): number {
+  const la = relativeLuminance(colorA);
+  const lb = relativeLuminance(colorB);
   const [lighter, darker] = la > lb ? [la, lb] : [lb, la];
   return (lighter + 0.05) / (darker + 0.05);
 }
 
 /** Picks primary ink or white, whichever clears more contrast against a fill color. */
-export function getContrastText(fillHex: string): "#0b0b0b" | "#ffffff" {
-  const contrastWithInk = contrastRatio(fillHex, "#0b0b0b");
-  const contrastWithWhite = contrastRatio(fillHex, "#ffffff");
+export function getContrastText(fill: string): "#0b0b0b" | "#ffffff" {
+  const contrastWithInk = contrastRatio(fill, "#0b0b0b");
+  const contrastWithWhite = contrastRatio(fill, "#ffffff");
   return contrastWithInk >= contrastWithWhite ? "#0b0b0b" : "#ffffff";
 }
 

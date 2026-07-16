@@ -1,11 +1,12 @@
 import { sql } from "drizzle-orm";
 import { createDb, dailyQuotes } from "@pseye/db";
-import { MockQuoteSource } from "@pseye/source-quotes";
+import { PseEdgeQuoteSource } from "@pseye/source-quotes";
 
 /**
- * Runs once daily after PSE market close (see .github/workflows/quotes-daily.yml).
- * Swap MockQuoteSource for a real QuoteSource implementation once Open Question #1
- * (a legally-sound, full-coverage price feed) is resolved — nothing else here changes.
+ * Runs hourly during PSE trading hours (see .github/workflows/quotes-daily.yml)
+ * and scrapes PSE Edge's public per-company pages — see PseEdgeQuoteSource's
+ * doc comment for the caching/rate-limit reasoning and docs/PLANNING.md for the
+ * legal tradeoffs behind that choice (Open Question #1).
  */
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -14,7 +15,7 @@ async function main() {
   }
 
   const db = createDb(databaseUrl);
-  const source = new MockQuoteSource();
+  const source = new PseEdgeQuoteSource();
   const quotes = await source.getDailyQuotes();
 
   const tradeDate = new Date().toISOString().slice(0, 10);
@@ -23,9 +24,9 @@ async function main() {
     ticker: quote.ticker,
     companyName: quote.companyName,
     tradeDate,
-    price: quote.price.toString(),
-    pctChange: quote.pctChange.toString(),
-    marketCap: quote.marketCap,
+    price: quote.price == null ? null : quote.price.toString(),
+    pctChange: quote.pctChange == null ? null : quote.pctChange.toString(),
+    marketCap: quote.marketCap.toString(),
     sector: quote.sector,
   }));
 
