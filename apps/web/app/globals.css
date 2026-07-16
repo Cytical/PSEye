@@ -10,6 +10,9 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Scoped to the News route — see apps/web/app/news/fonts.ts. */
+  --font-news-serif: var(--font-news-serif);
+  --font-news-sans: var(--font-news-sans);
 }
 
 @media (prefers-color-scheme: dark) {
