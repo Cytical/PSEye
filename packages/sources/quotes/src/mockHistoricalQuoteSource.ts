@@ -34,7 +34,10 @@ export class MockHistoricalQuoteSource implements HistoricalQuoteSource {
     }
 
     const scale = anchor.price / relatives[relatives.length - 1];
-    return dates.map((date, i) => ({ date, close: round2(relatives[i] * scale) }));
+    // Floored at one centavo: a sub-centavo mock price (e.g. a ₱0.012 penny
+    // stock) can otherwise round to an exact 0.00 close, which then divides
+    // by zero in any growth-relative calculation (simulateDca, buildCompositeHistory).
+    return dates.map((date, i) => ({ date, close: Math.max(0.01, round2(relatives[i] * scale)) }));
   }
 }
 

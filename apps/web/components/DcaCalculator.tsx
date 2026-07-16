@@ -1,9 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { MockHistoricalQuoteSource, type Quote } from "@pseye/source-quotes";
+import type { HistoricalClose, Quote } from "@pseye/source-quotes";
 import { buildCompositeHistory, simulateDca, type DcaFrequency, type DcaResult } from "@/lib/dca";
 import { DcaChart } from "./DcaChart";
+
+/**
+ * Fetches /api/history rather than hitting a *Source directly — real
+ * historical data lives server-side in our own DB (see
+ * apps/web/lib/historicalQuotes.ts), populated by a daily ETL job, never
+ * fetched live from PSE Edge per keystroke.
+ */
+async function fetchHistories(tickers: string[], fromDate: string): Promise<Record<string, HistoricalClose[]>> {
+  const res = await fetch(`/api/history?tickers=${encodeURIComponent(tickers.join(","))}&from=${fromDate}`);
+  if (!res.ok) return {};
+  return res.json();
+}
 
 const COMPOSITE_VALUE = "__PSEI_COMPOSITE__";
 
@@ -30,23 +42,20 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
     return quotes.find((q) => q.ticker === ticker)?.companyName ?? ticker;
   }, [ticker, quotes]);
 
-  // Anchored to `quotes` (whatever the page passed in — DB or mock) so the
-  // simulated history's latest close always matches the price shown elsewhere.
-  const historySource = useMemo(() => new MockHistoricalQuoteSource(quotes), [quotes]);
-
   useEffect(() => {
     let cancelled = false;
 
     async function run() {
       setLoading(true);
+      const tickers = ticker === COMPOSITE_VALUE ? quotes.map((q) => q.ticker) : [ticker];
+      const histories = await fetchHistories(tickers, startDate);
+      if (cancelled) return;
+
       const history =
         ticker === COMPOSITE_VALUE
-          ? buildCompositeHistory(
-              await Promise.all(quotes.map((q) => historySource.getHistory(q.ticker, startDate)))
-            )
-          : await historySource.getHistory(ticker, startDate);
+          ? buildCompositeHistory(tickers.map((t) => histories[t] ?? []))
+          : (histories[ticker] ?? []);
 
-      if (cancelled) return;
       setResult(simulateDca(history, { contribution, frequency }));
       setLoading(false);
     }
@@ -55,7 +64,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
     return () => {
       cancelled = true;
     };
-  }, [ticker, startDate, contribution, frequency, quotes, historySource]);
+  }, [ticker, startDate, contribution, frequency, quotes]);
 
   return (
     <div className="flex flex-col gap-6">
