@@ -52,6 +52,19 @@ export const companyProfiles = pgTable("company_profiles", {
   fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull(),
 });
 
+// One row per calendar day, upserted on every hourly ETL run (see
+// etl/jobs/fetch-market-snapshot.ts) — "the day's" PSEi/forex reading, not a
+// full intraday history.
+export const marketSnapshot = pgTable("market_snapshot", {
+  id: serial("id").primaryKey(),
+  snapshotDate: date("snapshot_date").notNull().unique(),
+  pseiValue: numeric("psei_value", { precision: 12, scale: 4 }).notNull(),
+  pseiChange: numeric("psei_change", { precision: 12, scale: 4 }).notNull(),
+  pseiPctChange: numeric("psei_pct_change", { precision: 8, scale: 4 }).notNull(),
+  usdPhpRate: numeric("usd_php_rate", { precision: 10, scale: 4 }).notNull(),
+  capturedAt: timestamp("captured_at", { withTimezone: true }).notNull(),
+});
+
 export const indexForeignFlow = pgTable(
   "index_foreign_flow",
   {
