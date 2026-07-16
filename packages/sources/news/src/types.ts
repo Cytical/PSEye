@@ -2,6 +2,7 @@ export interface NewsItem {
   source: string;
   title: string;
   snippet: string | null;
+  imageUrl: string | null;
   url: string;
   publishedAt: Date;
   tickers: string[];
