@@ -12,6 +12,8 @@ import {
   type TreemapInput,
 } from "@pseye/treemap-layout";
 import { generateSparklineHistory } from "@/lib/syntheticSparkline";
+import type { CompanyNewsItem } from "@/lib/companyNews";
+import { CompanyDetailPanel } from "./CompanyDetailPanel";
 
 export interface TreemapStock extends TreemapInput {
   companyName: string;
@@ -31,6 +33,8 @@ interface TreemapChartProps {
   /** Fixed width in px. Omit to fill the available container width responsively. */
   width?: number;
   height?: number;
+  /** Ticker -> recent news, pre-fetched once server-side (see apps/web/lib/companyNews.ts). */
+  newsByTicker?: Record<string, CompanyNewsItem[]>;
 }
 
 const DEFAULT_HEIGHT = 640;
@@ -56,8 +60,9 @@ function tickerFontSize(width: number, height: number): number {
  * toggle — the point is a self-contained, high-contrast poster of bright
  * saturated colors, not a themed widget.
  */
-export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT }: TreemapChartProps) {
+export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT, newsByTicker }: TreemapChartProps) {
   const [hovered, setHovered] = useState<TreemapStock | null>(null);
+  const [selected, setSelected] = useState<TreemapStock | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [measuredWidth, setMeasuredWidth] = useState(widthProp ?? 1000);
 
@@ -81,6 +86,12 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
     () => (hovered?.price != null ? generateSparklineHistory(hovered.ticker, hovered.price) : null),
     [hovered]
   );
+
+  /** 1-based market-cap rank among the stocks currently shown (respects the active filter) — shown in the detail panel. */
+  const rankByTicker = useMemo(() => {
+    const ranked = [...stocks].sort((a, b) => b.marketCap - a.marketCap);
+    return new Map(ranked.map((s, i) => [s.ticker, i + 1]));
+  }, [stocks]);
 
   return (
     <div ref={containerRef} className="flex w-full flex-col gap-3">
@@ -136,7 +147,8 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
               onMouseLeave={() => setHovered(null)}
               onFocus={() => stock && setHovered(stock)}
               onBlur={() => setHovered(null)}
-              title={`${box.ticker} ${formatPctChange(box.pctChange)}`}
+              onClick={() => stock && setSelected(stock)}
+              title={`${box.ticker} ${formatPctChange(box.pctChange)} — click for details`}
             >
               {showLabel && (
                 <>
@@ -152,7 +164,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
           );
         })}
 
-        {hovered && (
+        {hovered && !selected && (
           <div className="pointer-events-none absolute bottom-3 left-3 min-w-[190px] rounded-lg border border-white/15 bg-[#12141a]/95 px-3.5 py-3 text-xs text-white shadow-2xl backdrop-blur-sm">
             <div className="flex items-baseline justify-between gap-3">
               <span className="text-sm font-bold tracking-tight">{hovered.ticker}</span>
@@ -181,9 +193,20 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
                 <span className="text-[10px] text-white/50">1M</span>
               </div>
             )}
+            <div className="mt-1.5 text-[10px] text-white/35">Click for company info &amp; news</div>
           </div>
         )}
       </div>
+
+      {selected && (
+        <CompanyDetailPanel
+          stock={selected}
+          news={newsByTicker?.[selected.ticker] ?? []}
+          rank={rankByTicker.get(selected.ticker) ?? 1}
+          totalCount={stocks.length}
+          onClose={() => setSelected(null)}
+        />
+      )}
 
       <div className="flex flex-col gap-1.5">
         <span className="text-[10px] font-medium uppercase tracking-wide text-black/40 dark:text-white/40">

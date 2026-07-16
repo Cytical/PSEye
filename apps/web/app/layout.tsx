@@ -44,7 +44,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <header className="border-b border-black/10 dark:border-white/10">
-          <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-3 text-sm">
+          {/* max-w matches page.tsx's widest content container (the market map) so the
+              header never reads as narrower than the page below it. */}
+          <nav className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-3 text-sm">
             <Link href="/" className="mr-1 font-semibold opacity-100">
               PSEye
             </Link>

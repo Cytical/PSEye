@@ -1,16 +1,53 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { TreemapChart, type TreemapStock } from "./TreemapChart";
 import { MARKET_MAP_FILTERS, filterMarketMapStocks, type MarketMapFilter } from "@/lib/marketMapFilters";
 import { NASDAQ_100_STOCKS } from "@/lib/nasdaq100";
+import type { CompanyNewsItem } from "@/lib/companyNews";
 
 interface MarketMapProps {
   stocks: TreemapStock[];
+  /** Ticker -> recent news, pre-fetched once server-side so the click-to-detail panel never waits on a network request. */
+  newsByTicker?: Record<string, CompanyNewsItem[]>;
 }
 
-export function MarketMap({ stocks }: MarketMapProps) {
-  const [filter, setFilter] = useState<MarketMapFilter>("all");
+const FILTER_KEYS = new Set(MARKET_MAP_FILTERS.map((f) => f.key));
+
+/** Fired after history.replaceState so useSyncExternalStore knows to re-read the URL
+ * (replaceState doesn't dispatch popstate on its own). */
+const FILTER_CHANGE_EVENT = "pseye:filterchange";
+
+function subscribeToFilterUrl(callback: () => void) {
+  window.addEventListener(FILTER_CHANGE_EVENT, callback);
+  window.addEventListener("popstate", callback);
+  return () => {
+    window.removeEventListener(FILTER_CHANGE_EVENT, callback);
+    window.removeEventListener("popstate", callback);
+  };
+}
+
+function getFilterFromUrl(): MarketMapFilter {
+  const param = new URLSearchParams(window.location.search).get("filter");
+  return param && FILTER_KEYS.has(param as MarketMapFilter) ? (param as MarketMapFilter) : "all";
+}
+
+/**
+ * Syncs the active filter to the `?filter=` URL param — matches the useColorMode
+ * pattern in TreemapChart.tsx (server snapshot "all" so hydration never mismatches
+ * a client that might land on a deep-linked, non-default filter).
+ */
+export function MarketMap({ stocks, newsByTicker }: MarketMapProps) {
+  const filter = useSyncExternalStore(subscribeToFilterUrl, getFilterFromUrl, (): MarketMapFilter => "all");
+
+  function selectFilter(next: MarketMapFilter) {
+    const url = new URL(window.location.href);
+    if (next === "all") url.searchParams.delete("filter");
+    else url.searchParams.set("filter", next);
+    window.history.replaceState(null, "", url);
+    window.dispatchEvent(new Event(FILTER_CHANGE_EVENT));
+  }
+
   const filteredStocks = useMemo(
     () => (filter === "nasdaq100" ? NASDAQ_100_STOCKS : filterMarketMapStocks(stocks, filter)),
     [stocks, filter]
@@ -31,7 +68,7 @@ export function MarketMap({ stocks }: MarketMapProps) {
             <button
               key={option.key}
               type="button"
-              onClick={() => setFilter(option.key)}
+              onClick={() => selectFilter(option.key)}
               aria-pressed={isActive}
               className={`relative whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
                 isActive
@@ -46,7 +83,7 @@ export function MarketMap({ stocks }: MarketMapProps) {
       </nav>
 
       <div className="min-w-0 flex-1">
-        <TreemapChart stocks={filteredStocks} />
+        <TreemapChart stocks={filteredStocks} newsByTicker={newsByTicker} />
       </div>
     </div>
   );
