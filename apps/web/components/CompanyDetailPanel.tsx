@@ -33,7 +33,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
   const currency = stock.currency ?? "PHP";
   const symbol = currency === "USD" ? "$" : "₱";
   const changeColor =
-    stock.pctChange == null ? "text-white/50" : stock.pctChange >= 0 ? "text-[#30cc5a]" : "text-[#f6362f]";
+    stock.pctChange == null ? "text-panel-fg/50" : stock.pctChange >= 0 ? "text-[#30cc5a]" : "text-[#f6362f]";
 
   return (
     <div
@@ -46,23 +46,23 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
         aria-modal="true"
         aria-labelledby="company-detail-heading"
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-xl bg-[#12141a] text-white ring-1 ring-white/10 shadow-2xl"
+        className="flex max-h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-xl bg-panel text-panel-fg ring-1 ring-panel-border shadow-2xl"
       >
-        <div className="flex items-start justify-between gap-3 border-b border-white/10 p-5">
+        <div className="flex items-start justify-between gap-3 border-b border-panel-border p-5">
           <div>
             <div className="flex items-baseline gap-2">
               <h2 id="company-detail-heading" className="text-lg font-bold tracking-tight">
                 {stock.ticker}
               </h2>
-              <span className="text-[10px] uppercase tracking-wide text-white/40">{stock.sector}</span>
+              <span className="text-[10px] uppercase tracking-wide text-panel-fg/40">{stock.sector}</span>
             </div>
-            <div className="mt-0.5 text-sm text-white/70">{stock.companyName}</div>
+            <div className="mt-0.5 text-sm text-panel-fg/70">{stock.companyName}</div>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="shrink-0 rounded-md p-1 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+            className="shrink-0 rounded-md p-1 text-panel-fg/50 transition-colors hover:bg-panel-raised hover:text-panel-fg"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -83,9 +83,9 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
                   : `${stock.pctChange >= 0 ? "+" : ""}${stock.pctChange.toFixed(2)}% today`}
               </div>
             </div>
-            <div className="text-right text-xs text-white/50">
+            <div className="text-right text-xs text-panel-fg/50">
               <div>Market cap</div>
-              <div className="font-semibold text-white/80">{formatMarketCap(stock.marketCap, currency)}</div>
+              <div className="font-semibold text-panel-fg/80">{formatMarketCap(stock.marketCap, currency)}</div>
               <div className="mt-1">
                 #{rank} of {totalCount} shown
               </div>
@@ -93,19 +93,19 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
           </div>
 
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-white/40">About</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-panel-fg/40">About</div>
             {profile == null ? (
-              <p className="mt-2 text-sm text-white/50">No company description yet for {stock.ticker}.</p>
+              <p className="mt-2 text-sm text-panel-fg/50">No company description yet for {stock.ticker}.</p>
             ) : (
               <>
                 <div className="mt-2 flex flex-col gap-2.5">
                   {profile.description.split("\n\n").map((paragraph, i) => (
-                    <p key={i} className="text-sm leading-snug text-white/80">
+                    <p key={i} className="text-sm leading-snug text-panel-fg/80">
                       {paragraph}
                     </p>
                   ))}
                 </div>
-                <div className="mt-2.5 text-[11px] text-white/40">{profile.source}</div>
+                <div className="mt-2.5 text-[11px] text-panel-fg/40">{profile.source}</div>
               </>
             )}
           </div>

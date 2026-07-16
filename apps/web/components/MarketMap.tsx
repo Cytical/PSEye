@@ -70,10 +70,10 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
   return (
     <div className="flex flex-col gap-4 sm:flex-row">
       <nav
-        className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-lg bg-[#12141a] p-2 ring-1 ring-white/10 sm:sticky sm:top-4 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
+        className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-lg bg-panel p-2 ring-1 ring-panel-border sm:sticky sm:top-4 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
         aria-label="Market map filters"
       >
-        <span className="hidden border-b border-white/10 px-2 pb-2 text-[10px] font-semibold uppercase tracking-wide text-white/35 sm:block">
+        <span className="hidden border-b border-panel-border px-2 pb-2 text-[10px] font-semibold uppercase tracking-wide text-panel-fg/35 sm:block">
           Filters
         </span>
         <div className="flex gap-2 sm:flex-col sm:gap-0.5">
@@ -87,14 +87,14 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
                 aria-pressed={isActive}
                 className={`group relative flex items-center justify-between gap-3 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-[#2b3543] text-white before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-[#30cc5a] before:content-['']"
-                    : "text-white/55 hover:bg-[#1c212b] hover:text-white"
+                    ? "bg-panel-active text-panel-fg before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-[#30cc5a] before:content-['']"
+                    : "text-panel-fg/55 hover:bg-panel-raised hover:text-panel-fg"
                 }`}
               >
                 <span>{option.label}</span>
                 <span
                   className={`text-[11px] tabular-nums transition-colors ${
-                    isActive ? "text-white/50" : "text-white/25 group-hover:text-white/40"
+                    isActive ? "text-panel-fg/50" : "text-panel-fg/25 group-hover:text-panel-fg/40"
                   }`}
                 >
                   {countByFilter[option.key]}
@@ -104,7 +104,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
           })}
         </div>
 
-        <div className="border-t border-white/10 pt-2">
+        <div className="border-t border-panel-border pt-2">
           <MarketSummaryBar snapshot={snapshot} foreignFlow={foreignFlow} />
         </div>
       </nav>

@@ -39,9 +39,12 @@ interface TreemapChartProps {
 }
 
 const DEFAULT_HEIGHT = 640;
-const CANVAS_BG = "#0d0f14";
-const HEADER_BG = "#1c212b";
-const GRID_LINE = "#05060a";
+// CSS custom properties, not JS constants, so the canvas chrome re-themes
+// with the rest of the market map (see --panel-* in globals.css) — box fill
+// colors below stay data-driven (pctChangeToColor) regardless of theme.
+const CANVAS_BG = "var(--panel-canvas)";
+const HEADER_BG = "var(--panel-bg-raised)";
+const GRID_LINE = "var(--panel-grid)";
 
 /**
  * finviz scales ticker text with box size rather than using one fixed size —
@@ -57,9 +60,10 @@ function tickerFontSize(width: number, height: number): number {
 }
 
 /**
- * Canvas is always dark, finviz-style, regardless of the site's light/dark
- * toggle — the point is a self-contained, high-contrast poster of bright
- * saturated colors, not a themed widget.
+ * The canvas chrome (background, sector header bar, grid lines) follows the
+ * active site theme via the --panel-* CSS vars; box fill colors stay a
+ * finviz-style poster of bright, saturated, data-driven colors regardless
+ * of theme, since those encode real information (percent change).
  */
 export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT, profileByTicker }: TreemapChartProps) {
   const [hovered, setHovered] = useState<TreemapStock | null>(null);
@@ -97,7 +101,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
   return (
     <div ref={containerRef} className="flex w-full flex-col items-center gap-3">
       <div
-        className="relative select-none overflow-hidden rounded-lg ring-1 ring-white/10"
+        className="relative select-none overflow-hidden rounded-lg ring-1 ring-panel-border"
         style={{ width, height, background: CANVAS_BG }}
         role="img"
         aria-label="PSE market map: box size is market cap, color is today's percent change"
@@ -105,7 +109,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
         {layout.sectors.map((sector) => (
           <div
             key={sector.sector}
-            className="absolute flex items-center overflow-hidden whitespace-nowrap px-2.5 text-xs font-semibold uppercase tracking-wide text-white/80"
+            className="absolute flex items-center overflow-hidden whitespace-nowrap px-2.5 text-xs font-semibold uppercase tracking-wide text-panel-fg/80"
             style={{
               left: sector.x0,
               top: sector.y0,
@@ -166,13 +170,13 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
         })}
 
         {hovered && !selected && (
-          <div className="pointer-events-none absolute bottom-3 left-3 min-w-[190px] rounded-lg border border-white/15 bg-[#12141a]/95 px-3.5 py-3 text-xs text-white shadow-2xl backdrop-blur-sm">
+          <div className="pointer-events-none absolute bottom-3 left-3 min-w-[190px] rounded-lg border border-panel-border bg-panel/95 px-3.5 py-3 text-xs text-panel-fg shadow-2xl backdrop-blur-sm">
             <div className="flex items-baseline justify-between gap-3">
               <span className="text-sm font-bold tracking-tight">{hovered.ticker}</span>
               <span
                 className={`text-sm font-semibold ${
                   hovered.pctChange == null
-                    ? "text-white/50"
+                    ? "text-panel-fg/50"
                     : hovered.pctChange >= 0
                       ? "text-[#30cc5a]"
                       : "text-[#f6362f]"
@@ -181,20 +185,20 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
                 {formatPctChange(hovered.pctChange)}
               </span>
             </div>
-            <div className="mt-0.5 truncate text-white/60">{hovered.companyName}</div>
-            <div className="text-[10px] uppercase tracking-wide text-white/40">{hovered.sector}</div>
+            <div className="mt-0.5 truncate text-panel-fg/60">{hovered.companyName}</div>
+            <div className="text-[10px] uppercase tracking-wide text-panel-fg/40">{hovered.sector}</div>
             <div className="mt-1.5 font-semibold">
               {hovered.price == null
                 ? "N/A"
                 : `${hovered.currency === "USD" ? "$" : "₱"}${hovered.price.toFixed(2)}`}
             </div>
             {sparkline && (
-              <div className="mt-2 flex items-center gap-1.5 border-t border-white/10 pt-2">
+              <div className="mt-2 flex items-center gap-1.5 border-t border-panel-border pt-2">
                 <Sparkline closes={sparkline} />
-                <span className="text-[10px] text-white/50">1M</span>
+                <span className="text-[10px] text-panel-fg/50">1M</span>
               </div>
             )}
-            <div className="mt-1.5 text-[10px] text-white/35">Click for company info</div>
+            <div className="mt-1.5 text-[10px] text-panel-fg/35">Click for company info</div>
           </div>
         )}
       </div>
