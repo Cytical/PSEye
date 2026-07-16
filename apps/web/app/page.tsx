@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getDailyQuotes } from "@/lib/quotes";
-import { getNewsByTicker } from "@/lib/companyNews";
+import { getCompanyProfiles } from "@/lib/companyProfiles";
 import { MarketMap } from "@/components/MarketMap";
 import { ShareButton } from "@/components/ShareButton";
 
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default async function MarketMapPage() {
-  const [quotes, newsByTicker] = await Promise.all([getDailyQuotes(), getNewsByTicker()]);
+  const [quotes, profileByTicker] = await Promise.all([getDailyQuotes(), getCompanyProfiles()]);
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-8">
@@ -26,7 +26,7 @@ export default async function MarketMapPage() {
         not for trading decisions.
       </p>
       <div className="mt-6">
-        <MarketMap stocks={quotes} newsByTicker={newsByTicker} />
+        <MarketMap stocks={quotes} profileByTicker={profileByTicker} />
       </div>
       <p className="mt-4 text-xs text-black/40 dark:text-white/40">
         Reads from the database, refreshed hourly during PSE trading hours from PSE Edge&apos;s

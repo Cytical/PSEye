@@ -40,6 +40,18 @@ export const newsItems = pgTable("news_items", {
   tickers: text("tickers").array().notNull().default([]),
 });
 
+// Populated by a one-time backfill (etl/jobs/backfill-company-profiles.ts), not
+// a scheduled job — a company's business description (sourced from its PSE
+// Edge / SEC 17-A filing) changes rarely enough that a hand-triggered rerun
+// beats an hourly/daily cadence. See apps/web/lib/companyProfiles.ts.
+export const companyProfiles = pgTable("company_profiles", {
+  id: serial("id").primaryKey(),
+  ticker: varchar("ticker", { length: 16 }).notNull().unique(),
+  description: text("description").notNull(),
+  source: varchar("source", { length: 128 }).notNull(),
+  fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull(),
+});
+
 export const indexForeignFlow = pgTable(
   "index_foreign_flow",
   {

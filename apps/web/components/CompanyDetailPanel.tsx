@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 import type { TreemapStock } from "./TreemapChart";
-import type { CompanyNewsItem } from "@/lib/companyNews";
+import type { CompanyProfile } from "@/lib/companyProfiles";
 
 interface CompanyDetailPanelProps {
   stock: TreemapStock;
-  news: CompanyNewsItem[];
+  profile: CompanyProfile | null;
   /** 1-based position by market cap among the stocks currently shown (respects the active filter). */
   rank: number;
   totalCount: number;
@@ -21,15 +21,7 @@ function formatMarketCap(marketCap: number, currency: "PHP" | "USD"): string {
   return `${symbol}${marketCap.toFixed(0)}`;
 }
 
-function formatRelativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const hours = Math.round(diffMs / 3_600_000);
-  if (hours < 1) return "just now";
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.round(hours / 24)}d ago`;
-}
-
-export function CompanyDetailPanel({ stock, news, rank, totalCount, onClose }: CompanyDetailPanelProps) {
+export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }: CompanyDetailPanelProps) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -101,27 +93,20 @@ export function CompanyDetailPanel({ stock, news, rank, totalCount, onClose }: C
           </div>
 
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-white/40">Recent news</div>
-            {news.length === 0 ? (
-              <p className="mt-2 text-sm text-white/50">No recent news for {stock.ticker}.</p>
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-white/40">About</div>
+            {profile == null ? (
+              <p className="mt-2 text-sm text-white/50">No company description yet for {stock.ticker}.</p>
             ) : (
-              <ul className="mt-2 flex flex-col gap-3">
-                {news.map((item) => (
-                  <li key={item.url}>
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-sm font-medium leading-snug text-white/90 hover:underline"
-                    >
-                      {item.title}
-                    </a>
-                    <div className="mt-0.5 text-[11px] text-white/40">
-                      {item.source} · {formatRelativeTime(item.publishedAt)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <div className="mt-2 flex flex-col gap-2.5">
+                  {profile.description.split("\n\n").map((paragraph, i) => (
+                    <p key={i} className="text-sm leading-snug text-white/80">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+                <div className="mt-2.5 text-[11px] text-white/40">{profile.source}</div>
+              </>
             )}
           </div>
         </div>
