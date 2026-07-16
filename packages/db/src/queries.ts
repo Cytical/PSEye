@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import type { Db } from "./client";
-import { dailyQuotes, companyProfiles } from "./schema";
+import { dailyQuotes, companyProfiles, marketSnapshot, indexForeignFlow } from "./schema";
 
 /** All rows for the most recent trade_date on record, or [] if the table is empty. */
 export async function getLatestDailyQuotes(db: Db) {
@@ -22,4 +22,16 @@ export async function getLatestDailyQuotes(db: Db) {
  */
 export async function getCompanyProfiles(db: Db) {
   return db.select().from(companyProfiles);
+}
+
+/** Today's (or the most recently captured) PSEi/forex snapshot, or undefined if the table is empty. */
+export async function getLatestMarketSnapshot(db: Db) {
+  const [row] = await db.select().from(marketSnapshot).orderBy(desc(marketSnapshot.snapshotDate)).limit(1);
+  return row;
+}
+
+/** The most recent weekly index-level foreign flow period, or undefined if none recorded yet. */
+export async function getLatestIndexForeignFlow(db: Db) {
+  const [row] = await db.select().from(indexForeignFlow).orderBy(desc(indexForeignFlow.periodEnd)).limit(1);
+  return row;
 }

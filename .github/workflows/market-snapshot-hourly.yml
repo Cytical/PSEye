@@ -1,0 +1,24 @@
+name: Fetch market snapshot (hourly)
+
+on:
+  schedule:
+    # Hourly, 9:30am-4:30pm PHT (UTC+8) on weekdays — same cadence as quotes-daily.yml.
+    - cron: "30 1-8 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-market-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-market-snapshot
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
