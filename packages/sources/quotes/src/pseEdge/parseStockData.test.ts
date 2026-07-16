@@ -132,6 +132,50 @@ down&nbsp;
 </table>
 `;
 
+// PSE Edge pads a space before the digit for some rows (verbatim from CBC,
+// cmpy_id=184, at time of writing) — regression fixture for the bug where
+// this padded form silently parsed as null instead of a negative change.
+const DOWN_STOCK_PADDED_HTML = `
+<table class="view">
+<tr>
+  <th>Status</th>
+  <td>Active</td>
+  <th>Market Capitalization</th>
+  <td style="text-align:right;padding-right:1.5em;">
+    123,456,789.00</td>
+</tr>
+</table>
+<table class="view">
+<tr>
+  <th>Last Traded Price</th>
+  <td style="text-align:right;padding-right:1.2em;">
+56.55</td>
+  <th>Open</th>
+  <td style="text-align:right;padding-right:1.2em;">
+57.00</td>
+  <th>Previous Close and Date</th>
+  <td style="text-align:right;padding-right:1.2em;">
+56.70
+    (Jul 15, 2026)
+  </td>
+</tr>
+<tr>
+  <th>Change(% Change)</th>
+  <td style="text-align:right;padding-right:1.2em;">
+down&nbsp;
+   0.65
+  ( 1.15%)
+  </td>
+  <th>High</th>
+  <td style="text-align:right;padding-right:1.2em;">
+56.80</td>
+  <th>P/E Ratio</th>
+  <td style="text-align:right;padding-right:1.2em;">
+</td>
+</tr>
+</table>
+`;
+
 describe("parseStockDataHtml", () => {
   it("parses an actively-traded stock with a positive change", () => {
     expect(parseStockDataHtml(ACTIVE_STOCK_HTML)).toEqual({
@@ -146,6 +190,14 @@ describe("parseStockDataHtml", () => {
       price: 13.44,
       pctChange: -1.75,
       marketCap: 19_641_424_982.4,
+    });
+  });
+
+  it("parses a negative change with PSE Edge's padded-space format", () => {
+    expect(parseStockDataHtml(DOWN_STOCK_PADDED_HTML)).toEqual({
+      price: 56.55,
+      pctChange: -1.15,
+      marketCap: 123_456_789,
     });
   });
 
