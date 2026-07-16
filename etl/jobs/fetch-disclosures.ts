@@ -1,10 +1,9 @@
 import { createDb, disclosures } from "@pseye/db";
-import { MockDisclosureSource } from "@pseye/source-disclosures";
+import { PseEdgeDisclosureSource } from "@pseye/source-disclosures";
 
 /**
  * Runs hourly (see .github/workflows/disclosures-hourly.yml), matching the
- * cadence of the news ETL job. Swap MockDisclosureSource for a real PSE Edge
- * poller once that pipeline exists — nothing else here changes.
+ * cadence of the news ETL job.
  */
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -13,7 +12,7 @@ async function main() {
   }
 
   const db = createDb(databaseUrl);
-  const source = new MockDisclosureSource();
+  const source = new PseEdgeDisclosureSource();
   const items = await source.getRecent();
 
   await db

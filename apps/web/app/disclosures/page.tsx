@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import {
-  MockDisclosureSource,
-  DISCLOSURE_TYPE_LABELS,
-  type Disclosure,
-} from "@pseye/source-disclosures";
+import { DISCLOSURE_TYPE_LABELS, type Disclosure } from "@pseye/source-disclosures";
+import { getDisclosures } from "@/lib/disclosures";
 
 export const revalidate = 3600;
 
@@ -34,8 +31,7 @@ function groupByCompany(items: Disclosure[]): { ticker: string; companyName: str
 }
 
 export default async function DisclosuresPage() {
-  const source = new MockDisclosureSource();
-  const items = await source.getRecent();
+  const items = await getDisclosures();
   const groups = groupByCompany(items);
 
   return (
@@ -74,10 +70,11 @@ export default async function DisclosuresPage() {
         ))}
       </div>
 
-      <p className="mt-6 text-xs text-black/40 dark:text-white/40">
-        Sample data — a real PSE Edge poller has not been wired in yet. Headlines here are
-        illustrative, not actual filings.
-      </p>
+      {groups.length === 0 && (
+        <p className="mt-6 text-sm text-black/50 dark:text-white/50">
+          No disclosures on record yet for the last lookback window.
+        </p>
+      )}
     </div>
   );
 }

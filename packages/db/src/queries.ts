@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import type { Db } from "./client";
-import { dailyQuotes, companyProfiles, marketSnapshot, indexForeignFlow } from "./schema";
+import { dailyQuotes, companyProfiles, marketSnapshot, indexForeignFlow, disclosures } from "./schema";
 
 /** All rows for the most recent trade_date on record, or [] if the table is empty. */
 export async function getLatestDailyQuotes(db: Db) {
@@ -34,4 +34,9 @@ export async function getLatestMarketSnapshot(db: Db) {
 export async function getLatestIndexForeignFlow(db: Db) {
   const [row] = await db.select().from(indexForeignFlow).orderBy(desc(indexForeignFlow.periodEnd)).limit(1);
   return row;
+}
+
+/** Most recent 200 disclosures on record, newest first — plenty for a single-page digest. */
+export async function getRecentDisclosures(db: Db) {
+  return db.select().from(disclosures).orderBy(desc(disclosures.filedAt)).limit(200);
 }
