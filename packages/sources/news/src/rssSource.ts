@@ -2,23 +2,22 @@ import Parser from "rss-parser";
 import type { NewsItem, NewsSource } from "./types";
 import { tagTickers } from "./tickerTagger";
 
-interface MediaFields {
-  mediaThumbnail?: { $?: { url?: string } };
-  mediaContent?: Array<{ $?: { url?: string; medium?: string } }>;
+// Extra fields not in rss-parser's default Item shape, needed to recover a
+// thumbnail image — most PH outlet feeds carry it as media:content (Media
+// RSS) or content:encoded (an inline <img> in the full-content HTML) rather
+// than the plain <enclosure> the base type already covers.
+interface RssImageFields {
+  "media:content"?: { $?: { url?: string } } | Array<{ $?: { url?: string } }>;
+  "content:encoded"?: string;
 }
-
-type FeedItem = Parser.Item & MediaFields;
 
 // Bounds how long a single outlet can block a fetch. Without it, an
 // unreachable feed (see the UNVERIFIED outlets in outlets.ts) hangs on the
 // default socket timeout instead of failing fast enough to stream around.
-const parser: Parser<Record<string, unknown>, FeedItem> = new Parser({
+const parser = new Parser<Record<string, unknown>, RssImageFields>({
   timeout: 8_000,
   customFields: {
-    item: [
-      ["media:thumbnail", "mediaThumbnail"],
-      ["media:content", "mediaContent", { keepArray: true }],
-    ],
+    item: ["media:content", "content:encoded"],
   },
 });
 
@@ -29,25 +28,18 @@ function stripHtmlAndTruncate(input: string | undefined, maxLength = 240): strin
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
 }
 
-/**
- * Feeds surface a thumbnail in different ways: a plain <enclosure>, the Media
- * RSS namespace (media:thumbnail / media:content), or just an <img> buried in
- * the full-content HTML (common on WordPress-based outlet feeds). Try each in
- * order of reliability.
- */
-function extractImageUrl(item: FeedItem): string | null {
-  if (item.enclosure?.url && (!item.enclosure.type || item.enclosure.type.startsWith("image/"))) {
-    return item.enclosure.url;
-  }
+function extractImageUrl(item: Parser.Item & RssImageFields): string | null {
+  if (item.enclosure?.url) return item.enclosure.url;
 
-  const thumbnailUrl = item.mediaThumbnail?.$?.url;
-  if (thumbnailUrl) return thumbnailUrl;
+  const media = item["media:content"];
+  const mediaUrl = Array.isArray(media) ? media[0]?.$?.url : media?.$?.url;
+  if (mediaUrl) return mediaUrl;
 
-  const contentUrl = item.mediaContent?.find((entry) => entry.$?.url)?.$?.url;
-  if (contentUrl) return contentUrl;
-
-  const html = item.content ?? item.contentSnippet;
-  const match = typeof html === "string" ? html.match(/<img[^>]+src=["']([^"']+)["']/i) : null;
+  // Last resort: pull the first <img> out of the full-content HTML, since a
+  // handful of outlets only embed the thumbnail inline rather than as a
+  // distinct feed field.
+  const html = item["content:encoded"] ?? item.content ?? "";
+  const match = /<img[^>]+src="([^"]+)"/i.exec(html);
   return match?.[1] ?? null;
 }
 
@@ -72,8 +64,8 @@ export function createRssSource(name: string, feedUrl: string): NewsSource {
             source: name,
             title: item.title,
             snippet,
-            url: item.link,
             imageUrl: extractImageUrl(item),
+            url: item.link,
             publishedAt,
             tickers: tagTickers(`${item.title} ${snippet ?? ""}`),
           },
