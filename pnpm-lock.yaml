@@ -150,6 +150,13 @@ importers:
         version: 5.9.3
 
   packages/sources/corporate-actions:
+    dependencies:
+      '@pseye/source-quotes':
+        specifier: workspace:*
+        version: link:../quotes
+      cheerio:
+        specifier: ^1.0.0
+        version: 1.2.0
     devDependencies:
       '@pseye/config':
         specifier: workspace:*
@@ -157,6 +164,9 @@ importers:
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.43)(lightningcss@1.32.0)
 
   packages/sources/disclosures:
     dependencies:

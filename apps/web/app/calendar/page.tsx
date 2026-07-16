@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import {
-  MockCorporateActionSource,
   CORPORATE_ACTION_LABELS,
   CORPORATE_ACTION_EXPLAINERS,
   type CorporateAction,
 } from "@pseye/source-corporate-actions";
+import { getCorporateActions } from "@/lib/corporateActions";
 
 export const revalidate = 86400;
 
@@ -23,8 +23,7 @@ function formatDate(iso: string): string {
 }
 
 export default async function CalendarPage() {
-  const source = new MockCorporateActionSource();
-  const actions = await source.getUpcoming();
+  const actions = await getCorporateActions();
   const sorted = [...actions].sort((a, b) => a.exDate.localeCompare(b.exDate));
   const todayIso = new Date().toISOString().slice(0, 10);
 
@@ -42,10 +41,11 @@ export default async function CalendarPage() {
         ))}
       </ul>
 
-      <p className="mt-6 text-xs text-black/40 dark:text-white/40">
-        Sample data — a real PSE Edge disclosure parser has not been wired in yet. Dates and
-        figures here are illustrative, not actual filings.
-      </p>
+      {sorted.length === 0 && (
+        <p className="mt-6 text-sm text-black/50 dark:text-white/50">
+          No corporate actions on record for the current window.
+        </p>
+      )}
     </div>
   );
 }

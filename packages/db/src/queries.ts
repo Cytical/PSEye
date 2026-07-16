@@ -1,6 +1,13 @@
 import { desc, eq } from "drizzle-orm";
 import type { Db } from "./client";
-import { dailyQuotes, companyProfiles, marketSnapshot, indexForeignFlow, disclosures } from "./schema";
+import {
+  dailyQuotes,
+  companyProfiles,
+  marketSnapshot,
+  indexForeignFlow,
+  disclosures,
+  corporateActions,
+} from "./schema";
 
 /** All rows for the most recent trade_date on record, or [] if the table is empty. */
 export async function getLatestDailyQuotes(db: Db) {
@@ -39,4 +46,9 @@ export async function getLatestIndexForeignFlow(db: Db) {
 /** Most recent 200 disclosures on record, newest first — plenty for a single-page digest. */
 export async function getRecentDisclosures(db: Db) {
   return db.select().from(disclosures).orderBy(desc(disclosures.filedAt)).limit(200);
+}
+
+/** All corporate actions on record, soonest ex-date first — the ETL job already windows this to ~recent/upcoming. */
+export async function getUpcomingCorporateActions(db: Db) {
+  return db.select().from(corporateActions).orderBy(corporateActions.exDate);
 }

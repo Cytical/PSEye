@@ -1,10 +1,8 @@
 import { createDb, corporateActions } from "@pseye/db";
-import { MockCorporateActionSource } from "@pseye/source-corporate-actions";
+import { PseEdgeCorporateActionSource } from "@pseye/source-corporate-actions";
 
 /**
- * Runs daily (see .github/workflows/corporate-actions-daily.yml). Swap
- * MockCorporateActionSource for a real PSE Edge disclosure parser once that
- * pipeline exists — nothing else here changes.
+ * Runs daily (see .github/workflows/corporate-actions-daily.yml).
  */
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -13,7 +11,7 @@ async function main() {
   }
 
   const db = createDb(databaseUrl);
-  const source = new MockCorporateActionSource();
+  const source = new PseEdgeCorporateActionSource();
   const actions = await source.getUpcoming();
 
   await db
