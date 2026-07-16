@@ -15,6 +15,13 @@
       "when": 1784183250525,
       "tag": "0001_shocking_green_goblin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784195178918,
+      "tag": "0002_tiny_switch",
+      "breakpoints": true
     }
   ]
 }

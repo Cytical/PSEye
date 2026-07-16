@@ -12,7 +12,7 @@ import {
   type TreemapInput,
 } from "@pseye/treemap-layout";
 import { generateSparklineHistory } from "@/lib/syntheticSparkline";
-import type { CompanyNewsItem } from "@/lib/companyNews";
+import type { CompanyProfile } from "@/lib/companyProfiles";
 import { CompanyDetailPanel } from "./CompanyDetailPanel";
 
 export interface TreemapStock extends TreemapInput {
@@ -33,8 +33,8 @@ interface TreemapChartProps {
   /** Fixed width in px. Omit to fill the available container width responsively. */
   width?: number;
   height?: number;
-  /** Ticker -> recent news, pre-fetched once server-side (see apps/web/lib/companyNews.ts). */
-  newsByTicker?: Record<string, CompanyNewsItem[]>;
+  /** Ticker -> one-time-fetched company description (see apps/web/lib/companyProfiles.ts). */
+  profileByTicker?: Record<string, CompanyProfile>;
 }
 
 const DEFAULT_HEIGHT = 640;
@@ -60,7 +60,7 @@ function tickerFontSize(width: number, height: number): number {
  * toggle — the point is a self-contained, high-contrast poster of bright
  * saturated colors, not a themed widget.
  */
-export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT, newsByTicker }: TreemapChartProps) {
+export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT, profileByTicker }: TreemapChartProps) {
   const [hovered, setHovered] = useState<TreemapStock | null>(null);
   const [selected, setSelected] = useState<TreemapStock | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -193,7 +193,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
                 <span className="text-[10px] text-white/50">1M</span>
               </div>
             )}
-            <div className="mt-1.5 text-[10px] text-white/35">Click for company info &amp; news</div>
+            <div className="mt-1.5 text-[10px] text-white/35">Click for company info</div>
           </div>
         )}
       </div>
@@ -201,7 +201,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
       {selected && (
         <CompanyDetailPanel
           stock={selected}
-          news={newsByTicker?.[selected.ticker] ?? []}
+          profile={profileByTicker?.[selected.ticker] ?? null}
           rank={rankByTicker.get(selected.ticker) ?? 1}
           totalCount={stocks.length}
           onClose={() => setSelected(null)}

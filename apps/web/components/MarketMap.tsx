@@ -4,12 +4,12 @@ import { useMemo, useSyncExternalStore } from "react";
 import { TreemapChart, type TreemapStock } from "./TreemapChart";
 import { MARKET_MAP_FILTERS, filterMarketMapStocks, type MarketMapFilter } from "@/lib/marketMapFilters";
 import { NASDAQ_100_STOCKS } from "@/lib/nasdaq100";
-import type { CompanyNewsItem } from "@/lib/companyNews";
+import type { CompanyProfile } from "@/lib/companyProfiles";
 
 interface MarketMapProps {
   stocks: TreemapStock[];
-  /** Ticker -> recent news, pre-fetched once server-side so the click-to-detail panel never waits on a network request. */
-  newsByTicker?: Record<string, CompanyNewsItem[]>;
+  /** Ticker -> one-time-fetched company description, pre-fetched once server-side so the click-to-detail panel never waits on a network request. */
+  profileByTicker?: Record<string, CompanyProfile>;
 }
 
 const FILTER_KEYS = new Set(MARKET_MAP_FILTERS.map((f) => f.key));
@@ -37,7 +37,7 @@ function getFilterFromUrl(): MarketMapFilter {
  * pattern in TreemapChart.tsx (server snapshot "all" so hydration never mismatches
  * a client that might land on a deep-linked, non-default filter).
  */
-export function MarketMap({ stocks, newsByTicker }: MarketMapProps) {
+export function MarketMap({ stocks, profileByTicker }: MarketMapProps) {
   const filter = useSyncExternalStore(subscribeToFilterUrl, getFilterFromUrl, (): MarketMapFilter => "all");
 
   function selectFilter(next: MarketMapFilter) {
@@ -83,7 +83,7 @@ export function MarketMap({ stocks, newsByTicker }: MarketMapProps) {
       </nav>
 
       <div className="min-w-0 flex-1">
-        <TreemapChart stocks={filteredStocks} newsByTicker={newsByTicker} />
+        <TreemapChart stocks={filteredStocks} profileByTicker={profileByTicker} />
       </div>
     </div>
   );

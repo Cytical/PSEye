@@ -5,3 +5,4 @@ export * from "./pseiConstituents";
 export * from "./pseEdge/pseEdgeQuoteSource";
 export * from "./pseEdge/pseEdgeCompanyDirectory";
 export * from "./pseEdge/parseStockData";
+export * from "./pseEdge/parseCompanyInfo";
