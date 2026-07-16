@@ -7,7 +7,7 @@ interface MarketSummaryBarProps {
 }
 
 function changeColor(n: number): string {
-  return n >= 0 ? "text-[#0ca30c] dark:text-[#30cc5a]" : "text-[#d03b3b] dark:text-[#f6362f]";
+  return n >= 0 ? "text-[#30cc5a]" : "text-[#f6362f]";
 }
 
 function formatPeso(n: number): string {
@@ -25,23 +25,22 @@ function formatPeriodLabel(periodEnd: string): string {
   });
 }
 
+/** Lives at the bottom of the always-dark filter sidebar (see MarketMap.tsx), so styled to match it rather than the light/dark page theme. */
 export function MarketSummaryBar({ snapshot, foreignFlow }: MarketSummaryBarProps) {
   return (
-    <div className="group relative w-fit cursor-default">
-      <div className="text-[10px] font-semibold uppercase tracking-wide text-black/40 dark:text-white/40">PSEi</div>
-      <div className="flex items-baseline gap-2.5">
-        <span className="text-3xl font-bold tracking-tight tabular-nums">
-          {snapshot.pseiValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </span>
-        <span className={`text-sm font-semibold tabular-nums ${changeColor(snapshot.pseiChange)}`}>
-          {snapshot.pseiChange >= 0 ? "+" : ""}
-          {snapshot.pseiChange.toFixed(2)} ({snapshot.pseiPctChange >= 0 ? "+" : ""}
-          {snapshot.pseiPctChange.toFixed(2)}%)
-        </span>
+    <div className="group relative cursor-default px-3 py-2">
+      <div className="text-[10px] font-semibold uppercase tracking-wide text-white/35">PSEi</div>
+      <div className="mt-1 text-2xl font-bold tracking-tight tabular-nums text-white">
+        {snapshot.pseiValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </div>
+      <div className={`text-xs font-semibold tabular-nums ${changeColor(snapshot.pseiChange)}`}>
+        {snapshot.pseiChange >= 0 ? "+" : ""}
+        {snapshot.pseiChange.toFixed(2)} ({snapshot.pseiPctChange >= 0 ? "+" : ""}
+        {snapshot.pseiPctChange.toFixed(2)}%)
       </div>
 
-      <div className="pointer-events-none absolute left-0 top-full z-10 mt-2 w-max max-w-xs rounded-lg border border-black/10 bg-white px-3 py-2 opacity-0 shadow-lg transition-opacity duration-100 group-hover:opacity-100 dark:border-white/10 dark:bg-[#12141a]">
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-black/40 dark:text-white/40">
+      <div className="pointer-events-none absolute bottom-full left-3 z-10 mb-2 w-max max-w-[220px] rounded-lg border border-white/10 bg-[#1c212b] px-3 py-2 opacity-0 shadow-2xl transition-opacity duration-100 group-hover:opacity-100">
+        <div className="text-[10px] font-semibold uppercase tracking-wide text-white/35">
           Foreign flow, week of {formatPeriodLabel(foreignFlow.periodEnd)}
         </div>
         <div className={`text-sm font-semibold tabular-nums ${changeColor(foreignFlow.netValue)}`}>
