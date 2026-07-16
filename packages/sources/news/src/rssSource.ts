@@ -2,7 +2,10 @@ import Parser from "rss-parser";
 import type { NewsItem, NewsSource } from "./types";
 import { tagTickers } from "./tickerTagger";
 
-const parser = new Parser();
+// Bounds how long a single outlet can block a fetch. Without it, an
+// unreachable feed (see the UNVERIFIED outlets in outlets.ts) hangs on the
+// default socket timeout instead of failing fast enough to stream around.
+const parser = new Parser({ timeout: 8_000 });
 
 function stripHtmlAndTruncate(input: string | undefined, maxLength = 240): string | null {
   if (!input) return null;

@@ -1,5 +1,9 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import { NEWS_SOURCES, type NewsItem } from "@pseye/source-news";
+import type { NewsItem } from "@pseye/source-news";
+import { fetchNewsProgressive } from "@/lib/news";
+import { NewsList } from "@/components/NewsList";
+import { NewsListSkeleton } from "@/components/NewsListSkeleton";
 
 export const revalidate = 3600; // hourly, matches the news ETL cadence
 
@@ -8,20 +12,10 @@ export const metadata: Metadata = {
   description: "PH business news headlines and snippets, auto-tagged by PSE ticker.",
 };
 
-async function fetchAllNews(): Promise<NewsItem[]> {
-  const results = await Promise.allSettled(
-    NEWS_SOURCES.map((source) => source.fetchLatest())
-  );
-
-  const items = results.flatMap((result) =>
-    result.status === "fulfilled" ? result.value : []
-  );
-
-  return items.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
-}
-
-export default async function NewsPage() {
-  const items = await fetchAllNews();
+export default function NewsPage() {
+  // Kicked off here (not awaited) so both tiers fetch in parallel; each
+  // Suspense boundary below awaits only the slice it needs.
+  const { top, rest } = fetchNewsProgressive();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -32,50 +26,33 @@ export default async function NewsPage() {
       </p>
 
       <ul className="mt-6 flex flex-col gap-4">
-        {items.length === 0 && (
-          <li className="text-sm text-black/50 dark:text-white/50">
-            No items fetched yet — outlet feeds may be unreachable from this
-            environment, or none matched. See packages/sources/news/src/outlets.ts.
-          </li>
-        )}
-        {items.map((item) => (
-          <li
-            key={item.url}
-            className="border-b border-black/10 pb-4 dark:border-white/10"
-          >
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium hover:underline"
-            >
-              {item.title}
-            </a>
-            <div className="mt-1 text-xs text-black/50 dark:text-white/50">
-              {item.source} &middot; {item.publishedAt.toLocaleDateString()}
-              {item.tickers.length > 0 && (
-                <>
-                  {" "}
-                  &middot;{" "}
-                  {item.tickers.map((ticker) => (
-                    <span
-                      key={ticker}
-                      className="ml-1 rounded bg-black/5 px-1.5 py-0.5 font-mono text-[10px] dark:bg-white/10"
-                    >
-                      {ticker}
-                    </span>
-                  ))}
-                </>
-              )}
-            </div>
-            {item.snippet && (
-              <p className="mt-1 text-sm text-black/70 dark:text-white/70">
-                {item.snippet}
-              </p>
-            )}
-          </li>
-        ))}
+        <Suspense fallback={<NewsListSkeleton count={8} />}>
+          <TopNews itemsPromise={top} />
+        </Suspense>
+        <Suspense fallback={<NewsListSkeleton count={3} />}>
+          <RestNews itemsPromise={rest} />
+        </Suspense>
       </ul>
     </div>
   );
+}
+
+async function TopNews({ itemsPromise }: { itemsPromise: Promise<NewsItem[]> }) {
+  const items = await itemsPromise;
+
+  if (items.length === 0) {
+    return (
+      <li className="text-sm text-black/50 dark:text-white/50">
+        No items fetched yet — outlet feeds may be unreachable from this
+        environment, or none matched. See packages/sources/news/src/outlets.ts.
+      </li>
+    );
+  }
+
+  return <NewsList items={items} />;
+}
+
+async function RestNews({ itemsPromise }: { itemsPromise: Promise<NewsItem[]> }) {
+  const items = await itemsPromise;
+  return <NewsList items={items} />;
 }
