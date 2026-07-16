@@ -2,7 +2,7 @@ import { LEGEND_GRADIENT_CSS, LEGEND_TICKS, NO_DATA_COLOR } from "@pseye/treemap
 
 export function MarketMapLegend() {
   return (
-    <div className="flex w-full max-w-xs flex-col items-center gap-1.5">
+    <div className="flex w-64 shrink-0 flex-col items-center gap-1.5">
       <span className="text-[10px] font-medium uppercase tracking-wide text-black/40 dark:text-white/40">
         Day change
       </span>
