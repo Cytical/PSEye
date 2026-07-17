@@ -111,8 +111,11 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
   }, [widthProp]);
 
   const width = widthProp ?? measuredWidth;
-  const layout = computeTreemapLayout(stocks, width, height);
-  const byTicker = new Map(stocks.map((s) => [s.ticker, s]));
+  // Recomputing the squarified treemap layout (a d3-hierarchy pass over ~100
+  // boxes) on every hover — the component's most frequent re-render trigger —
+  // was pure waste, since layout only actually depends on stocks/width/height.
+  const layout = useMemo(() => computeTreemapLayout(stocks, width, height), [stocks, width, height]);
+  const byTicker = useMemo(() => new Map(stocks.map((s) => [s.ticker, s])), [stocks]);
   const selected = selectedTicker ? (byTicker.get(selectedTicker) ?? null) : null;
 
   const sparkline = useMemo(
