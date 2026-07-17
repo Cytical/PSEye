@@ -26,6 +26,14 @@ function parseChartDate(raw: string): string | null {
  * chart (see `getDiscData()` in that page's inline script). Only `chartData`
  * (real daily OPEN/HIGH/LOW/CLOSE/VALUE) is used; `tableData` is a parallel
  * feed of disclosure headlines meant to annotate the chart, not price data.
+ *
+ * The endpoint itself repeats roughly one date per month (same CLOSE both
+ * times — confirmed across multiple tickers, not a per-company data
+ * conflict), which without deduping here fails every downstream
+ * `onConflictDoUpdate` insert with "ON CONFLICT DO UPDATE command cannot
+ * affect row a second time" as soon as two same-date rows land in one
+ * batch. Dedupe by date (last write wins, values match anyway) before
+ * returning.
  */
 export function parseChartDataJson(jsonText: string): HistoricalClose[] {
   let body: unknown;
@@ -38,13 +46,15 @@ export function parseChartDataJson(jsonText: string): HistoricalClose[] {
   const points = (body as { chartData?: ChartPoint[] })?.chartData;
   if (!Array.isArray(points)) return [];
 
-  const out: HistoricalClose[] = [];
+  const byDate = new Map<string, number>();
   for (const p of points) {
     const date = parseChartDate(p.CHART_DATE ?? "");
     if (!date || typeof p.CLOSE !== "number" || !Number.isFinite(p.CLOSE)) continue;
-    out.push({ date, close: p.CLOSE });
+    byDate.set(date, p.CLOSE);
   }
-  return out.sort((a, b) => a.date.localeCompare(b.date));
+  return Array.from(byDate, ([date, close]) => ({ date, close })).sort((a, b) =>
+    a.date.localeCompare(b.date)
+  );
 }
 
 /** Pulls `security_id` from stockData.do's own security dropdown (`<option value="…" selected>`). */
