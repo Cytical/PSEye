@@ -11,10 +11,12 @@
     "fetch-disclosures": "tsx jobs/fetch-disclosures.ts",
     "fetch-offerings": "tsx jobs/fetch-offerings.ts",
     "fetch-foreign-flow": "tsx jobs/fetch-foreign-flow.ts",
+    "fetch-historical-quotes": "tsx jobs/fetch-historical-quotes.ts",
     "fetch-market-snapshot": "tsx jobs/fetch-market-snapshot.ts",
     "backfill-company-profiles": "tsx jobs/backfill-company-profiles.ts",
     "migrate-db": "tsx jobs/migrate-db.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@pseye/db": "workspace:*",
@@ -25,11 +27,13 @@
     "@pseye/source-disclosures": "workspace:*",
     "@pseye/source-offerings": "workspace:*",
     "@pseye/source-foreign-flow": "workspace:*",
-    "drizzle-orm": "^0.36.4"
+    "drizzle-orm": "^0.36.4",
+    "pdfjs-dist": "4.0.379"
   },
   "devDependencies": {
     "@pseye/config": "workspace:*",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.8"
   }
 }

@@ -144,3 +144,17 @@ export const corporateActions = pgTable(
   },
   (table) => [unique().on(table.ticker, table.type, table.exDate)]
 );
+
+// Real daily closes from PSE Edge's per-company chart feed (see
+// etl/jobs/fetch-historical-quotes.ts) — backs the DCA calculator's
+// HistoricalQuoteSource instead of MockHistoricalQuoteSource's synthetic walk.
+export const historicalQuotes = pgTable(
+  "historical_quotes",
+  {
+    id: serial("id").primaryKey(),
+    ticker: varchar("ticker", { length: 16 }).notNull(),
+    tradeDate: date("trade_date").notNull(),
+    close: numeric("close", { precision: 12, scale: 4 }).notNull(),
+  },
+  (table) => [unique().on(table.ticker, table.tradeDate)]
+);

@@ -1,0 +1,22 @@
+name: Fetch historical quotes
+
+on:
+  schedule:
+    # ~9pm PHT (UTC+8) daily, after market close settles for the day
+    - cron: "0 13 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-historical-quotes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-historical-quotes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
