@@ -101,6 +101,13 @@ export function computeTreemapLayout(
       (sectorNode) =>
         sectorNode.children?.map((leaf) => {
           const raw = leaf.data.raw!;
+          // A stock whose value is tiny relative to its sector peers can round(true)
+          // down to an exactly-0px-wide or -tall rect — invisible and unclickable,
+          // not just "small." Nudging the far edge out by 1px (a negligible overlap
+          // into a neighboring box at these box sizes) guarantees every stock stays
+          // reachable, regardless of how extreme the market-cap spread is.
+          const x1 = leaf.x1 - leaf.x0 < 1 ? leaf.x0 + 1 : leaf.x1;
+          const y1 = leaf.y1 - leaf.y0 < 1 ? leaf.y0 + 1 : leaf.y1;
           return {
             ticker: raw.ticker,
             sector: raw.sector,
@@ -108,8 +115,8 @@ export function computeTreemapLayout(
             marketCap: raw.marketCap,
             x0: leaf.x0,
             y0: leaf.y0,
-            x1: leaf.x1,
-            y1: leaf.y1,
+            x1,
+            y1,
           };
         }) ?? []
     ) ?? [];
