@@ -34,6 +34,20 @@ describe("parseChartDataJson", () => {
   it("returns an empty array when chartData is missing", () => {
     expect(parseChartDataJson(JSON.stringify({ tableData: [] }))).toEqual([]);
   });
+
+  it("dedupes repeated CHART_DATE entries instead of returning a row per occurrence", () => {
+    const withDuplicateDate = JSON.stringify({
+      chartData: [
+        { CLOSE: 119.0, CHART_DATE: "Jul 01, 2026 00:00:00" },
+        { CLOSE: 119.0, CHART_DATE: "Jul 01, 2026 00:00:00" },
+        { CLOSE: 120.3, CHART_DATE: "Jul 02, 2026 00:00:00" },
+      ],
+    });
+    expect(parseChartDataJson(withDuplicateDate)).toEqual([
+      { date: "2026-07-01", close: 119.0 },
+      { date: "2026-07-02", close: 120.3 },
+    ]);
+  });
 });
 
 describe("parseSecurityId", () => {
