@@ -44,6 +44,12 @@ export async function getLatestIndexForeignFlow(db: Db) {
   return row;
 }
 
+/** The most recent `limit` weekly index-level foreign flow periods, oldest first (for charting). */
+export async function getIndexForeignFlowHistory(db: Db, limit = 12) {
+  const rows = await db.select().from(indexForeignFlow).orderBy(desc(indexForeignFlow.periodEnd)).limit(limit);
+  return rows.reverse();
+}
+
 /** Most recent 200 disclosures on record, newest first — plenty for a single-page digest. */
 export async function getRecentDisclosures(db: Db) {
   return db.select().from(disclosures).orderBy(desc(disclosures.filedAt)).limit(200);

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { MockForeignFlowSource, type IndexForeignFlow, type StockForeignFlow } from "@pseye/source-foreign-flow";
+import type { IndexForeignFlow, StockForeignFlow } from "@pseye/source-foreign-flow";
 import { ForeignFlowChart } from "@/components/ForeignFlowChart";
+import { getForeignFlowPageData } from "@/lib/foreignFlow";
 
 export const revalidate = 86400;
 
@@ -17,11 +18,7 @@ function formatPeso(n: number): string {
 }
 
 export default async function ForeignFlowPage() {
-  const source = new MockForeignFlowSource();
-  const [indexFlow, { periodEnd, topBuying, topSelling }] = await Promise.all([
-    source.getIndexFlow(),
-    source.getTopStockFlows(),
-  ]);
+  const { indexFlow, periodEnd, topBuying, topSelling } = await getForeignFlowPageData();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -58,8 +55,10 @@ export default async function ForeignFlowPage() {
       </div>
 
       <p className="mt-6 text-xs text-black/40 dark:text-white/40">
-        Sample data — a real PDF-table-extraction pipeline for PSE&apos;s Market Watch report
-        has not been wired in yet. Figures here are illustrative, not actual flows.
+        Per-stock rankings above are sample data — PSE&apos;s full per-stock foreign-buying/
+        selling breakdown isn&apos;t in any freely-published report we&apos;ve found (only a
+        cover-page preview of the Monthly Report is public). Figures here are illustrative,
+        not actual flows.
       </p>
     </div>
   );
