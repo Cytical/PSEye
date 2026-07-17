@@ -49,6 +49,12 @@ export default async function OfferingsPage() {
         context for deciding whether to participate.
       </p>
 
+      {sorted.length === 0 && (
+        <p className="mt-6 text-sm text-black/50 dark:text-white/50">
+          No upcoming offerings on record right now.
+        </p>
+      )}
+
       <div className="mt-6 flex flex-col gap-4">
         {sorted.map((offering) => {
           const isOpen = todayIso >= offering.subscriptionStart && todayIso <= offering.subscriptionEnd;
