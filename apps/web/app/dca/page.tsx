@@ -23,11 +23,6 @@ export default async function DcaPage() {
       <div className="mt-6">
         <DcaCalculator quotes={quotes} />
       </div>
-
-      <p className="mt-6 text-xs text-black/40 dark:text-white/40">
-        Price history is sample data — a real EOD price history feed has not been wired in yet
-        (see project plan, Open Question #1). Results are illustrative, not historical fact.
-      </p>
     </div>
   );
 }
