@@ -20,11 +20,17 @@ export interface HistoricalQuotesResult {
  * Called only from apps/web/app/api/history/route.ts — never directly from
  * client code, since this (like every *Source here) does real HTTP/DB work
  * that has no place running in a visitor's browser.
+ *
+ * `getCurrentQuotes` is a lazy loader, not a plain `Quote[]`, so the (already
+ * DB-backed) daily-quotes read it anchors the mock fallback to only actually
+ * runs when that fallback is taken — the common case, once the DB is
+ * populated, is every requested ticker resolving from historical_quotes
+ * directly, which needs no quotes at all.
  */
 export async function getHistoricalQuotes(
   tickers: string[],
   fromDate: string,
-  currentQuotes: Quote[]
+  getCurrentQuotes: () => Promise<Quote[]>
 ): Promise<HistoricalQuotesResult> {
   const databaseUrl = process.env.DATABASE_URL;
   if (databaseUrl) {
@@ -41,7 +47,7 @@ export async function getHistoricalQuotes(
     }
   }
 
-  const mockSource = new MockHistoricalQuoteSource(currentQuotes);
+  const mockSource = new MockHistoricalQuoteSource(await getCurrentQuotes());
   const entries = await Promise.all(
     tickers.map(async (t) => [t, await mockSource.getHistory(t, fromDate)] as const)
   );

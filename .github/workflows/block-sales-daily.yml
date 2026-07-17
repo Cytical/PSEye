@@ -2,9 +2,9 @@ name: Fetch block sales
 
 on:
   schedule:
-    # 9am UTC on the 1st of each month — PSE's Monthly Report is published
-    # a few business days after month-end, so this may need manual re-runs.
-    - cron: "0 9 1 * *"
+    # ~9:30pm PHT (UTC+8) daily, after PSE publishes its Daily Quotation
+    # Report (the EOD report block sales are extracted from) for the day.
+    - cron: "30 13 * * *"
   workflow_dispatch: {}
 
 jobs:

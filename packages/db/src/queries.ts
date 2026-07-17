@@ -8,6 +8,8 @@ import {
   disclosures,
   corporateActions,
   historicalQuotes,
+  blockSales,
+  newsItems,
 } from "./schema";
 
 /** All rows for the most recent trade_date on record, or [] if the table is empty. */
@@ -72,6 +74,33 @@ export async function getUpcomingCorporateActions(db: Db) {
     .from(corporateActions)
     .where(gte(corporateActions.exDate, cutoffIso))
     .orderBy(corporateActions.exDate);
+}
+
+/**
+ * Block sale trades from the last 30 days on record, largest trade value
+ * first — same cutoff-window shape as getUpcomingCorporateActions, so a
+ * years-old megatrade doesn't permanently pin itself to the top of a page
+ * framed as "recent" activity.
+ */
+export async function getRecentBlockSales(db: Db) {
+  const cutoff = new Date();
+  cutoff.setUTCDate(cutoff.getUTCDate() - 30);
+  const cutoffIso = cutoff.toISOString().slice(0, 10);
+
+  return db
+    .select()
+    .from(blockSales)
+    .where(gte(blockSales.tradeDate, cutoffIso))
+    .orderBy(desc(blockSales.value));
+}
+
+/**
+ * Most recent `limit` news items, newest first — generous enough for the
+ * news page's own front-page/more-headlines ranking and slicing to work
+ * with (see apps/web/lib/news.ts), not meant to be shown in full.
+ */
+export async function getRecentNews(db: Db, limit = 80) {
+  return db.select().from(newsItems).orderBy(desc(newsItems.publishedAt)).limit(limit);
 }
 
 /** Daily closes for the given tickers from `fromDate` through the most recent one on record, ascending. */
