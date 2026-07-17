@@ -52,9 +52,16 @@ function parseNumber(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** Parses PSE Edge's "up 2.40 (1.94%)" / "down 0.24 (1.75%)" format into a signed percent. */
+/**
+ * Parses PSE Edge's "up 2.40 (1.94%)" / "down 0.24 (1.75%)" format into a
+ * signed percent. PSE Edge inconsistently pads a space before the digit for
+ * some rows — e.g. "down 0.65 ( 1.15%)" — so the whitespace after "(" must be
+ * optional, not just the whitespace around "up"/"down". Missing this caused
+ * every "down" row with the padded form to silently parse as null (N/A)
+ * instead of a negative change.
+ */
 function parseSignedPctChange(raw: string): number | null {
-  const match = raw.match(/(up|down)[\s\S]*?\(([\d.]+)%\)/i);
+  const match = raw.match(/(up|down)[\s\S]*?\(\s*([\d.]+)%\)/i);
   if (!match) return null;
   const magnitude = Number(match[2]);
   if (!Number.isFinite(magnitude)) return null;
