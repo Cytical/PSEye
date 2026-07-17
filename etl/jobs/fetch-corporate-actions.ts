@@ -1,3 +1,4 @@
+import "../lib/loadEnv";
 import { createDb, corporateActions } from "@pseye/db";
 import { PseEdgeCorporateActionSource } from "@pseye/source-corporate-actions";
 

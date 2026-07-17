@@ -1,3 +1,4 @@
+import "../lib/loadEnv";
 import { createDb, offerings } from "@pseye/db";
 import { MockOfferingSource } from "@pseye/source-offerings";
 

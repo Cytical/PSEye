@@ -1,3 +1,4 @@
+import "../lib/loadEnv";
 import { createDb } from "@pseye/db";
 import { migrate } from "drizzle-orm/neon-http/migrator";
 

@@ -1,3 +1,4 @@
+import "../lib/loadEnv";
 import { createDb, blockSales } from "@pseye/db";
 import { MockBlockSaleSource } from "@pseye/source-block-sales";
 

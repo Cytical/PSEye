@@ -1,3 +1,4 @@
+import "../lib/loadEnv";
 import { sql } from "drizzle-orm";
 import { createDb, indexForeignFlow, stockForeignFlow } from "@pseye/db";
 import { MockForeignFlowSource } from "@pseye/source-foreign-flow";

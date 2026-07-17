@@ -1,3 +1,4 @@
+import "../lib/loadEnv";
 import { sql } from "drizzle-orm";
 import { createDb, marketSnapshot } from "@pseye/db";
 import { parseIndexSummaryHtml } from "@pseye/source-quotes";
