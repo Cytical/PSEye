@@ -1,3 +1,4 @@
+import "../lib/loadEnv";
 import { sql } from "drizzle-orm";
 import { createDb, companyProfiles } from "@pseye/db";
 import { PSE_EDGE_COMPANIES, parseCompanyInfoHtml } from "@pseye/source-quotes";

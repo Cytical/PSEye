@@ -1,3 +1,4 @@
+import "../lib/loadEnv";
 import { createDb, disclosures } from "@pseye/db";
 import { PseEdgeDisclosureSource } from "@pseye/source-disclosures";
 

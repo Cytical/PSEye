@@ -1,3 +1,4 @@
+import "../lib/loadEnv";
 import { sql } from "drizzle-orm";
 import { createDb, historicalQuotes } from "@pseye/db";
 import { PSE_EDGE_COMPANIES, PseEdgeHistoricalQuoteSource } from "@pseye/source-quotes";

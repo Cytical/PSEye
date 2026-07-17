@@ -1,3 +1,4 @@
+import "../lib/loadEnv";
 import { createDb, newsItems } from "@pseye/db";
 import { NEWS_SOURCES } from "@pseye/source-news";
 
