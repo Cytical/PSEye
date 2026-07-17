@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { MockBlockSaleSource } from "@pseye/source-block-sales";
+import { getBlockSales } from "@/lib/blockSales";
 
-export const revalidate = 86400;
+export const revalidate = 86400; // daily; matches the ETL job's cadence
 
 export const metadata: Metadata = {
   title: "Block Sales",
-  description: "Large negotiated trades from PSE's Monthly Report, sorted by value.",
+  description: "Large negotiated trades from PSE's Daily Quotation Report, sorted by value.",
 };
 
 function formatDate(iso: string): string {
@@ -21,16 +21,15 @@ function formatPeso(n: number): string {
 }
 
 export default async function BlockSalesPage() {
-  const source = new MockBlockSaleSource();
-  const trades = await source.getLatest();
+  const { source, trades } = await getBlockSales();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-xl font-semibold">Block Sales</h1>
       <p className="mt-1 text-sm text-black/60 dark:text-white/60">
         Large negotiated trades (&quot;crosses&quot;) arranged directly between parties and
-        executed outside the normal continuous order book, from PSE&apos;s Monthly Report.
-        Sorted by trade value, largest first.
+        executed outside the normal continuous order book, from PSE&apos;s Daily Quotation
+        Report. Sorted by trade value, largest first, over the last 30 days.
       </p>
 
       {trades.length > 0 ? (
@@ -67,10 +66,12 @@ export default async function BlockSalesPage() {
         <p className="mt-6 text-sm text-black/50 dark:text-white/50">No block sales on record yet.</p>
       )}
 
-      <p className="mt-6 text-xs text-black/40 dark:text-white/40">
-        Sample data — a real PDF-table-extraction pipeline for PSE&apos;s Monthly Report has
-        not been wired in yet. Figures here are illustrative, not actual trades.
-      </p>
+      {source === "mock" && (
+        <p className="mt-6 text-xs text-black/40 dark:text-white/40">
+          Sample data — no real block sales are on record yet for the last 30 days. Figures
+          here are illustrative, not actual trades.
+        </p>
+      )}
     </div>
   );
 }

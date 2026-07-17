@@ -23,7 +23,6 @@
     "@pseye/source-quotes": "workspace:*",
     "@pseye/source-news": "workspace:*",
     "@pseye/source-corporate-actions": "workspace:*",
-    "@pseye/source-block-sales": "workspace:*",
     "@pseye/source-disclosures": "workspace:*",
     "@pseye/source-offerings": "workspace:*",
     "@pseye/source-foreign-flow": "workspace:*",

@@ -34,6 +34,10 @@ export const newsItems = pgTable("news_items", {
   source: varchar("source", { length: 64 }).notNull(),
   title: text("title").notNull(),
   snippet: text("snippet"),
+  // Nullable: most outlets' RSS <enclosure>/media tags don't always carry one
+  // (see extractImageUrl in packages/sources/news/src/rssSource.ts) — NewsCard's
+  // Thumbnail already renders nothing when this is null, same as the live-fetch path.
+  imageUrl: text("image_url"),
   url: text("url").notNull().unique(),
   imageUrl: text("image_url"),
   publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),

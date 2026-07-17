@@ -34,6 +34,7 @@ async function main() {
     source: item.source,
     title: item.title,
     snippet: item.snippet,
+    imageUrl: item.imageUrl,
     url: item.url,
     imageUrl: item.imageUrl,
     publishedAt: item.publishedAt,

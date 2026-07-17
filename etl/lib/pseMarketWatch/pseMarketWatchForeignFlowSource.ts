@@ -1,8 +1,16 @@
 import type { IndexForeignFlow } from "@pseye/source-foreign-flow";
+import { fetchWithRetry } from "../fetchWithRetry";
 import { parseMarketWatchPdf } from "./parseMarketWatchPdf";
 
 const USER_AGENT =
   "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching public weekly market report PDFs";
+
+/**
+ * pse.com.ph's WAF 500s a request with no `Accept` header at all, regardless
+ * of User-Agent (confirmed live: identical Chrome UA got 500 without this
+ * header, 200 with it) — every fetch here needs it, not just a realistic UA.
+ */
+const REQUEST_HEADERS = { "User-Agent": USER_AGENT, Accept: "text/html,application/pdf,*/*" };
 
 const REPORT_PAGE_URL = "https://www.pse.com.ph/market-report/";
 
@@ -34,11 +42,8 @@ export class PseMarketWatchForeignFlowSource {
 
   private async findLatestMarketWatchUrl(): Promise<string | null> {
     try {
-      const res = await fetch(REPORT_PAGE_URL, { headers: { "User-Agent": USER_AGENT } });
-      if (!res.ok) {
-        console.error(`PseMarketWatchForeignFlowSource: market-report page returned HTTP ${res.status}`);
-        return null;
-      }
+      const res = await fetchWithRetry(REPORT_PAGE_URL, { headers: REQUEST_HEADERS });
+      if (!res) return null;
       const html = await res.text();
       return latestMarketWatchLink(html);
     } catch (err) {
@@ -49,11 +54,8 @@ export class PseMarketWatchForeignFlowSource {
 
   private async fetchPdf(url: string): Promise<Uint8Array | null> {
     try {
-      const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
-      if (!res.ok) {
-        console.error(`PseMarketWatchForeignFlowSource: PDF fetch returned HTTP ${res.status} for ${url}`);
-        return null;
-      }
+      const res = await fetchWithRetry(url, { headers: REQUEST_HEADERS });
+      if (!res) return null;
       return new Uint8Array(await res.arrayBuffer());
     } catch (err) {
       console.error(`PseMarketWatchForeignFlowSource: PDF fetch failed for ${url}`, err);

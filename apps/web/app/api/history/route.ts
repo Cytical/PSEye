@@ -19,8 +19,7 @@ export async function GET(request: Request) {
   }
 
   const tickers = tickersParam.split(",").filter(Boolean);
-  const quotes = await getDailyQuotes();
-  const result = await getHistoricalQuotes(tickers, fromDate, quotes);
+  const result = await getHistoricalQuotes(tickers, fromDate, getDailyQuotes);
 
   return Response.json(result);
 }
