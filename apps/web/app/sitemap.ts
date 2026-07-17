@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -16,10 +17,21 @@ const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["ch
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  return ROUTES.map((route) => ({
+  const staticEntries = ROUTES.map((route) => ({
     url: `${SITE_URL}${route.path}`,
     lastModified: now,
     changeFrequency: route.changeFrequency,
     priority: route.priority,
   }));
+
+  // One entry per tracked company — see apps/web/app/stocks/[ticker]/page.tsx,
+  // the single biggest indexable-page-count lever in the site (9 routes -> 100+).
+  const stockEntries = PSE_EDGE_COMPANIES.map((company) => ({
+    url: `${SITE_URL}/stocks/${company.ticker}`,
+    lastModified: now,
+    changeFrequency: "hourly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticEntries, ...stockEntries];
 }

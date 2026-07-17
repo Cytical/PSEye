@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { DISCLOSURE_TYPE_LABELS, type Disclosure } from "@pseye/source-disclosures";
 import { getDisclosures } from "@/lib/disclosures";
 
@@ -45,12 +46,12 @@ export default async function DisclosuresPage() {
       <div className="mt-6 flex flex-col gap-6">
         {groups.map((group) => (
           <div key={group.ticker}>
-            <div className="flex items-center gap-2">
+            <Link href={`/stocks/${group.ticker}`} className="flex items-center gap-2 hover:underline">
               <span className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-[10px] dark:bg-white/10">
                 {group.ticker}
               </span>
               <span className="font-medium">{group.companyName}</span>
-            </div>
+            </Link>
             <ul className="mt-2 flex flex-col gap-2 border-l border-black/10 pl-3 dark:border-white/10">
               {group.filings.map((f) => (
                 <li key={f.referenceNo} className="text-sm">

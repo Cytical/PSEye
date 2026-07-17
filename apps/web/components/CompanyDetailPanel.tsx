@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import type { TreemapStock } from "./TreemapChart";
 import type { CompanyProfile } from "@/lib/companyProfiles";
 
@@ -109,6 +110,15 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
               </>
             )}
           </div>
+
+          {currency !== "USD" && (
+            <Link
+              href={`/stocks/${stock.ticker}`}
+              className="text-sm font-medium text-panel-fg/70 hover:text-panel-fg hover:underline"
+            >
+              View full profile →
+            </Link>
+          )}
         </div>
       </div>
     </div>
