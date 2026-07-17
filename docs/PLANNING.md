@@ -217,3 +217,41 @@ Started an unattended, multi-session build-out against the feature backlog above
     source directly. `foreignFlow.ts` and `historicalQuotes.ts` each have a
     non-obvious fallback nuance (independent index/per-stock fallback; all-tickers-
     together fallback) spelled out in their own doc comments and in CLAUDE.md.
+- Ran a full-site review (product/UX, engineering efficiency, growth/virality) via
+  three parallel read-only audits, then worked through the resulting top-priority
+  backlog in another unattended session:
+  - Added `.github/workflows/ci.yml` — this repo has never had a CI gate; every other
+    workflow is schedule-only ETL jobs. Now every push to `master`/PR runs
+    lint+typecheck+test+build.
+  - Made the DCA page's "sample data" disclaimer conditional on whether
+    `getHistoricalQuotes` actually fell back to mock data (it previously claimed
+    sample data unconditionally, even after real PSE Edge history was wired in).
+  - Deep-linked the market map's selected stock via `?ticker=`, mirroring the
+    existing `?filter=` `useSyncExternalStore` pattern — makes "look at this stock"
+    shareable via the existing `ShareButton`.
+  - Investigated making `app/opengraph-image.tsx` vary its share image per
+    `?filter=`/`?ticker=` and deliberately did **not** implement it: that file
+    convention only receives dynamic route `params`, never `searchParams`, so the
+    only way to vary the image per query string is a `generateMetadata` reading
+    `searchParams` — which a real `next build` confirmed flips the whole `/` route
+    from `○ Static, revalidate 1h` to `ƒ Dynamic` (every visit hits a live fetch, not
+    just shared links). Not worth that cost for a cosmetic improvement; revisit via a
+    future `/stocks/[ticker]` page's own `opengraph-image.tsx` instead, which gets
+    `params.ticker` for free. See CLAUDE.md.
+  - Added unit tests for `apps/web/lib/dca.ts` and `packages/treemap-layout`
+    (`computeLayout.ts`/`color.ts`) — both pure, I/O-free, previously untested. Writing
+    the treemap test suite immediately surfaced a real bug: a stock whose market cap
+    is tiny relative to its sector peers could `round(true)` down to an exactly-0px
+    box (invisible, unclickable) — confirmed via a debug run showing `x0: 996, x1:
+    996`. Fixed by nudging any sub-1px leaf rect's far edge out by 1px.
+  - Added `app/error.tsx`/`app/not-found.tsx` (neither existed before) and
+    explanatory empty-state copy to block-sales/offerings/foreign-flow, which
+    previously rendered a bare empty table/list with no data.
+  - Two roadmap items couldn't be done in this session: validating `pnpm db:push`
+    against a real Postgres instance (no `DATABASE_URL` available in this
+    environment) and adding social links to the footer (no real PSEye social handles
+    to link to) — both need the user to supply the missing input.
+  - Full backlog (mid/low priority items not yet started: shared DB-or-mock/
+    paginated-scraper helpers, analytics, outbound `/feed.xml`, `/stocks/[ticker]` SEO
+    pages, search, a no-auth watchlist, and more) is saved as project memory for
+    future sessions to pick up from.
