@@ -12,6 +12,7 @@ Full product/technical planning brief: [`docs/PLANNING.md`](docs/PLANNING.md).
 | Route | What it does |
 |---|---|
 | `/` | PSEi market map — a treemap heatmap sized by market cap, colored by day's % change, grouped by PSE's 6 sectors |
+| `/charts` | Interactive candlestick charts via TradingView's free embed (NASDAQ names only — see "Data sources") |
 | `/news` | PH business news headlines, auto-tagged by PSE ticker |
 | `/calendar` | Dividend & corporate actions calendar (ex-date/record/payment dates, plain-language explainers) |
 | `/block-sales` | Large negotiated "cross" trades from PSE's Monthly Report |
@@ -20,14 +21,17 @@ Full product/technical planning brief: [`docs/PLANNING.md`](docs/PLANNING.md).
 | `/foreign-flow` | Weekly index-level and per-stock net foreign buying/selling |
 | `/dca` | Cost-averaging calculator — simulate DCA into a stock or an equal-weighted market proxy |
 
-Every route above the ETL/DB line currently runs on **fabricated sample data** — see
-"Data sources" below.
+Several features now run on real data scraped from public PSE Edge pages/PDFs; others
+still run on fabricated sample data pending a legally-sound real source — see "Data
+sources" below for exactly which is which.
 
 ## Stack
 
 - **Frontend**: Next.js 16 (App Router) + React 19, Tailwind CSS. Server Components with
   ISR (`export const revalidate`) rather than client-side fetching, except the DCA
-  calculator's interactive simulation (runs client-side, no API route needed).
+  calculator and Charts page's interactive client components. The DCA calculator fetches
+  a real Route Handler (`apps/web/app/api/history/route.ts`) for historical prices rather
+  than running its simulation over purely client-generated data.
 - **Database**: Postgres via [Neon](https://neon.tech) (serverless) + [Drizzle ORM](https://orm.drizzle.team).
 - **ETL**: standalone `tsx` scripts in `etl/`, scheduled via GitHub Actions (see
   `.github/workflows/`) — no long-running server, no app-triggered fetches.
@@ -83,14 +87,28 @@ pnpm typecheck   # tsc --noEmit across all packages
 
 ## Data sources
 
-Every feature above currently ships with a `Mock*Source` — fabricated but realistic
-sample data, clearly disclaimed in the UI — because a legally-sound real feed for that
-feature is still an open question. PSE's published reports (Monthly Report, Market Watch
-PDF) restrict reproduction/redistribution, and true real-time market data is a licensed,
-paid product. This app defaults to delayed/EOD data from publicly accessible sources
-(RSS feeds, and eventually parsed PSE PDF tables) and is designed so a mock source can be
-swapped for a real one without touching any caller. See `docs/PLANNING.md` for the full
-reasoning and open questions.
+Each feature is designed so a `Mock*Source` can be swapped for a real one without
+touching any caller (one small `*Source` interface per feature in `packages/sources/*`).
+Current status per feature:
+
+| Feature | Status | Source |
+|---|---|---|
+| Quotes (market map, DCA anchor price) | Real | PSE Edge per-company "Stock Data" pages |
+| Historical quotes (DCA) | Real | PSE Edge's own price-chart JSON endpoint |
+| News | Real | RSS feeds |
+| Disclosures | Real | PSE Edge's announcements search |
+| Corporate actions (dividends) | Real | PSE Edge's dividends & rights listing |
+| Foreign flow — index-level | Real | PSE's free weekly Market Watch PDF |
+| Foreign flow — per-stock rankings | Sample data | no free public source found (needs the full Monthly Report, which isn't freely published) |
+| Block sales | Sample data | same reason as above |
+| Offerings / IPO tracker | Sample data | the one free feed found is currently empty and lacks the dates this feature needs |
+| Charts (TradingView embed) | Real, but NASDAQ only | TradingView's free widgets refuse PSE-listed symbols (verified) |
+
+PSE's published reports (Monthly Report, Market Watch PDF) restrict reproduction/
+redistribution, and true real-time market data is a licensed, paid product — every real
+source above reads a public page/PDF for delayed/EOD figures, not a licensed feed, and
+none of it re-hosts PSE's documents themselves. See `docs/PLANNING.md`'s execution log
+for the full reasoning, what was investigated for the still-mock features, and why.
 
 ## Non-goals
 

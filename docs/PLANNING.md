@@ -145,3 +145,75 @@ Started an unattended, multi-session build-out against the feature backlog above
 - Cross-checked at the end that all 7 ETL jobs, their `etl/package.json` scripts, their
   GitHub Actions workflows, and their DB schema tables/dedupe keys are mutually
   consistent — no drift found.
+
+### 2026-07-17
+- Added a `/charts` page (backlog wasn't tracking this — user-requested): embeds
+  TradingView's free "Advanced Chart" widget. Discovered by direct testing that
+  **TradingView's free embeddable widgets refuse PSE-listed symbol data** — every PSE
+  ticker and the PSEi index return "This symbol is only available on TradingView" in
+  the widget (confirmed across widget types), even though the identical symbol works
+  fine as a normal tradingview.com page. Scoped the page to a curated NASDAQ ticker
+  list instead of forcing the original PSE-chart intent. See CLAUDE.md for the full
+  finding — don't re-attempt this.
+- Spent the rest of an unattended session converting `Mock*Source` placeholders to
+  real PSE Edge–backed sources wherever a free public source actually exists, following
+  the same "swap behind the interface" pattern as the existing `PseEdgeQuoteSource`:
+  - **Disclosures** (`PseEdgeDisclosureSource`) — PSE Edge's `/announcements/search.ax`
+    (the same endpoint the site's own search button POSTs to). Paginated, ~50 rows/page;
+    rows matched to our roster by `cmpy_id`, not company-name text.
+  - **Corporate actions / dividend calendar** (`PseEdgeCorporateActionSource`) — PSE
+    Edge's `dividends_and_rights_info_list.ax`, Dividends tab (Cash/Stock/Property).
+    Rights tab deliberately skipped: mostly "TBA" placeholder dates, not enough clean
+    data to map yet.
+  - **Historical quotes for the DCA calculator** (`PseEdgeHistoricalQuoteSource`) —
+    real daily OHLC from `/common/DisclosureCht.ax`, the same JSON endpoint PSE Edge's
+    own per-company page uses to draw its price chart. This one needed more than a new
+    source class: the DCA calculator ran entirely client-side before (per the original
+    plan's note that it's "no API route"), and a real source can't be called that way
+    (no CORS to PSE Edge, and it would mean live-scraping per keystroke instead of the
+    batch-job pattern everything else uses). Added `historical_quotes` DB table +
+    migration, a new daily `fetch-historical-quotes` ETL job, and the app's first Route
+    Handler (`app/api/history/route.ts`) for `DcaCalculator.tsx` to call instead.
+    - Found and fixed a real, pre-existing bug while testing the DCA composite ("PSEi
+      proxy") option: `MockHistoricalQuoteSource` could round a very low-priced mock
+      ticker's (ORE, ₱0.012) synthetic close to an exact ₱0.00, which then divided by
+      zero in both `simulateDca` and `buildCompositeHistory` (NaN/Infinity through the
+      whole chart). Floored the synthetic close at ₱0.01.
+  - **Foreign flow, index-level only** (`PseMarketWatchForeignFlowSource`) — PSE's free
+    weekly "Market Watch" PDF (linked from `pse.com.ph/market-report/`) has a clean,
+    real "Weekly Market Statistics" table with Foreign Buying/Selling figures. Needed
+    position-based PDF text extraction (`pdfjs-dist`, text items grouped into rows by
+    y-coordinate / columns by x-coordinate) since the PDF's raw text stream interleaves
+    the table with footer/disclaimer content rather than reading row-by-row — verified
+    against a live report before committing to the approach. This code lives in
+    `etl/lib/pseMarketWatch/`, not `packages/sources/foreign-flow`: `pdfjs-dist`'s
+    module-init side effect (a `DOMMatrix` check) isn't tree-shakeable once re-exported
+    through a shared package barrel, and putting it there broke static generation for
+    every `apps/web` route (silent build warnings) even though `apps/web` never calls
+    that code. Moved it and the warnings disappeared — confirmed with a clean
+    production build. Pinned `pdfjs-dist` to `4.0.379` since newer majors need Node ≥22
+    and this repo's tooling is on Node 20.
+  - **Investigated and explicitly deferred** (no free public source found, don't
+    re-investigate without new information): per-stock top-buying/top-selling foreign
+    flow and block sales both live in PSE's full Monthly Report, which isn't freely
+    published — `pse.com.ph/market-report/` only links a "Preview" (cover page +
+    written review, no data tables) of it, confirmed by fetching and reading that PDF's
+    own table of contents. Offerings/IPO tracker — the one free real feed found
+    (`disclosureData/listing_applicants_list.do`, "Listing Applicants") is currently
+    empty ("no data.") and has no subscription-window dates at all, which the
+    `offerings` schema requires as `NOT NULL`/part of its unique key — wiring it in for
+    real would need a schema change to serve a source that's empty in production
+    anyway, so left as `MockOfferingSource`.
+  - Every real source above was verified two ways: unit tests against a realistic
+    fixture (mirroring exact markup/JSON/PDF-layout pulled from the live site while
+    building the parser, same convention as the original `PseEdgeQuoteSource`), and a
+    live end-to-end smoke test against the actual production PSE/pse.com.ph endpoints
+    before wiring into the ETL job. `pnpm typecheck`, `pnpm --filter @pseye/web lint`,
+    `pnpm test`, and a production build were all clean after each feature; the DCA and
+    foreign-flow pages were also visually checked against a locally running dev server.
+  - New `apps/web/lib/*.ts` DB-or-mock wrappers for each (`disclosures.ts`,
+    `corporateActions.ts`, `foreignFlow.ts`, `historicalQuotes.ts`), following
+    `quotes.ts`'s existing contract — pages call these, never a `Mock*Source`/real
+    source directly. `foreignFlow.ts` and `historicalQuotes.ts` each have a
+    non-obvious fallback nuance (independent index/per-stock fallback; all-tickers-
+    together fallback) spelled out in their own doc comments and in CLAUDE.md.
