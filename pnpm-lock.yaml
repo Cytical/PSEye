@@ -87,9 +87,6 @@ importers:
       '@pseye/db':
         specifier: workspace:*
         version: link:../packages/db
-      '@pseye/source-block-sales':
-        specifier: workspace:*
-        version: link:../packages/sources/block-sales
       '@pseye/source-corporate-actions':
         specifier: workspace:*
         version: link:../packages/sources/corporate-actions
