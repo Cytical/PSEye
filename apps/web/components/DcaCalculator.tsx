@@ -5,17 +5,22 @@ import type { HistoricalClose, Quote } from "@pseye/source-quotes";
 import { buildCompositeHistory, simulateDca, type DcaFrequency, type DcaResult } from "@/lib/dca";
 import { DcaChart } from "./DcaChart";
 
+interface HistoriesResponse {
+  source: "real" | "mock";
+  history: Record<string, HistoricalClose[]>;
+}
+
 /**
  * Fetches /api/history rather than hitting a *Source directly — real
  * historical data lives server-side in our own DB (see
  * apps/web/lib/historicalQuotes.ts), populated by a daily ETL job, never
  * fetched live from PSE Edge per keystroke.
  */
-async function fetchHistories(tickers: string[], fromDate: string): Promise<Record<string, HistoricalClose[]>> {
+async function fetchHistories(tickers: string[], fromDate: string): Promise<HistoriesResponse> {
   const res = await fetch(`/api/history?tickers=${encodeURIComponent(tickers.join(","))}&from=${fromDate}`);
   if (!res.ok) {
     console.error(`/api/history returned HTTP ${res.status}`);
-    return {};
+    return { source: "mock", history: {} };
   }
   return res.json();
 }
@@ -39,6 +44,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
   const [frequency, setFrequency] = useState<DcaFrequency>("monthly");
   const [result, setResult] = useState<DcaResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isSampleData, setIsSampleData] = useState(false);
 
   const selectedLabel = useMemo(() => {
     if (ticker === COMPOSITE_VALUE) return "PSEi (equal-weighted proxy)";
@@ -51,7 +57,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
     async function run() {
       setLoading(true);
       const tickers = ticker === COMPOSITE_VALUE ? quotes.map((q) => q.ticker) : [ticker];
-      const histories = await fetchHistories(tickers, startDate);
+      const { source, history: histories } = await fetchHistories(tickers, startDate);
       if (cancelled) return;
 
       const history =
@@ -59,6 +65,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
           ? buildCompositeHistory(tickers.map((t) => histories[t] ?? []))
           : (histories[ticker] ?? []);
 
+      setIsSampleData(source === "mock");
       setResult(simulateDca(history, { contribution, frequency }));
       setLoading(false);
     }
@@ -142,6 +149,12 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
             <Stat label="Shares/units accumulated" value={result.totalShares.toFixed(2)} />
           </div>
           <DcaChart timeline={result.timeline} />
+          {isSampleData && (
+            <p className="text-xs text-black/40 dark:text-white/40">
+              Price history is sample data for this selection — a real EOD price history feed
+              hasn&apos;t been backfilled for it yet. Results are illustrative, not historical fact.
+            </p>
+          )}
         </div>
       )}
 

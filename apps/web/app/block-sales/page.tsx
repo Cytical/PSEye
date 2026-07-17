@@ -33,35 +33,39 @@ export default async function BlockSalesPage() {
         Sorted by trade value, largest first.
       </p>
 
-      <div className="mt-6 overflow-x-auto">
-        <table className="w-full min-w-[560px] text-sm">
-          <thead>
-            <tr className="border-b border-black/10 text-left text-xs text-black/50 dark:border-white/10 dark:text-white/50">
-              <th className="py-2 pr-4 font-medium">Date</th>
-              <th className="py-2 pr-4 font-medium">Ticker</th>
-              <th className="py-2 pr-4 font-medium">Company</th>
-              <th className="py-2 pr-4 text-right font-medium">Volume</th>
-              <th className="py-2 pr-4 text-right font-medium">Price</th>
-              <th className="py-2 text-right font-medium">Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {trades.map((t) => (
-              <tr
-                key={`${t.ticker}-${t.tradeDate}-${t.volume}`}
-                className="border-b border-black/5 dark:border-white/5"
-              >
-                <td className="py-2 pr-4 text-black/60 dark:text-white/60">{formatDate(t.tradeDate)}</td>
-                <td className="py-2 pr-4 font-mono text-xs">{t.ticker}</td>
-                <td className="py-2 pr-4">{t.companyName}</td>
-                <td className="py-2 pr-4 text-right tabular-nums">{t.volume.toLocaleString("en-PH")}</td>
-                <td className="py-2 pr-4 text-right tabular-nums">₱{t.price.toFixed(2)}</td>
-                <td className="py-2 text-right font-medium tabular-nums">{formatPeso(t.value)}</td>
+      {trades.length > 0 ? (
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
+            <thead>
+              <tr className="border-b border-black/10 text-left text-xs text-black/50 dark:border-white/10 dark:text-white/50">
+                <th className="py-2 pr-4 font-medium">Date</th>
+                <th className="py-2 pr-4 font-medium">Ticker</th>
+                <th className="py-2 pr-4 font-medium">Company</th>
+                <th className="py-2 pr-4 text-right font-medium">Volume</th>
+                <th className="py-2 pr-4 text-right font-medium">Price</th>
+                <th className="py-2 text-right font-medium">Value</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {trades.map((t) => (
+                <tr
+                  key={`${t.ticker}-${t.tradeDate}-${t.volume}`}
+                  className="border-b border-black/5 dark:border-white/5"
+                >
+                  <td className="py-2 pr-4 text-black/60 dark:text-white/60">{formatDate(t.tradeDate)}</td>
+                  <td className="py-2 pr-4 font-mono text-xs">{t.ticker}</td>
+                  <td className="py-2 pr-4">{t.companyName}</td>
+                  <td className="py-2 pr-4 text-right tabular-nums">{t.volume.toLocaleString("en-PH")}</td>
+                  <td className="py-2 pr-4 text-right tabular-nums">₱{t.price.toFixed(2)}</td>
+                  <td className="py-2 text-right font-medium tabular-nums">{formatPeso(t.value)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="mt-6 text-sm text-black/50 dark:text-white/50">No block sales on record yet.</p>
+      )}
 
       <p className="mt-6 text-xs text-black/40 dark:text-white/40">
         Sample data — a real PDF-table-extraction pipeline for PSE&apos;s Monthly Report has

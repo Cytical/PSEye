@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   computeTreemapLayout,
   pctChangeToColor,
@@ -59,6 +59,31 @@ function tickerFontSize(width: number, height: number): number {
   return Math.max(TICKER_FONT_MIN, Math.min(TICKER_FONT_MAX, bySize));
 }
 
+/** Fired after history.replaceState so useSyncExternalStore knows to re-read the URL
+ * (replaceState doesn't dispatch popstate on its own) — same pattern as MarketMap.tsx's filter sync. */
+const TICKER_CHANGE_EVENT = "pseye:tickerchange";
+
+function subscribeToTickerUrl(callback: () => void) {
+  window.addEventListener(TICKER_CHANGE_EVENT, callback);
+  window.addEventListener("popstate", callback);
+  return () => {
+    window.removeEventListener(TICKER_CHANGE_EVENT, callback);
+    window.removeEventListener("popstate", callback);
+  };
+}
+
+function getTickerFromUrl(): string | null {
+  return new URLSearchParams(window.location.search).get("ticker");
+}
+
+function selectTickerInUrl(next: string | null) {
+  const url = new URL(window.location.href);
+  if (next) url.searchParams.set("ticker", next);
+  else url.searchParams.delete("ticker");
+  window.history.replaceState(null, "", url);
+  window.dispatchEvent(new Event(TICKER_CHANGE_EVENT));
+}
+
 /**
  * The canvas chrome (background, sector header bar, grid lines) follows the
  * active site theme via the --panel-* CSS vars; box fill colors stay a
@@ -67,7 +92,9 @@ function tickerFontSize(width: number, height: number): number {
  */
 export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT, profileByTicker }: TreemapChartProps) {
   const [hovered, setHovered] = useState<TreemapStock | null>(null);
-  const [selected, setSelected] = useState<TreemapStock | null>(null);
+  // Synced to the `?ticker=` URL param (server snapshot null so hydration never mismatches
+  // a client that might land on a deep-linked ticker) — makes "look at this stock" shareable.
+  const selectedTicker = useSyncExternalStore(subscribeToTickerUrl, getTickerFromUrl, (): string | null => null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [measuredWidth, setMeasuredWidth] = useState(widthProp ?? 1000);
 
@@ -86,6 +113,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
   const width = widthProp ?? measuredWidth;
   const layout = computeTreemapLayout(stocks, width, height);
   const byTicker = new Map(stocks.map((s) => [s.ticker, s]));
+  const selected = selectedTicker ? (byTicker.get(selectedTicker) ?? null) : null;
 
   const sparkline = useMemo(
     () => (hovered?.price != null ? generateSparklineHistory(hovered.ticker, hovered.price) : null),
@@ -152,7 +180,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
               onMouseLeave={() => setHovered(null)}
               onFocus={() => stock && setHovered(stock)}
               onBlur={() => setHovered(null)}
-              onClick={() => stock && setSelected(stock)}
+              onClick={() => stock && selectTickerInUrl(stock.ticker)}
               title={`${box.ticker} ${formatPctChange(box.pctChange)} — click for details`}
             >
               {showLabel && (
@@ -209,7 +237,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
           profile={profileByTicker?.[selected.ticker] ?? null}
           rank={rankByTicker.get(selected.ticker) ?? 1}
           totalCount={stocks.length}
-          onClose={() => setSelected(null)}
+          onClose={() => selectTickerInUrl(null)}
         />
       )}
 

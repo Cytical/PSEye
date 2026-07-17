@@ -1,6 +1,13 @@
 import { createDb, getHistoricalQuotes as getHistoricalQuotesQuery } from "@pseye/db";
 import { MockHistoricalQuoteSource, type HistoricalClose, type Quote } from "@pseye/source-quotes";
 
+export interface HistoricalQuotesResult {
+  /** Whether `history` is real DB-backed data or the MockHistoricalQuoteSource fallback — lets
+   * callers (the DCA calculator) show a "sample data" caveat only when it's actually true. */
+  source: "real" | "mock";
+  history: Record<string, HistoricalClose[]>;
+}
+
 /**
  * DB-backed when DATABASE_URL is configured and the daily ETL job
  * (etl/jobs/fetch-historical-quotes.ts, PseEdgeHistoricalQuoteSource) has
@@ -18,7 +25,7 @@ export async function getHistoricalQuotes(
   tickers: string[],
   fromDate: string,
   currentQuotes: Quote[]
-): Promise<Record<string, HistoricalClose[]>> {
+): Promise<HistoricalQuotesResult> {
   const databaseUrl = process.env.DATABASE_URL;
   if (databaseUrl) {
     try {
@@ -28,7 +35,7 @@ export async function getHistoricalQuotes(
       for (const r of rows) {
         (byTicker[r.ticker] ??= []).push({ date: r.tradeDate, close: Number(r.close) });
       }
-      if (tickers.every((t) => byTicker[t]?.length)) return byTicker;
+      if (tickers.every((t) => byTicker[t]?.length)) return { source: "real", history: byTicker };
     } catch (err) {
       console.error("getHistoricalQuotes: DB read failed, falling back to mock data", err);
     }
@@ -38,5 +45,5 @@ export async function getHistoricalQuotes(
   const entries = await Promise.all(
     tickers.map(async (t) => [t, await mockSource.getHistory(t, fromDate)] as const)
   );
-  return Object.fromEntries(entries);
+  return { source: "mock", history: Object.fromEntries(entries) };
 }

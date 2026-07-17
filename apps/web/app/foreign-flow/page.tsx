@@ -29,24 +29,30 @@ export default async function ForeignFlowPage() {
       </p>
 
       <div className="mt-6">
-        <ForeignFlowChart periods={indexFlow} />
-        <div className="mt-1 flex items-center gap-4 text-[11px] text-black/60 dark:text-white/60">
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full bg-[#0ca30c]" />
-            Net buying
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full bg-[#d03b3b]" />
-            Net selling
-          </span>
-        </div>
+        {indexFlow.length > 0 ? (
+          <>
+            <ForeignFlowChart periods={indexFlow} />
+            <div className="mt-1 flex items-center gap-4 text-[11px] text-black/60 dark:text-white/60">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-[#0ca30c]" />
+                Net buying
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-[#d03b3b]" />
+                Net selling
+              </span>
+            </div>
 
-        <details className="mt-3 text-sm">
-          <summary className="cursor-pointer text-xs text-black/50 hover:text-black/70 dark:text-white/50 dark:hover:text-white/70">
-            Show as table
-          </summary>
-          <IndexFlowTable periods={indexFlow} />
-        </details>
+            <details className="mt-3 text-sm">
+              <summary className="cursor-pointer text-xs text-black/50 hover:text-black/70 dark:text-white/50 dark:hover:text-white/70">
+                Show as table
+              </summary>
+              <IndexFlowTable periods={indexFlow} />
+            </details>
+          </>
+        ) : (
+          <p className="text-sm text-black/50 dark:text-white/50">No index-level foreign flow on record yet.</p>
+        )}
       </div>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
@@ -117,17 +123,21 @@ function FlowTable({
       <p className="text-[11px] text-black/40 dark:text-white/40">
         Week ending {new Date(periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "UTC" })}
       </p>
-      <ol className="mt-2 flex flex-col gap-1.5 text-sm">
-        {rows.map((r) => (
-          <li key={r.ticker} className="flex items-center justify-between gap-2">
-            <span>
-              <span className="text-black/40 dark:text-white/40">{r.rank}.</span>{" "}
-              <span className="font-mono text-xs">{r.ticker}</span> {r.companyName}
-            </span>
-            <span className={`shrink-0 tabular-nums ${toneClass}`}>{formatPeso(r.netValue)}</span>
-          </li>
-        ))}
-      </ol>
+      {rows.length > 0 ? (
+        <ol className="mt-2 flex flex-col gap-1.5 text-sm">
+          {rows.map((r) => (
+            <li key={r.ticker} className="flex items-center justify-between gap-2">
+              <span>
+                <span className="text-black/40 dark:text-white/40">{r.rank}.</span>{" "}
+                <span className="font-mono text-xs">{r.ticker}</span> {r.companyName}
+              </span>
+              <span className={`shrink-0 tabular-nums ${toneClass}`}>{formatPeso(r.netValue)}</span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="mt-2 text-sm text-black/50 dark:text-white/50">No data for this period.</p>
+      )}
     </div>
   );
 }
