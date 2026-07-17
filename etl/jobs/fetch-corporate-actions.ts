@@ -14,6 +14,11 @@ async function main() {
   const source = new PseEdgeCorporateActionSource();
   const actions = await source.getUpcoming();
 
+  if (actions.length === 0) {
+    console.log("No corporate actions found for this run (or the fetch failed) — nothing to insert.");
+    return;
+  }
+
   await db
     .insert(corporateActions)
     .values(actions)

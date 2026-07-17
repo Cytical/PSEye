@@ -13,7 +13,10 @@ import { DcaChart } from "./DcaChart";
  */
 async function fetchHistories(tickers: string[], fromDate: string): Promise<Record<string, HistoricalClose[]>> {
   const res = await fetch(`/api/history?tickers=${encodeURIComponent(tickers.join(","))}&from=${fromDate}`);
-  if (!res.ok) return {};
+  if (!res.ok) {
+    console.error(`/api/history returned HTTP ${res.status}`);
+    return {};
+  }
   return res.json();
 }
 

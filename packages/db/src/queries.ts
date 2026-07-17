@@ -55,9 +55,23 @@ export async function getRecentDisclosures(db: Db) {
   return db.select().from(disclosures).orderBy(desc(disclosures.filedAt)).limit(200);
 }
 
-/** All corporate actions on record, soonest ex-date first — the ETL job already windows this to ~recent/upcoming. */
+/**
+ * Corporate actions from 30 days ago onward, soonest ex-date first. The ETL
+ * job only ever inserts within its own ~6-month-forward window, but rows
+ * from past runs stay in the table as time passes — without this floor the
+ * calendar would keep accumulating actions from further and further in the
+ * past on every visit.
+ */
 export async function getUpcomingCorporateActions(db: Db) {
-  return db.select().from(corporateActions).orderBy(corporateActions.exDate);
+  const cutoff = new Date();
+  cutoff.setUTCDate(cutoff.getUTCDate() - 30);
+  const cutoffIso = cutoff.toISOString().slice(0, 10);
+
+  return db
+    .select()
+    .from(corporateActions)
+    .where(gte(corporateActions.exDate, cutoffIso))
+    .orderBy(corporateActions.exDate);
 }
 
 /** Daily closes for the given tickers from `fromDate` through the most recent one on record, ascending. */

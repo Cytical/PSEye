@@ -15,6 +15,11 @@ async function main() {
   const source = new PseEdgeDisclosureSource();
   const items = await source.getRecent();
 
+  if (items.length === 0) {
+    console.log("No disclosures found for this run (or the fetch failed) — nothing to insert.");
+    return;
+  }
+
   await db
     .insert(disclosures)
     .values(
