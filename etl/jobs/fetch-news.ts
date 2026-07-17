@@ -36,7 +36,6 @@ async function main() {
     snippet: item.snippet,
     imageUrl: item.imageUrl,
     url: item.url,
-    imageUrl: item.imageUrl,
     publishedAt: item.publishedAt,
     tickers: item.tickers,
   }));

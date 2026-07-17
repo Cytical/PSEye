@@ -39,7 +39,6 @@ export const newsItems = pgTable("news_items", {
   // Thumbnail already renders nothing when this is null, same as the live-fetch path.
   imageUrl: text("image_url"),
   url: text("url").notNull().unique(),
-  imageUrl: text("image_url"),
   publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
   tickers: text("tickers").array().notNull().default([]),
 });
