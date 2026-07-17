@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   CORPORATE_ACTION_LABELS,
   CORPORATE_ACTION_EXPLAINERS,
@@ -54,10 +55,12 @@ function ActionRow({ action, isPast }: { action: CorporateAction; isPast: boolea
   return (
     <li className={`border-b border-black/10 pb-4 dark:border-white/10 ${isPast ? "opacity-50" : ""}`}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-[10px] dark:bg-white/10">
-          {action.ticker}
-        </span>
-        <span className="font-medium">{action.companyName}</span>
+        <Link href={`/stocks/${action.ticker}`} className="flex items-center gap-2 hover:underline">
+          <span className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-[10px] dark:bg-white/10">
+            {action.ticker}
+          </span>
+          <span className="font-medium">{action.companyName}</span>
+        </Link>
         <span className="rounded-full border border-black/15 px-2 py-0.5 text-[10px] dark:border-white/15">
           {CORPORATE_ACTION_LABELS[action.type]}
         </span>

@@ -1,4 +1,8 @@
+import Link from "next/link";
+import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 import type { NewsItem } from "@pseye/source-news";
+
+const TRACKED_TICKERS = new Set(PSE_EDGE_COMPANIES.map((c) => c.ticker));
 
 type Variant = "hero" | "secondary" | "compact";
 
@@ -38,14 +42,24 @@ function Byline({ item, className = "" }: { item: NewsItem; className?: string }
       <span>{item.source}</span>
       <span aria-hidden>&middot;</span>
       <span>{formatTimeAgo(item.publishedAt)}</span>
-      {item.tickers.map((ticker) => (
-        <span
-          key={ticker}
-          className="border border-black/20 px-1 py-px font-mono text-[10px] tracking-normal text-black/60 dark:border-white/25 dark:text-white/60"
-        >
-          {ticker}
-        </span>
-      ))}
+      {item.tickers.map((ticker) =>
+        TRACKED_TICKERS.has(ticker) ? (
+          <Link
+            key={ticker}
+            href={`/stocks/${ticker}`}
+            className="border border-black/20 px-1 py-px font-mono text-[10px] tracking-normal text-black/60 hover:border-black/40 hover:text-black/90 dark:border-white/25 dark:text-white/60 dark:hover:border-white/50 dark:hover:text-white/90"
+          >
+            {ticker}
+          </Link>
+        ) : (
+          <span
+            key={ticker}
+            className="border border-black/20 px-1 py-px font-mono text-[10px] tracking-normal text-black/60 dark:border-white/25 dark:text-white/60"
+          >
+            {ticker}
+          </span>
+        )
+      )}
     </div>
   );
 }

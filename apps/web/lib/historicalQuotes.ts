@@ -17,9 +17,11 @@ export interface HistoricalQuotesResult {
  * inside the same composite/DCA calculation would be misleading, so a
  * partially-backfilled table degrades to fully-mock rather than fully-mixed.
  *
- * Called only from apps/web/app/api/history/route.ts — never directly from
- * client code, since this (like every *Source here) does real HTTP/DB work
- * that has no place running in a visitor's browser.
+ * Called from apps/web/app/api/history/route.ts (the DCA calculator's client
+ * fetch target) and directly from server components like
+ * apps/web/app/stocks/[ticker]/page.tsx — never from client code, since this
+ * (like every *Source here) does real HTTP/DB work that has no place
+ * running in a visitor's browser.
  *
  * `getCurrentQuotes` is a lazy loader, not a plain `Quote[]`, so the (already
  * DB-backed) daily-quotes read it anchors the mock fallback to only actually

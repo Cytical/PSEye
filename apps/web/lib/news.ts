@@ -132,3 +132,26 @@ export function fetchNewsProgressive(): {
 
   return { top, rest };
 }
+
+/**
+ * Recent headlines mentioning a specific ticker, for /stocks/[ticker]'s "In
+ * the news" section — same DB-first-else-live contract as
+ * fetchNewsProgressive, just without the progressive Suspense split, since a
+ * single small section doesn't need it.
+ */
+export async function getNewsForTicker(ticker: string, limit = 5): Promise<NewsItem[]> {
+  const databaseUrl = process.env.DATABASE_URL;
+  const ranked = databaseUrl
+    ? ((await fetchRankedFromDb(databaseUrl)) ?? (await fetchLiveAll()))
+    : await fetchLiveAll();
+
+  return ranked.filter((item) => item.tickers.includes(ticker)).slice(0, limit);
+}
+
+async function fetchLiveAll(): Promise<NewsItem[]> {
+  const [reliable, unverified] = await Promise.all([
+    fetchFrom(RELIABLE_NEWS_SOURCES),
+    fetchFrom(UNVERIFIED_NEWS_SOURCES),
+  ]);
+  return rankByRelevance([...reliable, ...unverified]);
+}

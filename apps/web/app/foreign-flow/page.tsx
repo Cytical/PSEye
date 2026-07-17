@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { IndexForeignFlow, StockForeignFlow } from "@pseye/source-foreign-flow";
 import { ForeignFlowChart } from "@/components/ForeignFlowChart";
 import { getForeignFlowPageData } from "@/lib/foreignFlow";
@@ -127,10 +128,10 @@ function FlowTable({
         <ol className="mt-2 flex flex-col gap-1.5 text-sm">
           {rows.map((r) => (
             <li key={r.ticker} className="flex items-center justify-between gap-2">
-              <span>
+              <Link href={`/stocks/${r.ticker}`} className="hover:underline">
                 <span className="text-black/40 dark:text-white/40">{r.rank}.</span>{" "}
                 <span className="font-mono text-xs">{r.ticker}</span> {r.companyName}
-              </span>
+              </Link>
               <span className={`shrink-0 tabular-nums ${toneClass}`}>{formatPeso(r.netValue)}</span>
             </li>
           ))}

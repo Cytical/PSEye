@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getBlockSales } from "@/lib/blockSales";
 
 export const revalidate = 86400; // daily; matches the ETL job's cadence
@@ -52,8 +53,16 @@ export default async function BlockSalesPage() {
                   className="border-b border-black/5 dark:border-white/5"
                 >
                   <td className="py-2 pr-4 text-black/60 dark:text-white/60">{formatDate(t.tradeDate)}</td>
-                  <td className="py-2 pr-4 font-mono text-xs">{t.ticker}</td>
-                  <td className="py-2 pr-4">{t.companyName}</td>
+                  <td className="py-2 pr-4 font-mono text-xs">
+                    <Link href={`/stocks/${t.ticker}`} className="hover:underline">
+                      {t.ticker}
+                    </Link>
+                  </td>
+                  <td className="py-2 pr-4">
+                    <Link href={`/stocks/${t.ticker}`} className="hover:underline">
+                      {t.companyName}
+                    </Link>
+                  </td>
                   <td className="py-2 pr-4 text-right tabular-nums">{t.volume.toLocaleString("en-PH")}</td>
                   <td className="py-2 pr-4 text-right tabular-nums">₱{t.price.toFixed(2)}</td>
                   <td className="py-2 text-right font-medium tabular-nums">{formatPeso(t.value)}</td>
