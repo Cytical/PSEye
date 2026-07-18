@@ -25,6 +25,9 @@ export const metadata: Metadata = {
     template: "%s | PSEye",
   },
   description: "A free, community-first tracker for the Philippine Stock Exchange.",
+  alternates: {
+    types: { "application/rss+xml": "/feed.xml" },
+  },
   openGraph: {
     siteName: "PSEye",
     type: "website",

@@ -148,6 +148,18 @@ export async function getNewsForTicker(ticker: string, limit = 5): Promise<NewsI
   return ranked.filter((item) => item.tickers.includes(ticker)).slice(0, limit);
 }
 
+/**
+ * Flat, true-reverse-chronological headline list for the RSS feed
+ * (feed.xml/route.ts) — unlike fetchNewsProgressive's relevance-tiered
+ * top/rest split (built for the front page's layout), a feed reader expects
+ * plain newest-first order.
+ */
+export async function getRecentNewsFeed(limit = 30): Promise<NewsItem[]> {
+  const { top, rest } = fetchNewsProgressive();
+  const [topItems, restItems] = await Promise.all([top, rest]);
+  return sortByDate([...topItems, ...restItems]).slice(0, limit);
+}
+
 async function fetchLiveAll(): Promise<NewsItem[]> {
   const [reliable, unverified] = await Promise.all([
     fetchFrom(RELIABLE_NEWS_SOURCES),
