@@ -40,13 +40,25 @@ export const metadata: Metadata = {
 // Site-wide identity markup — no SearchAction claimed here since there's no
 // URL-templated search endpoint to point it at (the ticker search widget is
 // client-side navigation, not a queryable ?q= route); inaccurate structured
-// data is worse than none.
+// data is worse than none. Organization.logo (a PNG, not the SVG — Google's
+// own logo guidelines prefer a raster format) is what lets a knowledge-panel
+// or search result show the PSEye mark rather than a generic globe icon.
 const SITE_JSON_LD = {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "PSEye",
-  url: SITE_URL,
-  description: "A free, community-first tracker for the Philippine Stock Exchange.",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: "PSEye",
+      url: SITE_URL,
+      description: "A free, community-first tracker for the Philippine Stock Exchange.",
+    },
+    {
+      "@type": "Organization",
+      name: "PSEye",
+      url: SITE_URL,
+      logo: `${SITE_URL}/icons/512`,
+    },
+  ],
 };
 
 export default function RootLayout({
