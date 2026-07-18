@@ -1,0 +1,26 @@
+name: Fetch quotes (hourly)
+
+on:
+  schedule:
+    # Hourly, 9:30am-4:30pm PHT (UTC+8) on weekdays — PSE's 9:30-3:30 trading
+    # session plus one settle run after close. Outside that window PSE Edge's
+    # numbers don't change, so there's no reason to poll it. Was briefly cut
+    # to 2x/day to stay under the private-repo Actions minutes cap; restored
+    # to hourly now that the repo is public (unlimited Actions minutes).
+    - cron: "30 1-8 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-quotes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-quotes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

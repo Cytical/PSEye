@@ -29,28 +29,54 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # continue-on-error on each step so one source having a bad day (PSE
-      # Edge markup change, pse.com.ph's flaky WAF, etc.) doesn't skip the rest.
-      - run: pnpm --filter @pseye/etl fetch-news
+      # Edge markup change, pse.com.ph's flaky WAF, etc.) doesn't skip the
+      # rest — but that also hides the failure from the job's own status, so
+      # each step gets an id and the "Fail job if any step failed" step below
+      # re-surfaces it. Without that, GitHub's built-in failed-workflow email
+      # (Settings > Notifications > Actions) would never fire.
+      - id: news
+        run: pnpm --filter @pseye/etl fetch-news
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      - run: pnpm --filter @pseye/etl fetch-disclosures
+      - id: disclosures
+        run: pnpm --filter @pseye/etl fetch-disclosures
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      - run: pnpm --filter @pseye/etl fetch-corporate-actions
+      - id: corporateActions
+        run: pnpm --filter @pseye/etl fetch-corporate-actions
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      - run: pnpm --filter @pseye/etl fetch-historical-quotes
+      - id: historicalQuotes
+        run: pnpm --filter @pseye/etl fetch-historical-quotes
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      - run: pnpm --filter @pseye/etl fetch-offerings
+      - id: offerings
+        run: pnpm --filter @pseye/etl fetch-offerings
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      - run: pnpm --filter @pseye/etl fetch-block-sales
+      - id: blockSales
+        run: pnpm --filter @pseye/etl fetch-block-sales
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Fail job if any step failed
+        if: always()
+        run: |
+          for outcome in \
+            "${{ steps.news.outcome }}" \
+            "${{ steps.disclosures.outcome }}" \
+            "${{ steps.corporateActions.outcome }}" \
+            "${{ steps.historicalQuotes.outcome }}" \
+            "${{ steps.offerings.outcome }}" \
+            "${{ steps.blockSales.outcome }}"; do
+            if [ "$outcome" = "failure" ]; then
+              echo "At least one fetch step failed — see step logs above."
+              exit 1
+            fi
+          done
