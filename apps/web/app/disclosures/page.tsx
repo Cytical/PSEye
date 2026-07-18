@@ -94,7 +94,18 @@ export default async function DisclosuresPage() {
                       )}
                       <span className="ml-auto text-[11px] text-panel-fg/40">{formatRelative(f.filedAt)}</span>
                     </div>
-                    <p className="mt-1 text-panel-fg">{f.headline}</p>
+                    {f.url ? (
+                      <a
+                        href={f.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 block text-panel-fg hover:underline"
+                      >
+                        {f.headline} <span aria-hidden="true">↗</span>
+                      </a>
+                    ) : (
+                      <p className="mt-1 text-panel-fg">{f.headline}</p>
+                    )}
                   </li>
                 );
               })}

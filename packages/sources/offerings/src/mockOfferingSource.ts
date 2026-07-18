@@ -1,4 +1,7 @@
+import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 import type { Offering, OfferingSource } from "./types";
+
+const TICKER_TO_CMPY_ID = new Map(PSE_EDGE_COMPANIES.map((c) => [c.ticker, c.cmpyId] as const));
 
 /**
  * Placeholder OfferingSource. A real implementation would track PSE's IPO/
@@ -19,6 +22,12 @@ export class MockOfferingSource implements OfferingSource {
       subscriptionEnd: addDays(o.subEndOffset),
       listingDate: o.listingOffset === null ? null : addDays(o.listingOffset),
       summary: o.summary,
+      // This offering itself is sample data, but for the handful of sample
+      // rows that reuse a real ticker (JGS, MEG), link to that company's real
+      // PSE Edge page rather than fabricating a link for a fictional offer.
+      url: o.ticker && TICKER_TO_CMPY_ID.has(o.ticker)
+        ? `https://edge.pse.com.ph/companyInformation/form.do?cmpy_id=${TICKER_TO_CMPY_ID.get(o.ticker)}`
+        : null,
     }));
   }
 }
@@ -30,7 +39,7 @@ function addDays(offset: number): string {
 }
 
 interface SampleOffering
-  extends Omit<Offering, "subscriptionStart" | "subscriptionEnd" | "listingDate"> {
+  extends Omit<Offering, "subscriptionStart" | "subscriptionEnd" | "listingDate" | "url"> {
   subStartOffset: number;
   subEndOffset: number;
   listingOffset: number | null;

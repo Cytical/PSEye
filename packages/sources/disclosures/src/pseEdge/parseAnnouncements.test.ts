@@ -51,6 +51,7 @@ describe("parseAnnouncementsHtml", () => {
       type: "material_information",
       headline: "Material Information/Transactions",
       referenceNo: "C05437-2026",
+      url: "https://edge.pse.com.ph/openDiscViewer.do?edge_no=30a8f4f46bdfbf9364d70b69f0a3140b",
     });
   });
 

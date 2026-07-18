@@ -30,6 +30,7 @@ async function main() {
         subscriptionEnd: o.subscriptionEnd,
         listingDate: o.listingDate,
         summary: o.summary,
+        url: o.url,
       }))
     )
     .onConflictDoNothing({

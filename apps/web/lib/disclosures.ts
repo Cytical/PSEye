@@ -23,6 +23,7 @@ export async function getDisclosures(): Promise<Disclosure[]> {
       headline: r.headline,
       filedAt: r.filedAt.toISOString(),
       referenceNo: r.referenceNo,
+      url: r.url,
     }));
   } catch (err) {
     console.error("getDisclosures: DB read failed, falling back to mock data", err);

@@ -20,6 +20,8 @@ export interface Offering {
   listingDate: string | null;
   /** Plain-language context: what the company does and what proceeds fund. */
   summary: string;
+  /** Link to the company's real PSE Edge page; null for pre-IPO/fictional companies with no ticker. */
+  url: string | null;
 }
 
 export interface OfferingSource {
