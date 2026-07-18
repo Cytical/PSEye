@@ -14,6 +14,7 @@ import { StockPriceChart } from "@/components/StockPriceChart";
 import { WatchlistStarButton } from "@/components/WatchlistStarButton";
 import { RecordStockView } from "@/components/RecordStockView";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
+import { ShareButton } from "@/components/ShareButton";
 
 export const revalidate = 3600; // hourly; matches the quotes ETL cadence
 
@@ -157,12 +158,15 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             <p className="mt-1 text-sm text-black/60 dark:text-white/60">{summaryLine}</p>
           </div>
         </div>
-        <Link
-          href={`/?ticker=${company.ticker}`}
-          className="shrink-0 rounded-md border border-black/10 px-3 py-1.5 text-xs font-medium hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-        >
-          View on market map
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <ShareButton title={`${company.ticker} — ${company.companyName} | PSEye`} />
+          <Link
+            href={`/?ticker=${company.ticker}`}
+            className="rounded-md border border-black/10 px-3 py-1.5 text-xs font-medium hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+          >
+            View on market map
+          </Link>
+        </div>
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">

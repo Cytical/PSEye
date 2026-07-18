@@ -7,14 +7,14 @@ import { useState } from "react";
  * clipboard copy with a brief confirmation everywhere else (desktop Chrome/
  * Firefox don't implement navigator.share).
  */
-export function ShareButton() {
+export function ShareButton({ title = "PSEye — PSE Market Map" }: { title?: string }) {
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
     const url = window.location.href;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "PSEye — PSE Market Map", url });
+        await navigator.share({ title, url });
       } catch {
         // User dismissed the native share sheet — not an error.
       }
