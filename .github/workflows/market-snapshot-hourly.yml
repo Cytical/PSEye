@@ -1,11 +1,11 @@
-name: Fetch market snapshot (2x daily)
+name: Fetch market snapshot (hourly)
 
 on:
   schedule:
-    # Same cadence as quotes-2x-daily.yml — see its comment for why this was
-    # cut back from hourly.
-    - cron: "0 4 * * 1-5" # ~12:00pm PHT (UTC+8)
-    - cron: "30 8 * * 1-5" # ~4:30pm PHT (UTC+8), after the 3:30pm close settles
+    # Hourly, 9:30am-4:30pm PHT (UTC+8) on weekdays — same cadence as
+    # quotes-hourly.yml. Was briefly cut to 2x/day for the private-repo
+    # Actions minutes cap; restored to hourly now that the repo is public.
+    - cron: "30 1-8 * * 1-5"
   workflow_dispatch: {}
 
 jobs:
