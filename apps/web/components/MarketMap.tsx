@@ -3,6 +3,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { TreemapChart, type TreemapStock } from "./TreemapChart";
 import { MarketSummaryBar } from "./MarketSummaryBar";
+import { TopMovers } from "./TopMovers";
 import { MARKET_MAP_FILTERS, filterMarketMapStocks, type MarketMapFilter } from "@/lib/marketMapFilters";
 import { NASDAQ_100_STOCKS } from "@/lib/nasdaq100";
 import type { CompanyProfile } from "@/lib/companyProfiles";
@@ -106,6 +107,10 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
 
         <div className="border-t border-panel-border pt-2">
           <MarketSummaryBar snapshot={snapshot} foreignFlow={foreignFlow} />
+        </div>
+
+        <div className="border-t border-panel-border pt-2">
+          <TopMovers quotes={stocks} />
         </div>
       </nav>
 
