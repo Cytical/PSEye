@@ -5,6 +5,7 @@ import Link from "next/link";
 import { NavLinks } from "./NavLinks";
 import { TickerSearch } from "./TickerSearch";
 import { ThemeToggle } from "./ThemeToggle";
+import { Logo } from "./Logo";
 
 /**
  * Nine nav links plus a search box no longer fit comfortably on a phone
@@ -21,8 +22,8 @@ export function SiteHeader() {
       {/* max-w matches page.tsx's widest content container (the market map) so the
           header never reads as narrower than the page below it. */}
       <div className="mx-auto flex max-w-[1600px] items-center gap-x-5 gap-y-1.5 px-4 py-3 text-sm">
-        <Link href="/" className="mr-1 shrink-0 font-semibold opacity-100">
-          PSEye
+        <Link href="/" className="mr-1 shrink-0">
+          <Logo />
         </Link>
 
         <nav className="hidden flex-1 flex-wrap items-center gap-x-5 gap-y-1.5 sm:flex" aria-label="Main">
