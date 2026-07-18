@@ -8,7 +8,7 @@ export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Foreign Fund Flow",
-  description: "Weekly index-level and per-stock net foreign buying/selling on the PSE.",
+  description: "Weekly index-level and daily per-stock net foreign buying/selling on the PSE.",
 };
 
 function formatPeso(n: number): string {
@@ -19,14 +19,14 @@ function formatPeso(n: number): string {
 }
 
 export default async function ForeignFlowPage() {
-  const { indexFlow, periodEnd, topBuying, topSelling } = await getForeignFlowPageData();
+  const { indexFlow, periodEnd, topBuying, topSelling, stockFlowSource } = await getForeignFlowPageData();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-xl font-semibold">Foreign Fund Flow</h1>
       <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-        Index-level foreign buying vs. selling by week, from PSE&apos;s Market Watch report.
-        Weekly/monthly granularity only — true daily foreign flow requires a licensed feed.
+        Index-level foreign buying vs. selling by week, from PSE&apos;s Market Watch report, plus
+        daily per-stock net foreign buying/selling from PSE&apos;s Daily Quotation Report.
       </p>
 
       <div className="mt-6">
@@ -62,10 +62,9 @@ export default async function ForeignFlowPage() {
       </div>
 
       <p className="mt-6 text-xs text-black/40 dark:text-white/40">
-        Per-stock rankings above are sample data — PSE&apos;s full per-stock foreign-buying/
-        selling breakdown isn&apos;t in any freely-published report we&apos;ve found (only a
-        cover-page preview of the Monthly Report is public). Figures here are illustrative,
-        not actual flows.
+        {stockFlowSource === "real"
+          ? "Per-stock rankings are real daily net foreign buying/selling figures from PSE's Daily Quotation Report."
+          : "Per-stock rankings above are sample data — the real daily source hasn't populated any rows yet."}
       </p>
     </div>
   );
@@ -122,7 +121,7 @@ function FlowTable({
     <div>
       <h2 className="text-sm font-medium">{title}</h2>
       <p className="text-[11px] text-black/40 dark:text-white/40">
-        Week ending {new Date(periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "UTC" })}
+        As of {new Date(periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "UTC" })}
       </p>
       {rows.length > 0 ? (
         <ol className="mt-2 flex flex-col gap-1.5 text-sm">

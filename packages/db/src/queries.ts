@@ -5,6 +5,7 @@ import {
   companyProfiles,
   marketSnapshot,
   indexForeignFlow,
+  stockForeignFlow,
   disclosures,
   corporateActions,
   historicalQuotes,
@@ -101,6 +102,33 @@ export async function getRecentBlockSales(db: Db) {
  */
 export async function getRecentNews(db: Db, limit = 80) {
   return db.select().from(newsItems).orderBy(desc(newsItems.publishedAt)).limit(limit);
+}
+
+/**
+ * The single latest periodEnd's stock-level foreign flow rows (rank asc),
+ * or null if the table is empty. Since fetch-block-sales.ts stores this
+ * daily now (real per-stock "Net Foreign Buying/(Selling)" from the Daily
+ * Quotation Report — see its doc comment), periodEnd is a trade date, not a
+ * week ending. Callers split into buying/selling by netValue's sign — rank
+ * is only meaningful within its own direction (see stock_foreign_flow's
+ * schema comment), so a rank=1 row could be either the top buyer or seller.
+ */
+export async function getLatestStockForeignFlow(db: Db) {
+  const [latest] = await db
+    .select({ periodEnd: stockForeignFlow.periodEnd })
+    .from(stockForeignFlow)
+    .orderBy(desc(stockForeignFlow.periodEnd))
+    .limit(1);
+
+  if (!latest) return null;
+
+  const rows = await db
+    .select()
+    .from(stockForeignFlow)
+    .where(eq(stockForeignFlow.periodEnd, latest.periodEnd))
+    .orderBy(asc(stockForeignFlow.rank));
+
+  return { periodEnd: latest.periodEnd, rows };
 }
 
 /** Daily closes for the given tickers from `fromDate` through the most recent one on record, ascending. */

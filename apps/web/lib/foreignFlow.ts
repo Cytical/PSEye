@@ -1,4 +1,4 @@
-import { createDb, getIndexForeignFlowHistory } from "@pseye/db";
+import { createDb, getIndexForeignFlowHistory, getLatestStockForeignFlow } from "@pseye/db";
 import { MockForeignFlowSource, type IndexForeignFlow, type StockForeignFlow } from "@pseye/source-foreign-flow";
 
 export interface ForeignFlowPageData {
@@ -6,6 +6,7 @@ export interface ForeignFlowPageData {
   periodEnd: string;
   topBuying: StockForeignFlow[];
   topSelling: StockForeignFlow[];
+  stockFlowSource: "real" | "mock";
 }
 
 /**
@@ -14,38 +15,60 @@ export interface ForeignFlowPageData {
  * has populated it, falling back to MockForeignFlowSource on any DB error or
  * empty table — same contract as getDailyQuotes.
  *
- * Per-stock top-buying/top-selling is always MockForeignFlowSource — no free
- * public source for that was found (see fetch-foreign-flow.ts's doc
- * comment). Kept separate from the index-level fallback rather than
- * bundled into one "real vs mock" flag, since one is genuinely real and the
- * other genuinely isn't, regardless of DATABASE_URL.
+ * Per-stock top-buying/top-selling is DB-backed too as of 2026-07 —
+ * fetch-block-sales.ts (daily) now extracts a real "Net Foreign
+ * Buying/(Selling)" figure per stock from the same Daily Quotation Report it
+ * already fetches for block sales (see parseQuotationReportForeignFlow's doc
+ * comment for how that was found), so this is genuinely real, daily data
+ * now, not the old MockForeignFlowSource weekly top-5. Falls back to mock
+ * independently of the index-level fallback (same as before this change),
+ * since the two come from different tables/jobs and can go stale
+ * independently. `stockFlowSource` lets the page show its "sample data"
+ * caveat only when the mock actually fired.
  */
 export async function getForeignFlowPageData(): Promise<ForeignFlowPageData> {
-  const mock = new MockForeignFlowSource();
-  const { periodEnd, topBuying, topSelling } = await mock.getTopStockFlows();
-
   const databaseUrl = process.env.DATABASE_URL;
+
+  let indexFlow: IndexForeignFlow[] | null = null;
+  let stockFlow: { periodEnd: string; topBuying: StockForeignFlow[]; topSelling: StockForeignFlow[] } | null = null;
+
   if (databaseUrl) {
     try {
       const db = createDb(databaseUrl);
-      const rows = await getIndexForeignFlowHistory(db, 12);
-      if (rows.length > 0) {
-        return {
-          indexFlow: rows.map((r) => ({
-            periodEnd: r.periodEnd,
-            foreignBuyValue: r.foreignBuyValue,
-            foreignSellValue: r.foreignSellValue,
-            netValue: r.netValue,
-          })),
-          periodEnd,
-          topBuying,
-          topSelling,
+      const [indexRows, stockResult] = await Promise.all([
+        getIndexForeignFlowHistory(db, 12),
+        getLatestStockForeignFlow(db),
+      ]);
+
+      if (indexRows.length > 0) {
+        indexFlow = indexRows.map((r) => ({
+          periodEnd: r.periodEnd,
+          foreignBuyValue: r.foreignBuyValue,
+          foreignSellValue: r.foreignSellValue,
+          netValue: r.netValue,
+        }));
+      }
+
+      if (stockResult) {
+        stockFlow = {
+          periodEnd: stockResult.periodEnd,
+          topBuying: stockResult.rows
+            .filter((r) => r.netValue > 0)
+            .map((r) => ({ ticker: r.ticker, companyName: r.companyName, netValue: r.netValue, rank: r.rank })),
+          topSelling: stockResult.rows
+            .filter((r) => r.netValue < 0)
+            .map((r) => ({ ticker: r.ticker, companyName: r.companyName, netValue: r.netValue, rank: r.rank })),
         };
       }
     } catch (err) {
-      console.error("getForeignFlowPageData: DB read failed, falling back to mock index flow", err);
+      console.error("getForeignFlowPageData: DB read failed, falling back to mock", err);
     }
   }
 
-  return { indexFlow: await mock.getIndexFlow(), periodEnd, topBuying, topSelling };
+  const mock = new MockForeignFlowSource();
+  const stockFlowSource: "real" | "mock" = stockFlow ? "real" : "mock";
+  if (!indexFlow) indexFlow = await mock.getIndexFlow();
+  if (!stockFlow) stockFlow = await mock.getTopStockFlows();
+
+  return { indexFlow, ...stockFlow, stockFlowSource };
 }

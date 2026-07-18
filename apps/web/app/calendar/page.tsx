@@ -4,6 +4,7 @@ import {
   CORPORATE_ACTION_LABELS,
   CORPORATE_ACTION_EXPLAINERS,
   type CorporateAction,
+  type CorporateActionType,
 } from "@pseye/source-corporate-actions";
 import { getCorporateActions } from "@/lib/corporateActions";
 
@@ -12,6 +13,16 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Calendar",
   description: "Dividend and corporate actions calendar — ex-date, record date, and payment date.",
+};
+
+/** Muted, theme-safe accent per action type — a 10%-opacity tint for badges/left-borders, distinct enough to scan a list by type at a glance. */
+const TYPE_ACCENT: Record<CorporateActionType, string> = {
+  cash_dividend: "#2f8f4e",
+  stock_dividend: "#2f6f9f",
+  property_dividend: "#8a5fc2",
+  rights_offer: "#b8862f",
+  follow_on_offer: "#c2662f",
+  stock_split: "#c23f7f",
 };
 
 function formatDate(iso: string): string {
@@ -23,27 +34,74 @@ function formatDate(iso: string): string {
   });
 }
 
+function formatMonthHeading(iso: string): string {
+  return new Date(iso + "T00:00:00Z").toLocaleDateString("en-PH", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function daysUntil(iso: string, todayIso: string): number {
+  const a = new Date(todayIso + "T00:00:00Z").getTime();
+  const b = new Date(iso + "T00:00:00Z").getTime();
+  return Math.round((b - a) / 86_400_000);
+}
+
+function countdownLabel(days: number): string {
+  if (days === 0) return "Today";
+  if (days < 0) return `${Math.abs(days)}d ago`;
+  return `In ${days}d`;
+}
+
+function groupByMonth(actions: CorporateAction[]): { monthKey: string; actions: CorporateAction[] }[] {
+  const groups = new Map<string, CorporateAction[]>();
+  for (const action of actions) {
+    const monthKey = action.exDate.slice(0, 7); // YYYY-MM
+    if (!groups.has(monthKey)) groups.set(monthKey, []);
+    groups.get(monthKey)!.push(action);
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([monthKey, actions]) => ({ monthKey, actions }));
+}
+
 export default async function CalendarPage() {
   const actions = await getCorporateActions();
   const sorted = [...actions].sort((a, b) => a.exDate.localeCompare(b.exDate));
   const todayIso = new Date().toISOString().slice(0, 10);
+  const months = groupByMonth(sorted);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-xl font-semibold">Dividend &amp; Corporate Actions Calendar</h1>
-      <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+      <h1 className="text-2xl font-semibold tracking-tight">Dividend &amp; Corporate Actions Calendar</h1>
+      <p className="mt-1.5 text-sm text-panel-fg/60">
         Ex-date, record date, and payment date for dividends, rights offers, and other
         corporate actions. Own the stock before the ex-date to be entitled.
       </p>
 
-      <ul className="mt-6 flex flex-col gap-4">
-        {sorted.map((action) => (
-          <ActionRow key={`${action.ticker}-${action.type}-${action.exDate}`} action={action} isPast={action.exDate < todayIso} />
+      <div className="mt-8 flex flex-col gap-8">
+        {months.map(({ monthKey, actions }) => (
+          <div key={monthKey}>
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-panel-fg/40">
+              {formatMonthHeading(actions[0].exDate)}
+            </h2>
+            <ul className="mt-3 flex flex-col gap-3">
+              {actions.map((action) => (
+                <ActionRow
+                  key={`${action.ticker}-${action.type}-${action.exDate}`}
+                  action={action}
+                  isPast={action.exDate < todayIso}
+                  todayIso={todayIso}
+                />
+              ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
 
       {sorted.length === 0 && (
-        <p className="mt-6 text-sm text-black/50 dark:text-white/50">
+        <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/50 ring-1 ring-panel-border">
           No corporate actions on record for the current window.
         </p>
       )}
@@ -51,29 +109,57 @@ export default async function CalendarPage() {
   );
 }
 
-function ActionRow({ action, isPast }: { action: CorporateAction; isPast: boolean }) {
+function ActionRow({ action, isPast, todayIso }: { action: CorporateAction; isPast: boolean; todayIso: string }) {
+  const accent = TYPE_ACCENT[action.type];
+  const days = daysUntil(action.exDate, todayIso);
+
   return (
-    <li className={`border-b border-black/10 pb-4 dark:border-white/10 ${isPast ? "opacity-50" : ""}`}>
-      <div className="flex flex-wrap items-center gap-2">
-        <Link href={`/stocks/${action.ticker}`} className="flex items-center gap-2 hover:underline">
-          <span className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-[10px] dark:bg-white/10">
-            {action.ticker}
-          </span>
-          <span className="font-medium">{action.companyName}</span>
-        </Link>
-        <span className="rounded-full border border-black/15 px-2 py-0.5 text-[10px] dark:border-white/15">
-          {CORPORATE_ACTION_LABELS[action.type]}
-        </span>
+    <li
+      className={`overflow-hidden rounded-lg bg-panel ring-1 ring-panel-border ${isPast ? "opacity-50" : ""}`}
+      style={{ borderLeft: `3px solid ${accent}` }}
+    >
+      <div className="p-4">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link href={`/stocks/${action.ticker}`} className="flex items-center gap-2 hover:underline">
+              <span className="rounded bg-panel-raised px-1.5 py-0.5 font-mono text-[10px] text-panel-fg/80">
+                {action.ticker}
+              </span>
+              <span className="font-medium text-panel-fg">{action.companyName}</span>
+            </Link>
+            <span
+              className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+              style={{ backgroundColor: `${accent}1a`, color: accent }}
+            >
+              {CORPORATE_ACTION_LABELS[action.type]}
+            </span>
+          </div>
+          {!isPast && (
+            <span className="shrink-0 rounded-full bg-panel-raised px-2 py-0.5 text-[10px] font-medium tabular-nums text-panel-fg/70">
+              {countdownLabel(days)}
+            </span>
+          )}
+        </div>
+
+        <p className="mt-2 text-sm text-panel-fg">{action.details}</p>
+
+        <div className="mt-2.5 grid grid-cols-3 gap-2 border-t border-panel-border pt-2.5 text-xs">
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-panel-fg/40">Ex-date</div>
+            <div className="mt-0.5 text-panel-fg/80">{formatDate(action.exDate)}</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-panel-fg/40">Record date</div>
+            <div className="mt-0.5 text-panel-fg/80">{formatDate(action.recordDate)}</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-panel-fg/40">Payment date</div>
+            <div className="mt-0.5 text-panel-fg/80">{action.paymentDate ? formatDate(action.paymentDate) : "—"}</div>
+          </div>
+        </div>
+
+        <p className="mt-2.5 text-xs leading-snug text-panel-fg/40">{CORPORATE_ACTION_EXPLAINERS[action.type]}</p>
       </div>
-      <p className="mt-1 text-sm">{action.details}</p>
-      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-black/50 dark:text-white/50">
-        <span>Ex-date: {formatDate(action.exDate)}</span>
-        <span>Record date: {formatDate(action.recordDate)}</span>
-        {action.paymentDate && <span>Payment date: {formatDate(action.paymentDate)}</span>}
-      </div>
-      <p className="mt-1 text-xs text-black/40 dark:text-white/40">
-        {CORPORATE_ACTION_EXPLAINERS[action.type]}
-      </p>
     </li>
   );
 }
