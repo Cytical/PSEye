@@ -1,13 +1,15 @@
-name: Fetch historical quotes
+name: Fetch market snapshot (2x daily)
 
 on:
   schedule:
-    # ~9pm PHT (UTC+8) daily, after market close settles for the day
-    - cron: "0 13 * * *"
+    # Same cadence as quotes-2x-daily.yml — see its comment for why this was
+    # cut back from hourly.
+    - cron: "0 4 * * 1-5" # ~12:00pm PHT (UTC+8)
+    - cron: "30 8 * * 1-5" # ~4:30pm PHT (UTC+8), after the 3:30pm close settles
   workflow_dispatch: {}
 
 jobs:
-  fetch-historical-quotes:
+  fetch-market-snapshot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,6 +19,6 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @pseye/etl fetch-historical-quotes
+      - run: pnpm --filter @pseye/etl fetch-market-snapshot
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

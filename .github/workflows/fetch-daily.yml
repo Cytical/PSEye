@@ -1,0 +1,56 @@
+name: Fetch daily (news, disclosures, corporate actions, historical quotes, block sales, offerings)
+
+# One consolidated job replacing what used to be 6 separate workflows
+# (news-hourly, disclosures-hourly, corporate-actions-daily,
+# historical-quotes-daily, block-sales-daily, offerings-daily). None of these
+# need better than daily freshness, and running them hourly (news/disclosures
+# in particular, at 24 runs/day each) was the majority of a ~1,900 workflow
+# runs/month total that blew past GitHub Actions' free monthly minutes.
+# Sharing one checkout/install across all six cuts that to ~30 runs/month.
+#
+# Scheduled after market close settles (9pm PHT) and after PSE's Daily
+# Quotation Report is typically published (~9:30pm PHT) — the latest
+# dependency among these six (block sales, which is extracted from that PDF).
+on:
+  schedule:
+    - cron: "30 13 * * *" # ~9:30pm PHT (UTC+8), daily
+  workflow_dispatch: {}
+
+jobs:
+  fetch-daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # continue-on-error on each step so one source having a bad day (PSE
+      # Edge markup change, pse.com.ph's flaky WAF, etc.) doesn't skip the rest.
+      - run: pnpm --filter @pseye/etl fetch-news
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: pnpm --filter @pseye/etl fetch-disclosures
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: pnpm --filter @pseye/etl fetch-corporate-actions
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: pnpm --filter @pseye/etl fetch-historical-quotes
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: pnpm --filter @pseye/etl fetch-offerings
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - run: pnpm --filter @pseye/etl fetch-block-sales
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
