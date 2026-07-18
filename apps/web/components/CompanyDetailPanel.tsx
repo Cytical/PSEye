@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import type { TreemapStock } from "./TreemapChart";
 import type { CompanyProfile } from "@/lib/companyProfiles";
+import { WatchlistStarButton } from "./WatchlistStarButton";
 
 interface CompanyDetailPanelProps {
   stock: TreemapStock;
@@ -59,17 +60,20 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
             </div>
             <div className="mt-0.5 text-sm text-panel-fg/70">{stock.companyName}</div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="shrink-0 rounded-md p-1 text-panel-fg/50 transition-colors hover:bg-panel-raised hover:text-panel-fg"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+          <div className="flex shrink-0 items-center gap-1">
+            {currency !== "USD" && <WatchlistStarButton ticker={stock.ticker} size={18} />}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="rounded-md p-1 text-panel-fg/50 transition-colors hover:bg-panel-raised hover:text-panel-fg"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col gap-4 overflow-y-auto p-5">

@@ -6,6 +6,7 @@ import { MarketSummaryBar } from "./MarketSummaryBar";
 import { TopMovers } from "./TopMovers";
 import { MARKET_MAP_FILTERS, filterMarketMapStocks, type MarketMapFilter } from "@/lib/marketMapFilters";
 import { NASDAQ_100_STOCKS } from "@/lib/nasdaq100";
+import { useWatchlist } from "@/lib/watchlist";
 import type { CompanyProfile } from "@/lib/companyProfiles";
 import type { MarketSnapshot } from "@/lib/marketSnapshot";
 import type { LatestForeignFlow } from "@/lib/latestForeignFlow";
@@ -45,6 +46,7 @@ function getFilterFromUrl(): MarketMapFilter {
  */
 export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: MarketMapProps) {
   const filter = useSyncExternalStore(subscribeToFilterUrl, getFilterFromUrl, (): MarketMapFilter => "all");
+  const { tickers: watchedTickers } = useWatchlist();
 
   function selectFilter(next: MarketMapFilter) {
     const url = new URL(window.location.href);
@@ -54,19 +56,22 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
     window.dispatchEvent(new Event(FILTER_CHANGE_EVENT));
   }
 
-  const filteredStocks = useMemo(
-    () => (filter === "nasdaq100" ? NASDAQ_100_STOCKS : filterMarketMapStocks(stocks, filter)),
-    [stocks, filter]
-  );
+  const filteredStocks = useMemo(() => {
+    if (filter === "nasdaq100") return NASDAQ_100_STOCKS;
+    if (filter === "watchlist") return stocks.filter((s) => watchedTickers.includes(s.ticker));
+    return filterMarketMapStocks(stocks, filter);
+  }, [stocks, filter, watchedTickers]);
 
   /** Stock count per filter, shown as a badge so the choice between e.g. "Top 50" and "Top 100" is informed rather than a guess. */
   const countByFilter = useMemo((): Record<MarketMapFilter, number> => {
     const counts = {} as Record<MarketMapFilter, number>;
     for (const { key } of MARKET_MAP_FILTERS) {
-      counts[key] = key === "nasdaq100" ? NASDAQ_100_STOCKS.length : filterMarketMapStocks(stocks, key).length;
+      if (key === "nasdaq100") counts[key] = NASDAQ_100_STOCKS.length;
+      else if (key === "watchlist") counts[key] = stocks.filter((s) => watchedTickers.includes(s.ticker)).length;
+      else counts[key] = filterMarketMapStocks(stocks, key).length;
     }
     return counts;
-  }, [stocks]);
+  }, [stocks, watchedTickers]);
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row">
@@ -115,7 +120,16 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
       </nav>
 
       <div className="min-w-0 flex-1">
-        <TreemapChart stocks={filteredStocks} profileByTicker={profileByTicker} />
+        {filter === "watchlist" && filteredStocks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-1 rounded-lg bg-panel py-24 text-center ring-1 ring-panel-border">
+            <p className="text-sm font-medium text-panel-fg/70">Your watchlist is empty.</p>
+            <p className="max-w-xs text-xs text-panel-fg/45">
+              Click any stock on the map, then the star icon, to add it here. Saved on this device only.
+            </p>
+          </div>
+        ) : (
+          <TreemapChart stocks={filteredStocks} profileByTicker={profileByTicker} />
+        )}
       </div>
     </div>
   );

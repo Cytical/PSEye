@@ -11,6 +11,7 @@ import { getCorporateActions } from "@/lib/corporateActions";
 import { getNewsForTicker } from "@/lib/news";
 import { getHistoricalQuotes } from "@/lib/historicalQuotes";
 import { StockPriceChart } from "@/components/StockPriceChart";
+import { WatchlistStarButton } from "@/components/WatchlistStarButton";
 
 export const revalidate = 3600; // hourly; matches the quotes ETL cadence
 
@@ -129,11 +130,14 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       </nav>
 
       <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">
-            {company.companyName} <span className="font-mono text-lg text-black/50 dark:text-white/50">({company.ticker})</span>
-          </h1>
-          <p className="mt-1 text-sm text-black/60 dark:text-white/60">{summaryLine}</p>
+        <div className="flex items-baseline gap-2">
+          <WatchlistStarButton ticker={company.ticker} size={22} className="translate-y-0.5" />
+          <div>
+            <h1 className="text-2xl font-semibold">
+              {company.companyName} <span className="font-mono text-lg text-black/50 dark:text-white/50">({company.ticker})</span>
+            </h1>
+            <p className="mt-1 text-sm text-black/60 dark:text-white/60">{summaryLine}</p>
+          </div>
         </div>
         <Link
           href={`/?ticker=${company.ticker}`}
