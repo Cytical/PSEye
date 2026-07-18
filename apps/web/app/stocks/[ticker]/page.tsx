@@ -109,12 +109,27 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
     : { source: "mock" as const, history: {} };
   const closes = history.source === "real" ? (history.history[ticker] ?? []) : [];
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  // @graph bundles the company identity with a BreadcrumbList — Google renders the
+  // latter as a breadcrumb trail under the search result (instead of the raw URL),
+  // which is a free click-through-rate lever, not just cosmetic markup.
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Corporation",
-    name: company.companyName,
-    tickerSymbol: company.ticker,
-    url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/stocks/${company.ticker}`,
+    "@graph": [
+      {
+        "@type": "Corporation",
+        name: company.companyName,
+        tickerSymbol: company.ticker,
+        url: `${siteUrl}/stocks/${company.ticker}`,
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Market Map", item: siteUrl },
+          { "@type": "ListItem", position: 2, name: company.ticker, item: `${siteUrl}/stocks/${company.ticker}` },
+        ],
+      },
+    ],
   };
 
   return (
