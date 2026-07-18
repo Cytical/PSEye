@@ -12,6 +12,8 @@ import { getNewsForTicker } from "@/lib/news";
 import { getHistoricalQuotes } from "@/lib/historicalQuotes";
 import { StockPriceChart } from "@/components/StockPriceChart";
 import { WatchlistStarButton } from "@/components/WatchlistStarButton";
+import { RecordStockView } from "@/components/RecordStockView";
+import { RecentlyViewed } from "@/components/RecentlyViewed";
 
 export const revalidate = 3600; // hourly; matches the quotes ETL cadence
 
@@ -134,6 +136,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
+      <RecordStockView ticker={ticker} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <nav className="text-xs text-black/50 dark:text-white/50">
@@ -263,6 +266,8 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           </ul>
         </div>
       )}
+
+      <RecentlyViewed excludeTicker={ticker} />
 
       <p className="mt-8 text-xs text-black/40 dark:text-white/40">
         Delayed/EOD data from PSE Edge, not real-time. Not financial advice, a stock pick, or a
