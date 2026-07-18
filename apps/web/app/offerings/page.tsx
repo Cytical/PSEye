@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { MockOfferingSource, OFFERING_TYPE_LABELS, type Offering } from "@pseye/source-offerings";
+import { MockOfferingSource, OFFERING_TYPE_LABELS, type Offering, type OfferingType } from "@pseye/source-offerings";
 
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Offerings",
   description: "IPO, follow-on, and rights offer tracker with subscription-window countdowns.",
+};
+
+/** Muted, theme-safe accent per offering type — same color-language approach as the calendar/disclosures pages. */
+const TYPE_ACCENT: Record<OfferingType, string> = {
+  ipo: "#2f8f4e",
+  follow_on: "#2f6f9f",
+  stock_rights: "#b8862f",
 };
 
 function daysBetween(fromIso: string, toIso: string): number {
@@ -23,16 +30,38 @@ function formatDate(iso: string): string {
   });
 }
 
-function subscriptionStatus(offering: Offering, todayIso: string): string {
-  if (todayIso < offering.subscriptionStart) {
+type Status = "upcoming" | "open" | "closed";
+
+function subscriptionStatus(offering: Offering, todayIso: string): Status {
+  if (todayIso < offering.subscriptionStart) return "upcoming";
+  if (todayIso <= offering.subscriptionEnd) return "open";
+  return "closed";
+}
+
+function statusLabel(offering: Offering, status: Status, todayIso: string): string {
+  if (status === "upcoming") {
     const days = daysBetween(todayIso, offering.subscriptionStart);
     return `Opens in ${days} day${days === 1 ? "" : "s"}`;
   }
-  if (todayIso <= offering.subscriptionEnd) {
+  if (status === "open") {
     const days = daysBetween(todayIso, offering.subscriptionEnd);
-    return days === 0 ? "Closes today" : `${days} day${days === 1 ? "" : "s"} left to subscribe`;
+    return days === 0 ? "Closes today" : `${days} day${days === 1 ? "" : "s"} left`;
   }
   return "Subscription closed";
+}
+
+/** "closed" has no color object — it uses the neutral panel-raised/panel-fg tokens directly instead of an accent tint, since "subscription closed" isn't a state worth drawing the eye to. */
+const STATUS_STYLE: Partial<Record<Status, { bg: string; text: string }>> = {
+  upcoming: { bg: "#b8862f1a", text: "#b8862f" },
+  open: { bg: "#2f8f4e1a", text: "#2f8f4e" },
+};
+
+/** % of the subscription window elapsed, clamped [0,100] — only meaningful while status is "open". */
+function windowProgress(offering: Offering, todayIso: string): number {
+  const total = daysBetween(offering.subscriptionStart, offering.subscriptionEnd);
+  if (total <= 0) return 100;
+  const elapsed = daysBetween(offering.subscriptionStart, todayIso);
+  return Math.max(0, Math.min(100, Math.round((elapsed / total) * 100)));
 }
 
 export default async function OfferingsPage() {
@@ -43,49 +72,68 @@ export default async function OfferingsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-xl font-semibold">IPO &amp; Follow-on Offerings</h1>
-      <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+      <h1 className="text-2xl font-semibold tracking-tight">IPO &amp; Follow-on Offerings</h1>
+      <p className="mt-1.5 text-sm text-panel-fg/60">
         Subscription windows for new listings and follow-on offers, with plain-language
         context for deciding whether to participate.
       </p>
 
       {sorted.length === 0 && (
-        <p className="mt-6 text-sm text-black/50 dark:text-white/50">
+        <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/50 ring-1 ring-panel-border">
           No upcoming offerings on record right now.
         </p>
       )}
 
-      <div className="mt-6 flex flex-col gap-4">
+      <div className="mt-8 flex flex-col gap-4">
         {sorted.map((offering) => {
-          const isOpen = todayIso >= offering.subscriptionStart && todayIso <= offering.subscriptionEnd;
+          const status = subscriptionStatus(offering, todayIso);
+          const accent = TYPE_ACCENT[offering.type];
+          const statusStyle = STATUS_STYLE[status];
+          const statusClassName =
+            "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" +
+            (statusStyle ? "" : " bg-panel-raised text-panel-fg/40");
           return (
             <div
               key={`${offering.companyName}-${offering.type}-${offering.subscriptionStart}`}
-              className="rounded-md border border-black/10 p-4 dark:border-white/10"
+              className="overflow-hidden rounded-lg bg-panel p-4 ring-1 ring-panel-border"
+              style={{ borderLeft: `3px solid ${accent}` }}
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{offering.companyName}</span>
+                  <span className="font-medium text-panel-fg">{offering.companyName}</span>
                   {offering.ticker && (
-                    <span className="rounded bg-black/5 px-1.5 py-0.5 font-mono text-[10px] dark:bg-white/10">
+                    <span className="rounded bg-panel-raised px-1.5 py-0.5 font-mono text-[10px] text-panel-fg/80">
                       {offering.ticker}
                     </span>
                   )}
-                  <span className="rounded-full border border-black/15 px-2 py-0.5 text-[10px] dark:border-white/15">
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+                    style={{ backgroundColor: `${accent}1a`, color: accent }}
+                  >
                     {OFFERING_TYPE_LABELS[offering.type]}
                   </span>
-                  <span className="text-xs text-black/50 dark:text-white/50">{offering.sector}</span>
+                  <span className="text-xs text-panel-fg/50">{offering.sector}</span>
                 </div>
                 <span
-                  className={`text-xs font-medium ${isOpen ? "text-[#006300] dark:text-[#0ca30c]" : "text-black/50 dark:text-white/50"}`}
+                  className={statusClassName}
+                  style={statusStyle ? { backgroundColor: statusStyle.bg, color: statusStyle.text } : undefined}
                 >
-                  {subscriptionStatus(offering, todayIso)}
+                  {statusLabel(offering, status, todayIso)}
                 </span>
               </div>
 
-              <p className="mt-2 text-sm">{offering.summary}</p>
+              <p className="mt-2.5 text-sm text-panel-fg">{offering.summary}</p>
 
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-black/50 dark:text-white/50">
+              {status === "open" && (
+                <div className="mt-3 h-1 overflow-hidden rounded-full bg-panel-raised">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${windowProgress(offering, todayIso)}%`, backgroundColor: accent }}
+                  />
+                </div>
+              )}
+
+              <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-panel-fg/50">
                 <span>Offer price: ₱{offering.offerPrice.toFixed(2)}</span>
                 <span>
                   Subscription: {formatDate(offering.subscriptionStart)} &ndash;{" "}
@@ -98,7 +146,7 @@ export default async function OfferingsPage() {
         })}
       </div>
 
-      <p className="mt-6 text-xs text-black/40 dark:text-white/40">
+      <p className="mt-8 text-xs text-panel-fg/40">
         Sample data, including fictional pre-IPO company names — a real offering-disclosure
         tracker has not been wired in yet. Not financial advice.
       </p>

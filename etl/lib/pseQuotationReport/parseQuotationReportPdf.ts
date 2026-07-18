@@ -122,3 +122,113 @@ function parsePesoNumber(raw: string): number | null {
   const n = Number(raw.trim().replace(/,/g, ""));
   return Number.isFinite(n) ? n : null;
 }
+
+export interface StockForeignFlowRow {
+  ticker: string;
+  netForeignValue: number; // PHP; positive = net buying, negative = net selling, 0 = none traded
+}
+
+/**
+ * The report's ticker column, verified live (July 2026 issue) at x≈113-120
+ * across every MAIN BOARD page — comfortably between the Issue Name column
+ * (x=36, e.g. "ASIA UNITED") and the Bid column (x≈163+), so a plain x-range
+ * gate distinguishes the ticker from both without needing to parse headers.
+ */
+const TICKER_COL_MIN = 100;
+const TICKER_COL_MAX = 160;
+
+/**
+ * Parses per-stock daily "Net Foreign Buying/(Selling), PHP" from the same
+ * Daily Quotation Report used for BLOCK SALES (see parseQuotationReportPdf's
+ * doc comment) — a real, free, per-stock daily figure that turns out to sit
+ * right in a report this project already fetches for block sales, discovered
+ * 2026-07 while re-investigating whether per-stock foreign flow (previously
+ * only found gated behind PSE's paid Monthly Report) had a free alternative.
+ *
+ * Every MAIN BOARD page (1 through the page before "BLOCK SALES") lists one
+ * row per stock: Issue Name, Symbol, Bid, Ask, Open, High, Low, Close,
+ * Volume, Value(PHP), Net Foreign Buying/(Selling)(PHP) — sector-grouped
+ * under spaced-letter headers ("F I N A N C I A L S"), sub-headers
+ * ("**** BANKS ****"), and "<SECTOR> SECTOR TOTAL" footers. Rather than
+ * parse the column header (it's a 3-line-tall label split across "Net
+ * Foreign" / "Buying / (Selling)," / "PHP" at three different y-coordinates),
+ * a stock row is identified structurally: a ticker-shaped item in the ticker
+ * column's x-range, on a row with enough columns to be real data (not a
+ * sector/total label, which has no ticker at all). The Net Foreign value is
+ * always the rightmost item on that row, since it's the last column.
+ *
+ * Negative (net selling) values are parenthesized like
+ * parseMarketWatchPdf.ts's index-level figures ("(23,040,571.5)"); "-" means
+ * no foreign trading that day, parsed as 0, not skipped — a real reading,
+ * not a missing one.
+ */
+export async function parseQuotationReportForeignFlow(pdfBytes: Uint8Array): Promise<StockForeignFlowRow[]> {
+  const doc = await getDocument({ data: pdfBytes }).promise;
+  const rows: StockForeignFlowRow[] = [];
+  const seen = new Set<string>();
+
+  for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
+    const page = await doc.getPage(pageNum);
+    const content = await page.getTextContent();
+    const items: TextItem[] = content.items
+      .map((it) => {
+        const raw = it as { str?: string; transform?: number[] };
+        return { str: raw.str ?? "", x: raw.transform?.[4] ?? 0, y: raw.transform?.[5] ?? 0 };
+      })
+      .filter((it) => it.str.trim() !== "");
+
+    // BLOCK SALES / SECTORAL SUMMARY page (and everything after it) isn't a
+    // per-stock table — stop before it rather than risk misreading it as one.
+    if (items.some((it) => it.str === "BLOCK SALES")) break;
+
+    for (const row of extractForeignFlowRowsFromPage(items, seen)) {
+      rows.push(row);
+    }
+  }
+
+  return rows;
+}
+
+/** One page's worth of per-stock foreign flow extraction, factored out of parseQuotationReportForeignFlow so it's testable without a real PDF (same reasoning as tryParsePage for BLOCK SALES). `seen` is shared and mutated across pages to guard against a ticker appearing twice (e.g. a page-break artifact). */
+export function extractForeignFlowRowsFromPage(items: TextItem[], seen: Set<string>): StockForeignFlowRow[] {
+  const rows: StockForeignFlowRow[] = [];
+  for (const row of groupRowsByY(items)) {
+    const tickerItem = row.find(
+      (it) => it.x >= TICKER_COL_MIN && it.x <= TICKER_COL_MAX && /^[A-Z][A-Z0-9]*$/.test(it.str)
+    );
+    if (!tickerItem || seen.has(tickerItem.str) || row.length < 6) continue;
+
+    const rightmost = row.reduce((a, b) => (b.x > a.x ? b : a));
+    const netForeignValue = parseSignedPesoNumber(rightmost.str);
+    if (netForeignValue === null) continue;
+
+    seen.add(tickerItem.str);
+    rows.push({ ticker: tickerItem.str, netForeignValue });
+  }
+  return rows;
+}
+
+/** Groups text runs into table rows by y-coordinate (same tolerance as BLOCK SALES row grouping), each row sorted left-to-right by x. */
+function groupRowsByY(items: TextItem[], epsilon = 1.5): TextItem[][] {
+  const ys = [...new Set(items.map((it) => it.y))].sort((a, b) => b - a);
+  const used = new Set<number>();
+  const rows: TextItem[][] = [];
+  for (const y of ys) {
+    if (used.has(y)) continue;
+    const clustered = ys.filter((y2) => !used.has(y2) && Math.abs(y2 - y) <= epsilon);
+    clustered.forEach((y2) => used.add(y2));
+    rows.push(items.filter((it) => clustered.includes(it.y)).sort((a, b) => a.x - b.x));
+  }
+  return rows;
+}
+
+/** "18,263,956,192.43" or "(9,903,714.18)" (parens = negative) or "-" (none) -> a number. */
+function parseSignedPesoNumber(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (trimmed === "-" || trimmed === "") return 0;
+  const negative = trimmed.startsWith("(") && trimmed.endsWith(")");
+  const cleaned = trimmed.replace(/[(),]/g, "");
+  const n = Number(cleaned);
+  if (!Number.isFinite(n)) return null;
+  return negative ? -n : n;
+}
