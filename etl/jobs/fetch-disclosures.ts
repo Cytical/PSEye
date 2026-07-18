@@ -31,6 +31,7 @@ async function main() {
         headline: d.headline,
         filedAt: new Date(d.filedAt),
         referenceNo: d.referenceNo,
+        url: d.url,
       }))
     )
     .onConflictDoNothing({ target: disclosures.referenceNo });

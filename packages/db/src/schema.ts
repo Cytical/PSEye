@@ -105,6 +105,8 @@ export const offerings = pgTable(
     subscriptionEnd: date("subscription_end").notNull(),
     listingDate: date("listing_date"),
     summary: text("summary").notNull(),
+    /** Link to the real PSE Edge company page for offerings with a real ticker; null otherwise. */
+    url: text("url"),
   },
   (table) => [unique().on(table.companyName, table.type, table.subscriptionStart)]
 );
@@ -117,6 +119,8 @@ export const disclosures = pgTable("disclosures", {
   headline: text("headline").notNull(),
   filedAt: timestamp("filed_at", { withTimezone: true }).notNull(),
   referenceNo: varchar("reference_no", { length: 64 }).notNull().unique(),
+  /** Link to the real PSE Edge filing detail view; null for rows inserted before this column existed. */
+  url: text("url"),
 });
 
 export const blockSales = pgTable(

@@ -8,6 +8,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@pseye/source-quotes": "workspace:*"
+  },
   "devDependencies": {
     "@pseye/config": "workspace:*",
     "typescript": "^5.6.0"

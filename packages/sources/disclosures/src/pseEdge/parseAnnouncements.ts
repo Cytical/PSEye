@@ -83,6 +83,13 @@ export function parseAnnouncementsHtml(html: string): Disclosure[] {
     const referenceNo = $(cells[4]).text().trim();
     if (!templateName || !filedAt || !referenceNo) return;
 
+    // Template Name cell's link opens the filing detail via openPopup('<edge_no>')
+    // (see edge.pse.com.ph's epCommon.js) rather than a plain href — the same
+    // hex key works as a direct URL: /openDiscViewer.do?edge_no=<edge_no>.
+    const onclick = $(cells[1]).find("a").attr("onclick") ?? "";
+    const edgeNo = onclick.match(/openPopup\('([0-9a-f]+)'\)/)?.[1];
+    const url = edgeNo ? `https://edge.pse.com.ph/openDiscViewer.do?edge_no=${edgeNo}` : null;
+
     out.push({
       ticker: company.ticker,
       companyName: company.companyName,
@@ -90,6 +97,7 @@ export function parseAnnouncementsHtml(html: string): Disclosure[] {
       headline: templateName,
       filedAt,
       referenceNo,
+      url,
     });
   });
 

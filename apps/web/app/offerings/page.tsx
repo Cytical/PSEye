@@ -100,7 +100,18 @@ export default async function OfferingsPage() {
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-panel-fg">{offering.companyName}</span>
+                  {offering.url ? (
+                    <a
+                      href={offering.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-panel-fg hover:underline"
+                    >
+                      {offering.companyName} <span aria-hidden="true">↗</span>
+                    </a>
+                  ) : (
+                    <span className="font-medium text-panel-fg">{offering.companyName}</span>
+                  )}
                   {offering.ticker && (
                     <span className="rounded bg-panel-raised px-1.5 py-0.5 font-mono text-[10px] text-panel-fg/80">
                       {offering.ticker}

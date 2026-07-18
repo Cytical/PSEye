@@ -13,6 +13,7 @@ export class MockDisclosureSource implements DisclosureSource {
       ...d,
       filedAt: hoursAgo(d.hoursAgoOffset),
       referenceNo: `SAMPLE-${new Date().getUTCFullYear()}-${String(i + 1).padStart(4, "0")}`,
+      url: null,
     })).sort((a, b) => b.filedAt.localeCompare(a.filedAt));
   }
 }
@@ -23,7 +24,7 @@ function hoursAgo(hours: number): string {
   return d.toISOString();
 }
 
-interface SampleDisclosure extends Omit<Disclosure, "filedAt" | "referenceNo"> {
+interface SampleDisclosure extends Omit<Disclosure, "filedAt" | "referenceNo" | "url"> {
   hoursAgoOffset: number;
 }
 

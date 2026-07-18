@@ -27,6 +27,8 @@ export interface Disclosure {
   filedAt: string; // ISO datetime
   /** PSE Edge assigns each filing a unique reference number; used as our dedupe key. */
   referenceNo: string;
+  /** Link to the real PSE Edge filing detail view; null for sample/mock filings, which have no real filing to point to. */
+  url: string | null;
 }
 
 export interface DisclosureSource {

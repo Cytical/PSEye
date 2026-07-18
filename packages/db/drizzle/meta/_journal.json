@@ -43,6 +43,20 @@
       "when": 1784306391494,
       "tag": "0005_silky_captain_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784387914887,
+      "tag": "0006_lying_mongu",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784387988516,
+      "tag": "0007_young_quicksilver",
+      "breakpoints": true
     }
   ]
 }

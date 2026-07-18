@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { LogoMark } from "@/components/LogoMark";
 import { getDailyQuotes } from "@/lib/quotes";
 import {
   computeTreemapLayout,
@@ -40,9 +41,12 @@ export default async function Image() {
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
-            <span style={{ fontSize: 34, fontWeight: 700, color: "#ffffff" }}>PSEye</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <LogoMark size={36} />
+              <span style={{ fontSize: 34, fontWeight: 700, color: "#ffffff" }}>PSEye</span>
+            </div>
             <span style={{ fontSize: 20, color: "#8b93a1" }}>PSE Market Map</span>
           </div>
           <span style={{ fontSize: 15, color: "#5b6272" }}>Delayed/EOD data — not for trading decisions</span>

@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
+import { LogoMark } from "@/components/LogoMark";
 import { getDailyQuotes } from "@/lib/quotes";
 
 export const size = { width: 1200, height: 630 };
@@ -43,7 +44,10 @@ export default async function Image({ params }: { params: Promise<{ ticker: stri
           fontFamily: "sans-serif",
         }}
       >
-        <span style={{ fontSize: 28, color: MUTED, letterSpacing: 1 }}>PSEye</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <LogoMark size={32} />
+          <span style={{ fontSize: 28, color: MUTED, letterSpacing: 1 }}>PSEye</span>
+        </div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 20, marginTop: 24 }}>
           <span style={{ fontSize: 96, fontWeight: 700, color: "#ffffff" }}>{upper}</span>
           <span style={{ fontSize: 40, color: MUTED }}>{company?.companyName ?? ""}</span>

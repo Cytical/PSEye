@@ -1,0 +1,1 @@
+ALTER TABLE "disclosures" ADD COLUMN "url" text;
