@@ -18,37 +18,54 @@ export class PseEdgeQuoteSource implements QuoteSource {
   constructor(private readonly requestDelayMs = 200) {}
 
   async getDailyQuotes(): Promise<Quote[]> {
-    const quotes: Quote[] = [];
+    return (await this.getDailyQuotesWithStatus()).map((r) => r.quote);
+  }
+
+  /**
+   * Same data as getDailyQuotes(), but each row also says whether *our* request
+   * for that ticker failed this run (network error, non-2xx) as opposed to PSE
+   * Edge responding normally with no trade to report (suspended ticker, no fill
+   * yet today — a legitimate null, not a failure). Only fetch-quotes.ts (the ETL
+   * job) needs this distinction, to avoid a transient scrape hiccup overwriting
+   * a ticker's real price with a spurious null for the rest of the day.
+   */
+  async getDailyQuotesWithStatus(): Promise<Array<{ quote: Quote; fetchFailed: boolean }>> {
+    const results: Array<{ quote: Quote; fetchFailed: boolean }> = [];
 
     for (const company of PSE_EDGE_COMPANIES) {
-      const parsed = await this.fetchOne(company.cmpyId);
-      quotes.push({
-        ticker: company.ticker,
-        companyName: company.companyName,
-        sector: company.sector,
-        price: parsed?.price ?? null,
-        pctChange: parsed?.pctChange ?? null,
-        marketCap: parsed?.marketCap ?? 0,
+      const outcome = await this.fetchOne(company.cmpyId);
+      results.push({
+        quote: {
+          ticker: company.ticker,
+          companyName: company.companyName,
+          sector: company.sector,
+          price: outcome.parsed?.price ?? null,
+          pctChange: outcome.parsed?.pctChange ?? null,
+          marketCap: outcome.parsed?.marketCap ?? 0,
+        },
+        fetchFailed: outcome.failed,
       });
       await sleep(this.requestDelayMs);
     }
 
-    return quotes;
+    return results;
   }
 
-  private async fetchOne(cmpyId: string) {
+  private async fetchOne(
+    cmpyId: string
+  ): Promise<{ parsed: ReturnType<typeof parseStockDataHtml> | null; failed: boolean }> {
     try {
       const res = await fetch(`https://edge.pse.com.ph/companyPage/stockData.do?cmpy_id=${cmpyId}`, {
         headers: { "User-Agent": USER_AGENT },
       });
       if (!res.ok) {
         console.error(`PseEdgeQuoteSource: cmpy_id=${cmpyId} returned HTTP ${res.status}`);
-        return null;
+        return { parsed: null, failed: true };
       }
-      return parseStockDataHtml(await res.text());
+      return { parsed: parseStockDataHtml(await res.text()), failed: false };
     } catch (err) {
       console.error(`PseEdgeQuoteSource: cmpy_id=${cmpyId} fetch failed`, err);
-      return null;
+      return { parsed: null, failed: true };
     }
   }
 }

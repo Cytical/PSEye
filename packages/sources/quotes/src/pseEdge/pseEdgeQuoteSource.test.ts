@@ -82,4 +82,37 @@ describe("PseEdgeQuoteSource", () => {
     expect(quotes[0].pctChange).toBeNull();
     expect(quotes[0].marketCap).toBe(0);
   });
+
+  it("getDailyQuotesWithStatus flags a failed request as fetchFailed, distinct from a legitimate no-trade null", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: false, status: 500, text: async () => "" }))
+    );
+
+    const source = new PseEdgeQuoteSource(0);
+    const results = await source.getDailyQuotesWithStatus();
+
+    expect(results).toHaveLength(PSE_EDGE_COMPANIES.length);
+    for (const result of results) {
+      expect(result.fetchFailed).toBe(true);
+      expect(result.quote.price).toBeNull();
+    }
+  });
+
+  it("getDailyQuotesWithStatus does not flag a successful response reporting no trade as fetchFailed", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        text: async () => stockDataHtml("", "", "1,000,000.00"),
+      }))
+    );
+
+    const source = new PseEdgeQuoteSource(0);
+    const results = await source.getDailyQuotesWithStatus();
+
+    const bdo = results.find((r) => r.quote.ticker === "BDO");
+    expect(bdo?.fetchFailed).toBe(false);
+    expect(bdo?.quote.price).toBeNull();
+  });
 });
