@@ -22,7 +22,11 @@ const LIST_URL = "https://edge.pse.com.ph/disclosureData/dividends_and_rights_in
 export class PseEdgeCorporateActionSource implements CorporateActionSource {
   constructor(
     private readonly requestDelayMs = 300,
-    private readonly maxPages = 15
+    private readonly maxPages = 15,
+    /** How far back (by ex-date) to keep rows. The default keeps the calendar's
+     * "recently passed" framing; the dividend screener's one-off backfill run
+     * passes ~400 to pull a full trailing year (see etl/jobs/fetch-corporate-actions.ts). */
+    private readonly lookbackDays = 14
   ) {}
 
   async getUpcoming(): Promise<CorporateAction[]> {
@@ -40,7 +44,7 @@ export class PseEdgeCorporateActionSource implements CorporateActionSource {
       if (page <= Math.min(totalPages, this.maxPages)) await sleep(this.requestDelayMs);
     }
 
-    return dedupe(withinWindow(results));
+    return dedupe(withinWindow(results, this.lookbackDays));
   }
 
   private async fetchPage(pageNum: number): Promise<string | null> {
@@ -72,9 +76,9 @@ export class PseEdgeCorporateActionSource implements CorporateActionSource {
 }
 
 /** Keeps the calendar focused on what's actionable: recently-passed through the next ~6 months. */
-function withinWindow(actions: CorporateAction[]): CorporateAction[] {
+function withinWindow(actions: CorporateAction[], lookbackDays: number): CorporateAction[] {
   const today = new Date().toISOString().slice(0, 10);
-  const windowStart = addDays(today, -14);
+  const windowStart = addDays(today, -lookbackDays);
   const windowEnd = addDays(today, 183);
   return actions.filter((a) => a.exDate >= windowStart && a.exDate <= windowEnd);
 }

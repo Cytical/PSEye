@@ -78,6 +78,21 @@ export async function getUpcomingCorporateActions(db: Db) {
 }
 
 /**
+ * Cash-dividend rows from `fromDate` (by ex-date) onward — past *and*
+ * upcoming, in one pass, so the /dividends screener can compute a
+ * trailing-12-month total and the next ex-date from the same result set.
+ * Depth of past coverage depends on the one-off backfill described in
+ * etl/jobs/fetch-corporate-actions.ts.
+ */
+export async function getCashDividends(db: Db, fromDate: string) {
+  return db
+    .select()
+    .from(corporateActions)
+    .where(and(eq(corporateActions.type, "cash_dividend"), gte(corporateActions.exDate, fromDate)))
+    .orderBy(asc(corporateActions.exDate));
+}
+
+/**
  * Block sale trades from the last 30 days on record, largest trade value
  * first — same cutoff-window shape as getUpcomingCorporateActions, so a
  * years-old megatrade doesn't permanently pin itself to the top of a page

@@ -11,6 +11,7 @@ const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["ch
   { path: "/compare", changeFrequency: "daily", priority: 0.6 },
   { path: "/news", changeFrequency: "hourly", priority: 0.8 },
   { path: "/calendar", changeFrequency: "daily", priority: 0.6 },
+  { path: "/dividends", changeFrequency: "daily", priority: 0.7 },
   { path: "/block-sales", changeFrequency: "monthly", priority: 0.5 },
   { path: "/disclosures", changeFrequency: "hourly", priority: 0.6 },
   { path: "/offerings", changeFrequency: "daily", priority: 0.5 },

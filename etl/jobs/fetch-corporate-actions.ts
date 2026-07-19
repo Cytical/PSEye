@@ -3,7 +3,14 @@ import { createDb, corporateActions } from "@pseye/db";
 import { PseEdgeCorporateActionSource } from "@pseye/source-corporate-actions";
 
 /**
- * Runs daily (see .github/workflows/corporate-actions-daily.yml).
+ * Runs daily (see .github/workflows/fetch-daily.yml).
+ *
+ * CORP_ACTIONS_LOOKBACK_DAYS / CORP_ACTIONS_MAX_PAGES override the source's
+ * defaults for one-off backfill runs — e.g. `CORP_ACTIONS_LOOKBACK_DAYS=400
+ * CORP_ACTIONS_MAX_PAGES=40` pulls a full trailing year of dividend history
+ * for the /dividends screener. The scheduled daily run stays at the shallow
+ * defaults: dividends are declared weeks ahead of their ex-date, so once
+ * backfilled, history accumulates on its own.
  */
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -11,8 +18,11 @@ async function main() {
     throw new Error("DATABASE_URL is required");
   }
 
+  const maxPages = Number(process.env.CORP_ACTIONS_MAX_PAGES) || 15;
+  const lookbackDays = Number(process.env.CORP_ACTIONS_LOOKBACK_DAYS) || 14;
+
   const db = createDb(databaseUrl);
-  const source = new PseEdgeCorporateActionSource();
+  const source = new PseEdgeCorporateActionSource(300, maxPages, lookbackDays);
   const actions = await source.getUpcoming();
 
   if (actions.length === 0) {
