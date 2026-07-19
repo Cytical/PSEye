@@ -37,7 +37,7 @@ function Kicker({ text, className = "" }: { text: string; className?: string }) 
 function Byline({ item, className = "" }: { item: NewsItem; className?: string }) {
   return (
     <div
-      className={`font-news-sans mt-2 flex flex-wrap items-center gap-x-1.5 text-[11px] font-medium uppercase tracking-[0.04em] text-black/50 dark:text-white/50 ${className}`}
+      className={`font-news-sans mt-2 flex flex-wrap items-center gap-x-1.5 text-[11px] font-medium uppercase tracking-[0.04em] text-black/65 dark:text-white/65 ${className}`}
     >
       <span>{item.source}</span>
       <span aria-hidden>&middot;</span>

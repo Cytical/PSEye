@@ -151,7 +151,7 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
       {!loading && selected.length > 0 && series.length > 0 && <CompareChart series={series} />}
 
       {!loading && selected.length > 0 && isSampleData && (
-        <p className="text-xs text-black/40 dark:text-white/40">
+        <p className="text-xs text-black/60 dark:text-white/60">
           Price history is sample data for one or more of these tickers — a real EOD price
           history feed hasn&apos;t been backfilled for it yet. Results are illustrative, not
           historical fact.

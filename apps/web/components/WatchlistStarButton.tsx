@@ -31,7 +31,7 @@ export function WatchlistStarButton({ ticker, size = 20, className = "" }: Watch
         stroke={watched ? "#f5b400" : "currentColor"}
         strokeWidth="1.5"
         strokeLinejoin="round"
-        className={watched ? "" : "text-panel-fg/40"}
+        className={watched ? "" : "text-panel-fg/60"}
       >
         <path d="M12 2.5l3.09 6.26 6.91 1.01-5 4.87 1.18 6.86L12 18.27l-6.18 3.23L7 14.64l-5-4.87 6.91-1.01L12 2.5z" />
       </svg>

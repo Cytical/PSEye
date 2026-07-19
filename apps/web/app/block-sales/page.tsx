@@ -76,7 +76,7 @@ export default async function BlockSalesPage() {
       )}
 
       {source === "mock" && (
-        <p className="mt-6 text-xs text-black/40 dark:text-white/40">
+        <p className="mt-6 text-xs text-black/60 dark:text-white/60">
           Sample data — no real block sales are on record yet for the last 30 days. Figures
           here are illustrative, not actual trades.
         </p>

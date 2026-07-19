@@ -83,7 +83,7 @@ export default async function CalendarPage() {
       <div className="mt-8 flex flex-col gap-8">
         {months.map(({ monthKey, actions }) => (
           <div key={monthKey}>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-panel-fg/40">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-panel-fg/60">
               {formatMonthHeading(actions[0].exDate)}
             </h2>
             <ul className="mt-3 flex flex-col gap-3">
@@ -145,20 +145,20 @@ function ActionRow({ action, isPast, todayIso }: { action: CorporateAction; isPa
 
         <div className="mt-2.5 grid grid-cols-3 gap-2 border-t border-panel-border pt-2.5 text-xs">
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-panel-fg/40">Ex-date</div>
+            <div className="text-[10px] uppercase tracking-wide text-panel-fg/60">Ex-date</div>
             <div className="mt-0.5 text-panel-fg/80">{formatDate(action.exDate)}</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-panel-fg/40">Record date</div>
+            <div className="text-[10px] uppercase tracking-wide text-panel-fg/60">Record date</div>
             <div className="mt-0.5 text-panel-fg/80">{formatDate(action.recordDate)}</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-panel-fg/40">Payment date</div>
+            <div className="text-[10px] uppercase tracking-wide text-panel-fg/60">Payment date</div>
             <div className="mt-0.5 text-panel-fg/80">{action.paymentDate ? formatDate(action.paymentDate) : "—"}</div>
           </div>
         </div>
 
-        <p className="mt-2.5 text-xs leading-snug text-panel-fg/40">{CORPORATE_ACTION_EXPLAINERS[action.type]}</p>
+        <p className="mt-2.5 text-xs leading-snug text-panel-fg/60">{CORPORATE_ACTION_EXPLAINERS[action.type]}</p>
       </div>
     </li>
   );

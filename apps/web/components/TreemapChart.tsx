@@ -185,6 +185,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
               onBlur={() => setHovered(null)}
               onClick={() => stock && selectTickerInUrl(stock.ticker)}
               title={`${box.ticker} ${formatPctChange(box.pctChange)} — click for details`}
+              aria-label={`${box.ticker}${stock ? `, ${stock.companyName}` : ""}, ${formatPctChange(box.pctChange)} today`}
             >
               {showLabel && (
                 <>
@@ -217,7 +218,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
               </span>
             </div>
             <div className="mt-0.5 truncate text-panel-fg/60">{hovered.companyName}</div>
-            <div className="text-[10px] uppercase tracking-wide text-panel-fg/40">{hovered.sector}</div>
+            <div className="text-[10px] uppercase tracking-wide text-panel-fg/60">{hovered.sector}</div>
             <div className="mt-1.5 font-semibold">
               {hovered.price == null
                 ? "N/A"
@@ -229,7 +230,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
                 <span className="text-[10px] text-panel-fg/50">1M</span>
               </div>
             )}
-            <div className="mt-1.5 text-[10px] text-panel-fg/35">Click for company info</div>
+            <div className="mt-1.5 text-[10px] text-panel-fg/60">Click for company info</div>
           </div>
         )}
       </div>
@@ -245,7 +246,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
       )}
 
       <div className="flex w-full max-w-xs flex-col items-center gap-1.5">
-        <span className="text-[10px] font-medium uppercase tracking-wide text-black/40 dark:text-white/40">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-black/60 dark:text-white/60">
           Day change
         </span>
         <div className="w-full">
@@ -262,7 +263,7 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] font-medium text-black/40 dark:text-white/40">
+        <div className="flex items-center gap-1.5 text-[10px] font-medium text-black/60 dark:text-white/60">
           <span
             className="h-2.5 w-2.5 rounded-sm ring-1 ring-inset ring-black/10 dark:ring-white/10"
             style={{ background: NO_DATA_COLOR }}

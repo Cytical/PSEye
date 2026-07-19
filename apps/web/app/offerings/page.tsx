@@ -91,7 +91,7 @@ export default async function OfferingsPage() {
           const statusStyle = STATUS_STYLE[status];
           const statusClassName =
             "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" +
-            (statusStyle ? "" : " bg-panel-raised text-panel-fg/40");
+            (statusStyle ? "" : " bg-panel-raised text-panel-fg/60");
           return (
             <div
               key={`${offering.companyName}-${offering.type}-${offering.subscriptionStart}`}
@@ -157,7 +157,7 @@ export default async function OfferingsPage() {
         })}
       </div>
 
-      <p className="mt-8 text-xs text-panel-fg/40">
+      <p className="mt-8 text-xs text-panel-fg/60">
         Sample data, including fictional pre-IPO company names — a real offering-disclosure
         tracker has not been wired in yet. Not financial advice.
       </p>

@@ -8,7 +8,7 @@ const STATUS_LABEL: Record<PhComparisonStatus, string> = {
 };
 
 const STATUS_CLASS: Record<PhComparisonStatus, string> = {
-  match: "text-black/40 dark:text-white/40",
+  match: "text-black/60 dark:text-white/60",
   "na-mismatch": "text-red-700 dark:text-red-400 font-medium",
   "price-drift": "text-amber-700 dark:text-amber-400",
   "pct-drift": "text-amber-700 dark:text-amber-400",

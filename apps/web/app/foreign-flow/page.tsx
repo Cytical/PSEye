@@ -61,7 +61,7 @@ export default async function ForeignFlowPage() {
         <FlowTable title="Top net foreign selling" rows={topSelling} tone="down" periodEnd={periodEnd} />
       </div>
 
-      <p className="mt-6 text-xs text-black/40 dark:text-white/40">
+      <p className="mt-6 text-xs text-black/60 dark:text-white/60">
         {stockFlowSource === "real"
           ? "Per-stock rankings are real daily net foreign buying/selling figures from PSE's Daily Quotation Report."
           : "Per-stock rankings above are sample data — the real daily source hasn't populated any rows yet."}
@@ -120,7 +120,7 @@ function FlowTable({
   return (
     <div>
       <h2 className="text-sm font-medium">{title}</h2>
-      <p className="text-[11px] text-black/40 dark:text-white/40">
+      <p className="text-[11px] text-black/60 dark:text-white/60">
         As of {new Date(periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "UTC" })}
       </p>
       {rows.length > 0 ? (
@@ -128,7 +128,7 @@ function FlowTable({
           {rows.map((r) => (
             <li key={r.ticker} className="flex items-center justify-between gap-2">
               <Link href={`/stocks/${r.ticker}`} className="hover:underline">
-                <span className="text-black/40 dark:text-white/40">{r.rank}.</span>{" "}
+                <span className="text-black/60 dark:text-white/60">{r.rank}.</span>{" "}
                 <span className="font-mono text-xs">{r.ticker}</span> {r.companyName}
               </Link>
               <span className={`shrink-0 tabular-nums ${toneClass}`}>{formatPeso(r.netValue)}</span>

@@ -199,7 +199,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
               </p>
             ))}
           </div>
-          <p className="mt-1.5 text-[11px] text-black/40 dark:text-white/40">{profile.source}</p>
+          <p className="mt-1.5 text-[11px] text-black/60 dark:text-white/60">{profile.source}</p>
         </div>
       )}
 
@@ -214,7 +214,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                     <span className="rounded-full border border-black/15 px-2 py-0.5 text-[10px] text-black/60 dark:border-white/15 dark:text-white/60">
                       {DISCLOSURE_TYPE_LABELS[d.type]}
                     </span>
-                    <span className="text-[11px] text-black/40 dark:text-white/40">{formatRelative(d.filedAt)}</span>
+                    <span className="text-[11px] text-black/60 dark:text-white/60">{formatRelative(d.filedAt)}</span>
                   </div>
                   <p className="mt-0.5">{d.headline}</p>
                 </li>
@@ -238,7 +238,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                     <span className="rounded-full border border-black/15 px-2 py-0.5 text-[10px] dark:border-white/15">
                       {CORPORATE_ACTION_LABELS[a.type]}
                     </span>
-                    <span className="text-[11px] text-black/40 dark:text-white/40">Ex-date {formatDate(a.exDate)}</span>
+                    <span className="text-[11px] text-black/60 dark:text-white/60">Ex-date {formatDate(a.exDate)}</span>
                   </div>
                   <p className="mt-0.5">{a.details}</p>
                 </li>
@@ -262,7 +262,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                 <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                   {item.title}
                 </a>
-                <div className="text-[11px] text-black/40 dark:text-white/40">
+                <div className="text-[11px] text-black/60 dark:text-white/60">
                   {item.source} &middot; {formatRelative(item.publishedAt.toISOString())}
                 </div>
               </li>
@@ -273,7 +273,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       <RecentlyViewed excludeTicker={ticker} />
 
-      <p className="mt-8 text-xs text-black/40 dark:text-white/40">
+      <p className="mt-8 text-xs text-black/60 dark:text-white/60">
         Delayed/EOD data from PSE Edge, not real-time. Not financial advice, a stock pick, or a
         buy/sell signal.
       </p>

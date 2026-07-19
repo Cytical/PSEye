@@ -69,7 +69,7 @@ export default async function DisclosuresPage() {
                 </span>
                 <span className="font-medium text-panel-fg">{group.companyName}</span>
               </Link>
-              <span className="shrink-0 text-[11px] text-panel-fg/40">
+              <span className="shrink-0 text-[11px] text-panel-fg/60">
                 {group.filings.length} filing{group.filings.length === 1 ? "" : "s"}
               </span>
             </div>
@@ -92,7 +92,7 @@ export default async function DisclosuresPage() {
                           New
                         </span>
                       )}
-                      <span className="ml-auto text-[11px] text-panel-fg/40">{formatRelative(f.filedAt)}</span>
+                      <span className="ml-auto text-[11px] text-panel-fg/60">{formatRelative(f.filedAt)}</span>
                     </div>
                     {f.url ? (
                       <a

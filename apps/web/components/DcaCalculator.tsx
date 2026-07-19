@@ -150,7 +150,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
           </div>
           <DcaChart timeline={result.timeline} />
           {isSampleData && (
-            <p className="text-xs text-black/40 dark:text-white/40">
+            <p className="text-xs text-black/60 dark:text-white/60">
               Price history is sample data for this selection — a real EOD price history feed
               hasn&apos;t been backfilled for it yet. Results are illustrative, not historical fact.
             </p>

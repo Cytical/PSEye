@@ -79,7 +79,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
         className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-lg bg-panel p-2 ring-1 ring-panel-border sm:sticky sm:top-4 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
         aria-label="Market map filters"
       >
-        <span className="hidden border-b border-panel-border px-2 pb-2 text-[10px] font-semibold uppercase tracking-wide text-panel-fg/35 sm:block">
+        <span className="hidden border-b border-panel-border px-2 pb-2 text-[10px] font-semibold uppercase tracking-wide text-panel-fg/60 sm:block">
           Filters
         </span>
         <div className="flex gap-2 sm:flex-col sm:gap-0.5">
@@ -100,7 +100,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
                 <span>{option.label}</span>
                 <span
                   className={`text-[11px] tabular-nums transition-colors ${
-                    isActive ? "text-panel-fg/50" : "text-panel-fg/25 group-hover:text-panel-fg/40"
+                    isActive ? "text-panel-fg/60" : "text-panel-fg/50 group-hover:text-panel-fg/65"
                   }`}
                 >
                   {countByFilter[option.key]}
@@ -123,7 +123,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
         {filter === "watchlist" && filteredStocks.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-1 rounded-lg bg-panel py-24 text-center ring-1 ring-panel-border">
             <p className="text-sm font-medium text-panel-fg/70">Your watchlist is empty.</p>
-            <p className="max-w-xs text-xs text-panel-fg/45">
+            <p className="max-w-xs text-xs text-panel-fg/60">
               Click any stock on the map, then the star icon, to add it here. Saved on this device only.
             </p>
           </div>

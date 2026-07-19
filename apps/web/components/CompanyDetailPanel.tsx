@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import type { TreemapStock } from "./TreemapChart";
 import type { CompanyProfile } from "@/lib/companyProfiles";
 import { WatchlistStarButton } from "./WatchlistStarButton";
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface CompanyDetailPanelProps {
   stock: TreemapStock;
@@ -24,12 +27,43 @@ function formatMarketCap(marketCap: number, currency: "PHP" | "USD"): string {
 }
 
 export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }: CompanyDetailPanelProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Moves focus into the dialog on open and back to whatever triggered it
+  // (the treemap box button) on close, and traps Tab/Shift+Tab within the
+  // dialog while it's open — without this, a keyboard/screen-reader user
+  // could Tab straight through into the treemap/page chrome sitting behind
+  // the overlay, making this only a *visual* modal.
   useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
+
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocused?.focus();
+    };
   }, [onClose]);
 
   const currency = stock.currency ?? "PHP";
@@ -44,11 +78,13 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
       role="presentation"
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="company-detail-heading"
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-xl bg-panel text-panel-fg ring-1 ring-panel-border shadow-2xl"
+        className="flex max-h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-xl bg-panel text-panel-fg ring-1 ring-panel-border shadow-2xl outline-none"
       >
         <div className="flex items-start justify-between gap-3 border-b border-panel-border p-5">
           <div>
@@ -56,7 +92,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
               <h2 id="company-detail-heading" className="text-lg font-bold tracking-tight">
                 {stock.ticker}
               </h2>
-              <span className="text-[10px] uppercase tracking-wide text-panel-fg/40">{stock.sector}</span>
+              <span className="text-[10px] uppercase tracking-wide text-panel-fg/60">{stock.sector}</span>
             </div>
             <div className="mt-0.5 text-sm text-panel-fg/70">{stock.companyName}</div>
           </div>
@@ -98,7 +134,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
           </div>
 
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-panel-fg/40">About</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-panel-fg/60">About</div>
             {profile == null ? (
               <p className="mt-2 text-sm text-panel-fg/50">No company description yet for {stock.ticker}.</p>
             ) : (
@@ -110,7 +146,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
                     </p>
                   ))}
                 </div>
-                <div className="mt-2.5 text-[11px] text-panel-fg/40">{profile.source}</div>
+                <div className="mt-2.5 text-[11px] text-panel-fg/60">{profile.source}</div>
               </>
             )}
           </div>
