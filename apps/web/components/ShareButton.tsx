@@ -29,6 +29,7 @@ export function ShareButton({ title = "PSEye — PSE Market Map" }: { title?: st
     <button
       type="button"
       onClick={handleShare}
+      aria-live="polite"
       className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-black/10 px-3 py-1.5 text-xs font-medium text-black/70 transition-colors hover:bg-black/5 dark:border-white/15 dark:text-white/70 dark:hover:bg-white/10"
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
