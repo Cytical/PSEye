@@ -1,4 +1,5 @@
 import "../lib/loadEnv";
+import { sql } from "drizzle-orm";
 import { createDb, newsItems } from "@pseye/db";
 import { NEWS_SOURCES } from "@pseye/source-news";
 
@@ -40,9 +41,29 @@ async function main() {
     tickers: item.tickers,
   }));
 
-  await db.insert(newsItems).values(rows).onConflictDoNothing({ target: newsItems.url });
+  // onConflictDoUpdate (not onConflictDoNothing) so an already-seen article
+  // gets its columns refreshed — in particular `image_url`, added in
+  // migration 0005 after this job had already been inserting rows for a
+  // while; onConflictDoNothing would leave every pre-existing row's
+  // image_url permanently null since the job only sees the same URL again
+  // while it's still within an outlet's RSS feed window (same bug pattern
+  // fixed for disclosures'/offerings' `url` column — see those jobs).
+  await db
+    .insert(newsItems)
+    .values(rows)
+    .onConflictDoUpdate({
+      target: newsItems.url,
+      set: {
+        source: sql`excluded.source`,
+        title: sql`excluded.title`,
+        snippet: sql`excluded.snippet`,
+        imageUrl: sql`excluded.image_url`,
+        publishedAt: sql`excluded.published_at`,
+        tickers: sql`excluded.tickers`,
+      },
+    });
 
-  console.log(`Inserted up to ${rows.length} news items (duplicates skipped).`);
+  console.log(`Upserted up to ${rows.length} news items.`);
 }
 
 main().catch((err) => {
