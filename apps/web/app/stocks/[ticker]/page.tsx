@@ -18,7 +18,10 @@ import { ShareButton } from "@/components/ShareButton";
 
 export const revalidate = 3600; // hourly; matches the quotes ETL cadence
 
+/** Chart window — a quarter reads best at this page width. */
 const HISTORY_LOOKBACK_DAYS = 90;
+/** Stats window — the standard 52-week high/low frame. The ETL keeps ~4 years, so one year is safely covered. */
+const STATS_LOOKBACK_DAYS = 365;
 
 function findCompany(tickerParam: string) {
   const upper = tickerParam.toUpperCase();
@@ -86,9 +89,12 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
   if (!company) notFound();
 
   const ticker = company.ticker;
-  const fromDate = new Date();
-  fromDate.setUTCDate(fromDate.getUTCDate() - HISTORY_LOOKBACK_DAYS);
-  const fromIso = fromDate.toISOString().slice(0, 10);
+  const statsFrom = new Date();
+  statsFrom.setUTCDate(statsFrom.getUTCDate() - STATS_LOOKBACK_DAYS);
+  const statsFromIso = statsFrom.toISOString().slice(0, 10);
+  const chartFrom = new Date();
+  chartFrom.setUTCDate(chartFrom.getUTCDate() - HISTORY_LOOKBACK_DAYS);
+  const chartFromIso = chartFrom.toISOString().slice(0, 10);
 
   const [quotes, profiles, disclosures, corporateActions, news] = await Promise.all([
     getDailyQuotes(),
@@ -110,10 +116,39 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
   const sectorRank = sectorRanked.findIndex((q) => q.ticker === ticker) + 1;
   const summaryLine = `${sector} · #${rank} by market cap of ${quotes.length} tracked PSE stocks · #${sectorRank} of ${sectorRanked.length} in sector`;
 
+  // One year-deep query serves both the 52-week stats and (sliced) the chart.
   const history = quote
-    ? await getHistoricalQuotes([ticker], fromIso, async () => quotes)
+    ? await getHistoricalQuotes([ticker], statsFromIso, async () => quotes)
     : { source: "mock" as const, history: {} };
-  const closes = history.source === "real" ? (history.history[ticker] ?? []) : [];
+  const yearCloses = history.source === "real" ? (history.history[ticker] ?? []) : [];
+  const closes = yearCloses.filter((c) => c.date >= chartFromIso);
+
+  // 52-week high/low, honestly labeled: a recently listed company with less
+  // than ~a year of closes gets "since <month>" instead of claiming 52 weeks.
+  let yearStats: { high: number; low: number; sinceLabel: string | null; pctFromHigh: number | null } | null = null;
+  if (yearCloses.length >= 20) {
+    let high = -Infinity;
+    let low = Infinity;
+    for (const c of yearCloses) {
+      if (c.close > high) high = c.close;
+      if (c.close < low) low = c.close;
+    }
+    const coverageCutoff = new Date();
+    coverageCutoff.setUTCDate(coverageCutoff.getUTCDate() - 350);
+    const partial = yearCloses[0].date > coverageCutoff.toISOString().slice(0, 10);
+    yearStats = {
+      high,
+      low,
+      sinceLabel: partial
+        ? new Date(yearCloses[0].date + "T00:00:00Z").toLocaleDateString("en-PH", {
+            month: "short",
+            year: "numeric",
+            timeZone: "UTC",
+          })
+        : null,
+      pctFromHigh: quote?.price != null && high > 0 ? (quote.price / high - 1) * 100 : null,
+    };
+  }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   // @graph bundles the company identity with a BreadcrumbList — Google renders the
@@ -191,6 +226,25 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         />
         <Stat label="Market cap" value={quote ? formatMarketCap(quote.marketCap) : "N/A"} />
         <Stat label="Sector" value={sector} />
+        {yearStats && (
+          <>
+            <Stat
+              label={yearStats.sinceLabel ? `High since ${yearStats.sinceLabel}` : "52-wk high"}
+              value={formatPeso(yearStats.high)}
+            />
+            <Stat
+              label={yearStats.sinceLabel ? `Low since ${yearStats.sinceLabel}` : "52-wk low"}
+              value={formatPeso(yearStats.low)}
+            />
+            {yearStats.pctFromHigh != null && (
+              <Stat
+                label={yearStats.sinceLabel ? "vs that high" : "vs 52-wk high"}
+                value={`${yearStats.pctFromHigh >= 0 ? "+" : ""}${yearStats.pctFromHigh.toFixed(1)}%`}
+                tone={yearStats.pctFromHigh >= -1 ? "up" : yearStats.pctFromHigh <= -20 ? "down" : undefined}
+              />
+            )}
+          </>
+        )}
       </div>
 
       {closes.length >= 2 && (
