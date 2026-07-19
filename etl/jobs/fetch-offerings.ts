@@ -1,4 +1,5 @@
 import "../lib/loadEnv";
+import { sql } from "drizzle-orm";
 import { createDb, offerings } from "@pseye/db";
 import { MockOfferingSource } from "@pseye/source-offerings";
 
@@ -17,6 +18,12 @@ async function main() {
   const source = new MockOfferingSource();
   const items = await source.getUpcoming();
 
+  // onConflictDoUpdate (not onConflictDoNothing) so a row already on record
+  // gets its columns refreshed — in particular `url`, added after this job
+  // had already been inserting rows for a while; onConflictDoNothing would
+  // leave every pre-existing row's url permanently null since the source is
+  // a fixed deterministic mock list that re-generates the same identities
+  // every run.
   await db
     .insert(offerings)
     .values(
@@ -33,8 +40,17 @@ async function main() {
         url: o.url,
       }))
     )
-    .onConflictDoNothing({
+    .onConflictDoUpdate({
       target: [offerings.companyName, offerings.type, offerings.subscriptionStart],
+      set: {
+        ticker: sql`excluded.ticker`,
+        sector: sql`excluded.sector`,
+        offerPrice: sql`excluded.offer_price`,
+        subscriptionEnd: sql`excluded.subscription_end`,
+        listingDate: sql`excluded.listing_date`,
+        summary: sql`excluded.summary`,
+        url: sql`excluded.url`,
+      },
     });
 
   console.log(`Upserted up to ${items.length} offerings.`);

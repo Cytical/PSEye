@@ -1,4 +1,5 @@
 import "../lib/loadEnv";
+import { sql } from "drizzle-orm";
 import { createDb, disclosures } from "@pseye/db";
 import { PseEdgeDisclosureSource } from "@pseye/source-disclosures";
 
@@ -21,6 +22,12 @@ async function main() {
     return;
   }
 
+  // onConflictDoUpdate (not onConflictDoNothing) so a disclosure already on
+  // record gets its columns refreshed — in particular `url`, added after
+  // this job had already been inserting rows for a while; onConflictDoNothing
+  // would leave every pre-existing row's url permanently null since the job
+  // only ever sees the same referenceNo again while it's still within PSE
+  // Edge's recent-announcements search window.
   await db
     .insert(disclosures)
     .values(
@@ -34,9 +41,19 @@ async function main() {
         url: d.url,
       }))
     )
-    .onConflictDoNothing({ target: disclosures.referenceNo });
+    .onConflictDoUpdate({
+      target: disclosures.referenceNo,
+      set: {
+        ticker: sql`excluded.ticker`,
+        companyName: sql`excluded.company_name`,
+        type: sql`excluded.type`,
+        headline: sql`excluded.headline`,
+        filedAt: sql`excluded.filed_at`,
+        url: sql`excluded.url`,
+      },
+    });
 
-  console.log(`Inserted up to ${items.length} disclosures (duplicates skipped).`);
+  console.log(`Upserted up to ${items.length} disclosures.`);
 }
 
 main().catch((err) => {
