@@ -22,6 +22,12 @@
   --panel-fg: #171717;
   --panel-canvas: #f6f5f3;
   --panel-grid: #ffffff;
+  /* Without this, native form controls (<select> popups, scrollbars, date
+   * pickers) always render with the browser's light-mode UA colors — in the
+   * dark theme that meant a white dropdown list showing light (near-white)
+   * inherited text, i.e. invisible. This tells the browser which UA palette
+   * to pick per theme so native chrome follows our own. */
+  color-scheme: light;
 }
 
 @theme inline {
@@ -49,6 +55,7 @@
   --panel-fg: #ffffff;
   --panel-canvas: #0d0f14;
   --panel-grid: #05060a;
+  color-scheme: dark;
 }
 
 /* Financial Times-style warm paper tone. Panel surfaces are a deeper cream
@@ -71,6 +78,18 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Keyboard-only focus ring, site-wide. Buttons/links here mostly rely on
+ * background/opacity changes for :hover, which give a mouse user feedback
+ * but leave a keyboard user with only the browser's default outline (often
+ * invisible against these custom surface colors) — this makes every
+ * interactive element show a clear, theme-matched ring when tabbed to,
+ * without adding any outline for a mouse click (:focus-visible, not :focus). */
+:focus-visible {
+  outline: 2px solid var(--panel-fg);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* Respects OS-level "reduce motion" — covers every animate-pulse loading

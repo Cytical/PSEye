@@ -75,7 +75,7 @@ export function TickerSearch() {
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 120)}
         onKeyDown={handleKeyDown}
-        className="w-full rounded-md border border-black/15 bg-transparent px-2.5 py-1 text-xs dark:border-white/15"
+        className="w-full rounded-md border border-foreground/15 bg-transparent px-2.5 py-1 text-xs"
       />
       {open && results.length > 0 && (
         <ul

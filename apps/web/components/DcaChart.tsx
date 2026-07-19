@@ -89,7 +89,7 @@ export function DcaChart({ timeline }: { timeline: DcaPoint[] }) {
               x2={WIDTH - PAD_RIGHT}
               y1={yForValue(t)}
               y2={yForValue(t)}
-              className="stroke-black/10 dark:stroke-white/10"
+              className="stroke-panel-fg/10"
               strokeWidth={1}
             />
             <text
@@ -98,7 +98,7 @@ export function DcaChart({ timeline }: { timeline: DcaPoint[] }) {
               textAnchor="end"
               dominantBaseline="middle"
               fontSize={10}
-              className="fill-black/40 dark:fill-white/40"
+              className="fill-panel-fg/40"
             >
               {currency(t)}
             </text>
@@ -129,7 +129,7 @@ export function DcaChart({ timeline }: { timeline: DcaPoint[] }) {
               x2={xForIndex(hoverIndex)}
               y1={PAD_TOP}
               y2={HEIGHT - PAD_BOTTOM}
-              className="stroke-black/30 dark:stroke-white/30"
+              className="stroke-panel-fg/30"
               strokeWidth={1}
               strokeDasharray="2,2"
             />
@@ -154,7 +154,7 @@ export function DcaChart({ timeline }: { timeline: DcaPoint[] }) {
         />
       </svg>
 
-      <div className="mt-1 flex flex-wrap items-center gap-4 text-[11px] text-black/60 dark:text-white/60">
+      <div className="mt-1 flex flex-wrap items-center gap-4 text-[11px] text-panel-fg/60">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2 w-2 rounded-full" style={{ background: "var(--series-value)" }} />
           Portfolio value

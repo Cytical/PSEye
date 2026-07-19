@@ -12,16 +12,32 @@ const STORAGE_KEY = "pseye:recently-viewed";
 const CHANGE_EVENT = "pseye:recentlyviewedchange";
 const MAX_ITEMS = 6;
 
+const EMPTY_TICKERS: string[] = [];
+
+// useSyncExternalStore compares snapshots by reference — see the identical
+// comment in lib/watchlist.ts's readTickers for why this must be cached
+// against the raw string rather than re-parsed fresh on every call.
+let cachedRaw: string | null = null;
+let cachedTickers: string[] = EMPTY_TICKERS;
+
 function readTickers(): string[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") return EMPTY_TICKERS;
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (raw === cachedRaw) return cachedTickers;
+  cachedRaw = raw;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === "string") : [];
+    if (!raw) {
+      cachedTickers = EMPTY_TICKERS;
+    } else {
+      const parsed = JSON.parse(raw);
+      cachedTickers = Array.isArray(parsed)
+        ? parsed.filter((t): t is string => typeof t === "string")
+        : EMPTY_TICKERS;
+    }
   } catch {
-    return [];
+    cachedTickers = EMPTY_TICKERS;
   }
+  return cachedTickers;
 }
 
 export function recordView(ticker: string): void {
@@ -40,7 +56,7 @@ function subscribe(callback: () => void) {
 }
 
 function emptySnapshot(): string[] {
-  return [];
+  return EMPTY_TICKERS;
 }
 
 export function useRecentlyViewed(excludeTicker?: string): string[] {

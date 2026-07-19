@@ -3,8 +3,8 @@ import Link from "next/link";
 import {
   CORPORATE_ACTION_LABELS,
   CORPORATE_ACTION_EXPLAINERS,
+  CORPORATE_ACTION_TYPE_ACCENT,
   type CorporateAction,
-  type CorporateActionType,
 } from "@pseye/source-corporate-actions";
 import { getCorporateActions } from "@/lib/corporateActions";
 
@@ -13,16 +13,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Calendar",
   description: "Dividend and corporate actions calendar — ex-date, record date, and payment date.",
-};
-
-/** Muted, theme-safe accent per action type — a 10%-opacity tint for badges/left-borders, distinct enough to scan a list by type at a glance. */
-const TYPE_ACCENT: Record<CorporateActionType, string> = {
-  cash_dividend: "#2f8f4e",
-  stock_dividend: "#2f6f9f",
-  property_dividend: "#8a5fc2",
-  rights_offer: "#b8862f",
-  follow_on_offer: "#c2662f",
-  stock_split: "#c23f7f",
+  alternates: { canonical: "/calendar" },
 };
 
 function formatDate(iso: string): string {
@@ -73,7 +64,7 @@ export default async function CalendarPage() {
   const months = groupByMonth(sorted);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-[1240px] px-4 py-8">
       <h1 className="text-2xl font-semibold tracking-tight">Dividend &amp; Corporate Actions Calendar</h1>
       <p className="mt-1.5 text-sm text-panel-fg/60">
         Ex-date, record date, and payment date for dividends, rights offers, and other
@@ -110,7 +101,7 @@ export default async function CalendarPage() {
 }
 
 function ActionRow({ action, isPast, todayIso }: { action: CorporateAction; isPast: boolean; todayIso: string }) {
-  const accent = TYPE_ACCENT[action.type];
+  const accent = CORPORATE_ACTION_TYPE_ACCENT[action.type];
   const days = daysUntil(action.exDate, todayIso);
 
   return (

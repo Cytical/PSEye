@@ -49,7 +49,7 @@ export function StockPriceChart({ closes }: { closes: HistoricalClose[] }) {
             x2={WIDTH - PAD_RIGHT}
             y1={yFor(t)}
             y2={yFor(t)}
-            className="stroke-black/10 dark:stroke-white/10"
+            className="stroke-panel-fg/10"
             strokeWidth={1}
           />
           <text
@@ -58,7 +58,7 @@ export function StockPriceChart({ closes }: { closes: HistoricalClose[] }) {
             textAnchor="end"
             dominantBaseline="middle"
             fontSize={10}
-            className="fill-black/40 dark:fill-white/40"
+            className="fill-panel-fg/40"
           >
             {t.toFixed(2)}
           </text>

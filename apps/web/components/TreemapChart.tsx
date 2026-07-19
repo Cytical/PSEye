@@ -36,7 +36,17 @@ interface TreemapChartProps {
   height?: number;
   /** Ticker -> one-time-fetched company description (see apps/web/lib/companyProfiles.ts). */
   profileByTicker?: Record<string, CompanyProfile>;
+  /** When set, an extra "+" tile is laid out into the grid itself (see ADD_TILE_TICKER below) that calls this on click — used by the "My Watchlist" filter so bookmarking stays on the map. */
+  onAddTileClick?: () => void;
 }
+
+/** Sentinel ticker/sector for the synthetic "+" tile injected into the layout
+ * input (never present in `stocks`) — computeTreemapLayout treats it like any
+ * other entry, weighted so it claims 1/(N+1) of the canvas (see the comment
+ * on `layoutInput` below), which is what makes it resize itself down as more
+ * stocks get bookmarked rather than sitting at a fixed pixel size. */
+const ADD_TILE_TICKER = "__pseye_add_watchlist_tile__";
+const ADD_TILE_SECTOR = "__pseye_add_watchlist_sector__";
 
 const DEFAULT_HEIGHT = 640;
 // CSS custom properties, not JS constants, so the canvas chrome re-themes
@@ -90,7 +100,13 @@ function selectTickerInUrl(next: string | null) {
  * finviz-style poster of bright, saturated, data-driven colors regardless
  * of theme, since those encode real information (percent change).
  */
-export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT, profileByTicker }: TreemapChartProps) {
+export function TreemapChart({
+  stocks,
+  width: widthProp,
+  height = DEFAULT_HEIGHT,
+  profileByTicker,
+  onAddTileClick,
+}: TreemapChartProps) {
   const [hovered, setHovered] = useState<TreemapStock | null>(null);
   // Synced to the `?ticker=` URL param (server snapshot null so hydration never mismatches
   // a client that might land on a deep-linked ticker) — makes "look at this stock" shareable.
@@ -111,10 +127,26 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
   }, [widthProp]);
 
   const width = widthProp ?? measuredWidth;
+
+  // Giving the add-tile a weight equal to the *average* market cap of the
+  // stocks already on screen makes it claim exactly 1/(N+1) of the total
+  // canvas area regardless of how those N stocks' caps are distributed: if
+  // their caps sum to S, the tile's share works out to (S/N) / (S + S/N) =
+  // 1/(N+1) — half the screen at N=1, a third at N=2, and so on, which is
+  // the "dynamic" sizing this was asked for rather than a fixed pixel size.
+  const layoutInput = useMemo((): TreemapInput[] => {
+    if (!onAddTileClick || stocks.length === 0) return stocks;
+    const avgMarketCap = stocks.reduce((sum, s) => sum + s.marketCap, 0) / stocks.length;
+    return [
+      ...stocks,
+      { ticker: ADD_TILE_TICKER, sector: ADD_TILE_SECTOR, marketCap: avgMarketCap, pctChange: null },
+    ];
+  }, [stocks, onAddTileClick]);
+
   // Recomputing the squarified treemap layout (a d3-hierarchy pass over ~100
   // boxes) on every hover — the component's most frequent re-render trigger —
-  // was pure waste, since layout only actually depends on stocks/width/height.
-  const layout = useMemo(() => computeTreemapLayout(stocks, width, height), [stocks, width, height]);
+  // was pure waste, since layout only actually depends on layoutInput/width/height.
+  const layout = useMemo(() => computeTreemapLayout(layoutInput, width, height), [layoutInput, width, height]);
   const byTicker = useMemo(() => new Map(stocks.map((s) => [s.ticker, s])), [stocks]);
   const selected = selectedTicker ? (byTicker.get(selectedTicker) ?? null) : null;
 
@@ -137,7 +169,9 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
         role="img"
         aria-label="PSE market map: box size is market cap, color is today's percent change"
       >
-        {layout.sectors.map((sector) => (
+        {layout.sectors
+          .filter((sector) => sector.sector !== ADD_TILE_SECTOR)
+          .map((sector) => (
           <div
             key={sector.sector}
             className="absolute flex items-center overflow-hidden whitespace-nowrap px-2.5 text-xs font-semibold uppercase tracking-wide text-panel-fg/80"
@@ -157,6 +191,28 @@ export function TreemapChart({ stocks, width: widthProp, height = DEFAULT_HEIGHT
         {layout.stocks.map((box) => {
           const w = box.x1 - box.x0;
           const h = box.y1 - box.y0;
+
+          if (box.ticker === ADD_TILE_TICKER) {
+            const iconSize = Math.max(18, Math.min(44, Math.min(w, h) / 2.4));
+            return (
+              <button
+                key={box.ticker}
+                type="button"
+                onClick={onAddTileClick}
+                aria-label="Add a stock to your watchlist"
+                title="Add a stock to your watchlist"
+                className="absolute flex flex-col items-center justify-center gap-1 overflow-hidden rounded-sm border-2 border-dashed border-panel-border text-panel-fg/45 transition-colors hover:border-panel-fg/50 hover:bg-panel-raised hover:text-panel-fg/80"
+                style={{ left: box.x0, top: box.y0, width: w, height: h }}
+              >
+                <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                {w > 70 && h > 46 && <span className="text-xs font-medium">Add stock</span>}
+              </button>
+            );
+          }
+
           const fill = pctChangeToColor(box.pctChange);
           const ink = getContrastText(fill);
           const showLabel = shouldShowLabel(w, h);

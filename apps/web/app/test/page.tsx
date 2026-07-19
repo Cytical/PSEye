@@ -62,9 +62,12 @@ export default async function TestPage({
           <p className="mt-1 text-xs text-black/50 dark:text-white/50">
             Re-fetches every tracked ticker from PSE Edge on demand (~97 requests, ~20s) and diffs
             it against what&apos;s stored in the DB. Verifies the ETL write path and staleness —
-            price/% drift is expected if the market has moved since the last ETL run; an N/A
-            mismatch (one side reports a trade, the other doesn&apos;t) is the signal worth
-            investigating.
+            price/% drift is expected if the market has moved since the last ETL run. An N/A
+            mismatch (one side reports a trade, the other doesn&apos;t) or a % N/A mismatch (price
+            matches, but one side has no % change value at all) is the signal worth investigating —
+            the latter means that ticker&apos;s stored % change is stuck at N/A even though a real
+            value exists, usually from a scrape hiccup on a prior ETL run that a later run hasn&apos;t
+            overwritten yet.
           </p>
           {comparison && (
             <div className="mt-4">

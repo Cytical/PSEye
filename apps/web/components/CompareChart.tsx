@@ -47,7 +47,7 @@ export function CompareChart({ series }: { series: CompareSeries[] }) {
 
   if (normalized.length === 0 || dateCount < 2) {
     return (
-      <p className="text-sm text-black/50 dark:text-white/50">
+      <p className="text-sm text-panel-fg/50">
         Not enough overlapping price history for this selection yet.
       </p>
     );
@@ -88,10 +88,10 @@ export function CompareChart({ series }: { series: CompareSeries[] }) {
               x2={WIDTH - PAD_RIGHT}
               y1={yForPct(t)}
               y2={yForPct(t)}
-              className={t === 0 ? "stroke-black/25 dark:stroke-white/25" : "stroke-black/10 dark:stroke-white/10"}
+              className={t === 0 ? "stroke-panel-fg/25" : "stroke-panel-fg/10"}
               strokeWidth={1}
             />
-            <text x={PAD_LEFT - 8} y={yForPct(t)} textAnchor="end" dominantBaseline="middle" fontSize={10} className="fill-black/40 dark:fill-white/40">
+            <text x={PAD_LEFT - 8} y={yForPct(t)} textAnchor="end" dominantBaseline="middle" fontSize={10} className="fill-panel-fg/40">
               {formatPct(t)}
             </text>
           </g>
@@ -118,7 +118,7 @@ export function CompareChart({ series }: { series: CompareSeries[] }) {
             x2={xForIndex(hoverIndex)}
             y1={PAD_TOP}
             y2={HEIGHT - PAD_BOTTOM}
-            className="stroke-black/30 dark:stroke-white/30"
+            className="stroke-panel-fg/30"
             strokeWidth={1}
             strokeDasharray="2,2"
           />
@@ -145,7 +145,7 @@ export function CompareChart({ series }: { series: CompareSeries[] }) {
         />
       </svg>
 
-      <div className="mt-2 flex flex-wrap items-center gap-4 text-[11px] text-black/60 dark:text-white/60">
+      <div className="mt-2 flex flex-wrap items-center gap-4 text-[11px] text-panel-fg/60">
         {normalized.map((s, i) => (
           <span key={s.ticker} className="flex items-center gap-1.5">
             <span

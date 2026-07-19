@@ -1,7 +1,12 @@
 import { getDailyQuotes } from "./quotes";
 import { PseEdgeQuoteSource } from "@pseye/source-quotes";
 
-export type PhComparisonStatus = "match" | "na-mismatch" | "price-drift" | "pct-drift";
+export type PhComparisonStatus =
+  | "match"
+  | "na-mismatch"
+  | "pct-na-mismatch"
+  | "price-drift"
+  | "pct-drift";
 
 export interface PhComparisonRow {
   ticker: string;
@@ -17,6 +22,7 @@ export interface PhComparisonResult {
   rows: PhComparisonRow[];
   matchCount: number;
   naMismatchCount: number;
+  pctNaMismatchCount: number;
   driftCount: number;
 }
 
@@ -60,6 +66,12 @@ export async function comparePhQuotes(): Promise<PhComparisonResult> {
       status = "na-mismatch";
     } else if (!numbersEqual(db.price, livePrice)) {
       status = "price-drift";
+    } else if ((db.pctChange === null) !== (livePctChange === null)) {
+      // Price matches but one side has no % change at all — this isn't the
+      // market moving between fetches (that's pct-drift below), it's the ETL
+      // run's own scrape failing to capture a value that genuinely exists.
+      // Worth investigating, same as an na-mismatch, not "expected drift".
+      status = "pct-na-mismatch";
     } else if (!numbersEqual(db.pctChange, livePctChange)) {
       status = "pct-drift";
     }
@@ -79,6 +91,7 @@ export async function comparePhQuotes(): Promise<PhComparisonResult> {
     rows,
     matchCount: rows.filter((r) => r.status === "match").length,
     naMismatchCount: rows.filter((r) => r.status === "na-mismatch").length,
+    pctNaMismatchCount: rows.filter((r) => r.status === "pct-na-mismatch").length,
     driftCount: rows.filter((r) => r.status === "price-drift" || r.status === "pct-drift").length,
   };
 }

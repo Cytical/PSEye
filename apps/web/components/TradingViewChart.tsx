@@ -31,8 +31,10 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
 
+    let cancelled = false;
+
     function render() {
-      if (!wrapper) return;
+      if (cancelled || !wrapper) return;
       wrapper.innerHTML = "";
 
       const container = document.createElement("div");
@@ -65,15 +67,30 @@ export function TradingViewChart({ symbol }: { symbol: string }) {
       container.appendChild(script);
     }
 
-    render();
+    // Deferred a tick rather than called inline: React's dev-mode Strict
+    // Mode mounts this effect, cleans it up, then mounts it again — all
+    // synchronously. Calling render() immediately meant the first run's
+    // script was still mid-async-load (fetching TradingView's bundle) when
+    // the second run's render() tore its container out via innerHTML = "";
+    // by the time that first script finished loading and tried to wire up
+    // its postMessage listener, the iframe it was targeting had already
+    // been removed from the DOM — "contentWindow is not available". The
+    // setTimeout/clearTimeout pair means only the second (real) run's
+    // render() actually fires; the first run's is cancelled before its
+    // timer ever executes.
+    const timer = setTimeout(render, 0);
 
-    const observer = new MutationObserver(render);
+    const observer = new MutationObserver(() => render());
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["data-theme"],
     });
 
-    return () => observer.disconnect();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      observer.disconnect();
+    };
   }, [symbol]);
 
   return (

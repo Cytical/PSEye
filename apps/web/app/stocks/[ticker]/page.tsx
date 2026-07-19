@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
-import { DISCLOSURE_TYPE_LABELS } from "@pseye/source-disclosures";
-import { CORPORATE_ACTION_LABELS } from "@pseye/source-corporate-actions";
+import { DISCLOSURE_TYPE_LABELS, DISCLOSURE_TYPE_ACCENT } from "@pseye/source-disclosures";
+import { CORPORATE_ACTION_LABELS, CORPORATE_ACTION_TYPE_ACCENT } from "@pseye/source-corporate-actions";
 import { getDailyQuotes } from "@/lib/quotes";
 import { getCompanyProfiles } from "@/lib/companyProfiles";
 import { getDisclosures } from "@/lib/disclosures";
@@ -140,7 +140,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       <RecordStockView ticker={ticker} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="text-xs text-black/50 dark:text-white/50">
+      <nav className="text-xs text-panel-fg/50">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -152,17 +152,17 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         <div className="flex items-baseline gap-2">
           <WatchlistStarButton ticker={company.ticker} size={22} className="translate-y-0.5" />
           <div>
-            <h1 className="text-2xl font-semibold">
-              {company.companyName} <span className="font-mono text-lg text-black/50 dark:text-white/50">({company.ticker})</span>
+            <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">
+              {company.companyName} <span className="font-mono text-lg text-panel-fg/50">({company.ticker})</span>
             </h1>
-            <p className="mt-1 text-sm text-black/60 dark:text-white/60">{summaryLine}</p>
+            <p className="mt-1 text-sm text-panel-fg/60">{summaryLine}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <ShareButton title={`${company.ticker} — ${company.companyName} | PSEye`} />
+          <ShareButton />
           <Link
             href={`/?ticker=${company.ticker}`}
-            className="rounded-md border border-black/10 px-3 py-1.5 text-xs font-medium hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+            className="rounded-md border border-panel-border px-3 py-1.5 text-xs font-medium text-panel-fg transition-colors hover:bg-panel-raised"
           >
             View on market map
           </Link>
@@ -182,8 +182,8 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {closes.length >= 2 && (
         <div className="mt-6">
-          <h2 className="text-sm font-medium">Closing price, last {HISTORY_LOOKBACK_DAYS} days</h2>
-          <div className="mt-2">
+          <h2 className="text-sm font-medium text-panel-fg">Closing price, last {HISTORY_LOOKBACK_DAYS} days</h2>
+          <div className="mt-2 rounded-lg bg-panel p-3 ring-1 ring-panel-border">
             <StockPriceChart closes={closes} />
           </div>
         </div>
@@ -191,63 +191,94 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {profile && (
         <div className="mt-6">
-          <h2 className="text-sm font-medium">About</h2>
+          <h2 className="text-sm font-medium text-panel-fg">About</h2>
           <div className="mt-2 flex flex-col gap-2.5">
             {profile.description.split("\n\n").map((paragraph, i) => (
-              <p key={i} className="text-sm leading-snug text-black/80 dark:text-white/80">
+              <p key={i} className="text-sm leading-snug text-panel-fg/80">
                 {paragraph}
               </p>
             ))}
           </div>
-          <p className="mt-1.5 text-[11px] text-black/60 dark:text-white/60">{profile.source}</p>
+          <p className="mt-1.5 text-[11px] text-panel-fg/60">{profile.source}</p>
         </div>
       )}
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
         <div>
-          <h2 className="text-sm font-medium">Recent disclosures</h2>
+          <h2 className="text-sm font-medium text-panel-fg">Recent disclosures</h2>
           {companyDisclosures.length > 0 ? (
-            <ul className="mt-2 flex flex-col gap-2.5">
-              {companyDisclosures.map((d) => (
-                <li key={d.referenceNo} className="text-sm">
-                  <div className="flex flex-wrap items-baseline gap-2">
-                    <span className="rounded-full border border-black/15 px-2 py-0.5 text-[10px] text-black/60 dark:border-white/15 dark:text-white/60">
-                      {DISCLOSURE_TYPE_LABELS[d.type]}
-                    </span>
-                    <span className="text-[11px] text-black/60 dark:text-white/60">{formatRelative(d.filedAt)}</span>
-                  </div>
-                  <p className="mt-0.5">{d.headline}</p>
-                </li>
-              ))}
+            <ul className="mt-2 flex flex-col gap-2">
+              {companyDisclosures.map((d) => {
+                const accent = DISCLOSURE_TYPE_ACCENT[d.type];
+                return (
+                  <li
+                    key={d.referenceNo}
+                    className="rounded-md bg-panel px-3 py-2.5 text-sm ring-1 ring-panel-border"
+                    style={{ borderLeft: `3px solid ${accent}` }}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+                        style={{ backgroundColor: `${accent}1a`, color: accent }}
+                      >
+                        {DISCLOSURE_TYPE_LABELS[d.type]}
+                      </span>
+                      <span className="ml-auto text-[11px] text-panel-fg/60">{formatRelative(d.filedAt)}</span>
+                    </div>
+                    {d.url ? (
+                      <a
+                        href={d.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 block text-panel-fg hover:underline"
+                      >
+                        {d.headline} <span aria-hidden="true">↗</span>
+                      </a>
+                    ) : (
+                      <p className="mt-1 text-panel-fg">{d.headline}</p>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-black/50 dark:text-white/50">No recent disclosures on record.</p>
+            <p className="mt-2 text-sm text-panel-fg/50">No recent disclosures on record.</p>
           )}
-          <Link href="/disclosures" className="mt-2 inline-block text-xs text-black/50 hover:underline dark:text-white/50">
+          <Link href="/disclosures" className="mt-2 inline-block text-xs text-panel-fg/50 hover:underline">
             All disclosures →
           </Link>
         </div>
 
         <div>
-          <h2 className="text-sm font-medium">Dividend &amp; corporate action history</h2>
+          <h2 className="text-sm font-medium text-panel-fg">Dividend &amp; corporate action history</h2>
           {companyActions.length > 0 ? (
-            <ul className="mt-2 flex flex-col gap-2.5">
-              {companyActions.map((a) => (
-                <li key={`${a.type}-${a.exDate}`} className="text-sm">
-                  <div className="flex flex-wrap items-baseline gap-2">
-                    <span className="rounded-full border border-black/15 px-2 py-0.5 text-[10px] dark:border-white/15">
-                      {CORPORATE_ACTION_LABELS[a.type]}
-                    </span>
-                    <span className="text-[11px] text-black/60 dark:text-white/60">Ex-date {formatDate(a.exDate)}</span>
-                  </div>
-                  <p className="mt-0.5">{a.details}</p>
-                </li>
-              ))}
+            <ul className="mt-2 flex flex-col gap-2">
+              {companyActions.map((a) => {
+                const accent = CORPORATE_ACTION_TYPE_ACCENT[a.type];
+                return (
+                  <li
+                    key={`${a.type}-${a.exDate}`}
+                    className="rounded-md bg-panel px-3 py-2.5 text-sm ring-1 ring-panel-border"
+                    style={{ borderLeft: `3px solid ${accent}` }}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+                        style={{ backgroundColor: `${accent}1a`, color: accent }}
+                      >
+                        {CORPORATE_ACTION_LABELS[a.type]}
+                      </span>
+                      <span className="ml-auto text-[11px] text-panel-fg/60">Ex-date {formatDate(a.exDate)}</span>
+                    </div>
+                    <p className="mt-1 text-panel-fg">{a.details}</p>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-black/50 dark:text-white/50">No recent corporate actions on record.</p>
+            <p className="mt-2 text-sm text-panel-fg/50">No recent corporate actions on record.</p>
           )}
-          <Link href="/calendar" className="mt-2 inline-block text-xs text-black/50 hover:underline dark:text-white/50">
+          <Link href="/calendar" className="mt-2 inline-block text-xs text-panel-fg/50 hover:underline">
             Full calendar →
           </Link>
         </div>
@@ -255,14 +286,14 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {news.length > 0 && (
         <div className="mt-8">
-          <h2 className="text-sm font-medium">In the news</h2>
+          <h2 className="text-sm font-medium text-panel-fg">In the news</h2>
           <ul className="mt-2 flex flex-col gap-2.5">
             {news.map((item) => (
               <li key={item.url} className="text-sm">
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-panel-fg hover:underline">
                   {item.title}
                 </a>
-                <div className="text-[11px] text-black/60 dark:text-white/60">
+                <div className="text-[11px] text-panel-fg/60">
                   {item.source} &middot; {formatRelative(item.publishedAt.toISOString())}
                 </div>
               </li>
@@ -273,7 +304,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       <RecentlyViewed excludeTicker={ticker} />
 
-      <p className="mt-8 text-xs text-black/60 dark:text-white/60">
+      <p className="mt-8 text-xs text-panel-fg/60">
         Delayed/EOD data from PSE Edge, not real-time. Not financial advice, a stock pick, or a
         buy/sell signal.
       </p>
@@ -282,10 +313,11 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 }
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "up" | "down" }) {
-  const toneClass = tone === "up" ? "text-[#006300] dark:text-[#0ca30c]" : tone === "down" ? "text-[#d03b3b]" : "";
+  const toneClass =
+    tone === "up" ? "text-[#006300] dark:text-[#0ca30c]" : tone === "down" ? "text-[#d03b3b]" : "text-panel-fg";
   return (
-    <div className="rounded-md border border-black/10 p-3 dark:border-white/10">
-      <div className="text-[11px] text-black/50 dark:text-white/50">{label}</div>
+    <div className="rounded-lg bg-panel p-3 ring-1 ring-panel-border">
+      <div className="text-[11px] text-panel-fg/50">{label}</div>
       <div className={`mt-0.5 text-lg font-semibold tabular-nums ${toneClass}`}>{value}</div>
     </div>
   );

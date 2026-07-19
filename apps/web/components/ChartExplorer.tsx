@@ -31,9 +31,9 @@ export function ChartExplorer() {
   return (
     <div className="flex flex-col gap-4">
       <label className="flex max-w-xs flex-col gap-1 text-sm">
-        <span className="text-black/60 dark:text-white/60">Stock</span>
+        <span className="text-panel-fg/60">Stock</span>
         <select
-          className="rounded border border-black/15 bg-transparent px-2 py-1.5 dark:border-white/15"
+          className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
           value={symbol}
           onChange={(e) => setSymbol(e.target.value)}
         >

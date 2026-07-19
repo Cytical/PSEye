@@ -18,6 +18,19 @@ export const CORPORATE_ACTION_LABELS: Record<CorporateActionType, string> = {
   stock_split: "Stock Split",
 };
 
+/** Muted, theme-safe accent per action type — shared by every page that
+ * lists corporate actions (the Calendar, and the per-company
+ * /stocks/[ticker] page) so the color language stays consistent everywhere
+ * this appears, not just a page-local convention. */
+export const CORPORATE_ACTION_TYPE_ACCENT: Record<CorporateActionType, string> = {
+  cash_dividend: "#2f8f4e",
+  stock_dividend: "#2f6f9f",
+  property_dividend: "#8a5fc2",
+  rights_offer: "#b8862f",
+  follow_on_offer: "#c2662f",
+  stock_split: "#c23f7f",
+};
+
 /** Plain-language explainer shown next to each action type, for beginners. */
 export const CORPORATE_ACTION_EXPLAINERS: Record<CorporateActionType, string> = {
   cash_dividend: "A cash payout per share, deposited by your broker on the payment date.",

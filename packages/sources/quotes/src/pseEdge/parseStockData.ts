@@ -33,10 +33,22 @@ export function parseStockDataHtml(html: string): ParsedStockData {
 
   const price = parseNumber(fields.get("Last Traded Price") ?? "");
   const marketCap = parseNumber(fields.get("Market Capitalization") ?? "");
+  const previousClose = parseNumber((fields.get("Previous Close and Date") ?? "").split("(")[0] ?? "");
 
   // No trade today (or suspended) means there's nothing to report a change
   // against, regardless of whatever partial text PSE Edge left in that cell.
-  const pctChange = price === null ? null : parseSignedPctChange(fields.get("Change(% Change)") ?? "");
+  let pctChange = price === null ? null : parseSignedPctChange(fields.get("Change(% Change)") ?? "");
+
+  // Fallback: confirmed live (2026-07-17, ~40% of tracked tickers, all of
+  // them down-movers) that PSE Edge's own "Change(% Change)" cell can render
+  // without the "up"/"down" word this parser keys off, even though a real
+  // trade and a real previous close are both present — silently producing a
+  // false N/A for the whole change, not just a rounding quirk. Derive it
+  // ourselves from the two raw prices already on the page rather than depend
+  // solely on that fragile natural-language text.
+  if (pctChange === null && price !== null && previousClose !== null && previousClose !== 0) {
+    pctChange = Math.round(((price - previousClose) / previousClose) * 100 * 100) / 100;
+  }
 
   return { price, pctChange, marketCap };
 }

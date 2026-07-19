@@ -18,6 +18,19 @@ export const DISCLOSURE_TYPE_LABELS: Record<DisclosureType, string> = {
   other: "Other Disclosure",
 };
 
+/** Muted, theme-safe accent per filing type — shared by every page that lists
+ * disclosures (the Disclosures digest, and the per-company /stocks/[ticker]
+ * page) so a reader gets one consistent color language for "what kind of
+ * filing is this" everywhere it appears, not just a page-local convention. */
+export const DISCLOSURE_TYPE_ACCENT: Record<DisclosureType, string> = {
+  material_information: "#2f6f9f",
+  insider_trading_report: "#c2662f",
+  public_ownership_report: "#8a5fc2",
+  sec_filing: "#4a4a48",
+  analyst_briefing: "#2f8f4e",
+  other: "#7a7a76",
+};
+
 /** A single PSE Edge filing, distilled to what matters for a reader skimming the feed. */
 export interface Disclosure {
   ticker: string;

@@ -11,6 +11,7 @@ export const revalidate = 3600; // hourly, matches the news ETL cadence
 export const metadata: Metadata = {
   title: "News",
   description: "The most relevant PH business headlines, auto-tagged by PSE ticker.",
+  alternates: { canonical: "/news" },
 };
 
 export default function NewsPage() {
@@ -27,7 +28,7 @@ export default function NewsPage() {
 
   return (
     <div
-      className={`${newsSerif.variable} ${newsSans.variable} mx-auto max-w-7xl px-4 py-8 sm:px-6`}
+      className={`${newsSerif.variable} ${newsSans.variable} mx-auto max-w-[1536px] px-4 py-8 sm:px-6`}
     >
       <header className="border-b-4 border-black pb-3 dark:border-white">
         <p className="font-news-sans text-xs font-semibold uppercase tracking-[0.14em] text-black/50 dark:text-white/50">
@@ -80,8 +81,31 @@ async function FrontPage({ itemsPromise }: { itemsPromise: Promise<NewsItem[]> }
 
   const [hero, ...secondary] = items;
 
+  // Cites the outlets' own articles (headline/url/date/publisher only, no
+  // body content claimed as ours) — same "accurate or not at all" standard
+  // as layout.tsx's site-wide JSON-LD comment. Only covers the front-page
+  // tier since that's what's available synchronously here; "More Headlines"
+  // streams in separately below.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: item.url,
+      item: {
+        "@type": "NewsArticle",
+        headline: item.title,
+        url: item.url,
+        datePublished: item.publishedAt.toISOString(),
+        publisher: { "@type": "Organization", name: item.source },
+      },
+    })),
+  };
+
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="lg:col-span-2">
         <NewsCard item={hero} variant="hero" />
       </div>

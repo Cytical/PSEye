@@ -18,7 +18,7 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="border-b border-black/10 dark:border-white/10">
+    <header className="border-b border-foreground/10">
       {/* max-w matches page.tsx's widest content container (the market map) so the
           header never reads as narrower than the page below it. */}
       <div className="mx-auto flex max-w-[1600px] items-center gap-x-5 gap-y-1.5 px-4 py-3 text-sm">
@@ -43,7 +43,7 @@ export function SiteHeader() {
             aria-expanded={open}
             aria-controls="mobile-nav-panel"
             aria-label={open ? "Close menu" : "Open menu"}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-black/10 dark:border-white/15"
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-foreground/15"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               {open ? (
@@ -64,7 +64,7 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <div id="mobile-nav-panel" className="border-t border-black/10 px-4 py-3 sm:hidden dark:border-white/10">
+        <div id="mobile-nav-panel" className="border-t border-foreground/10 px-4 py-3 sm:hidden">
           <div className="mb-3">
             <TickerSearch />
           </div>

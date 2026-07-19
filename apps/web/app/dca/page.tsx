@@ -7,15 +7,16 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "DCA Calculator",
   description: "Simulate dollar-cost-averaging into a PSE stock or an equal-weighted market proxy.",
+  alternates: { canonical: "/dca" },
 };
 
 export default async function DcaPage() {
   const quotes = await getDailyQuotes();
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="text-xl font-semibold">DCA Calculator</h1>
-      <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+    <div className="mx-auto max-w-[1400px] px-4 py-8">
+      <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">DCA Calculator</h1>
+      <p className="mt-1.5 text-sm text-panel-fg/60">
         See what cost-averaging a fixed amount into a stock (or the market as a whole) would
         have grown to. Not financial advice — past patterns don&apos;t predict future returns.
       </p>

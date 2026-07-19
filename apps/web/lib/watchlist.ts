@@ -15,16 +15,34 @@ const STORAGE_KEY = "pseye:watchlist";
  * reasoning as the ?filter=/?ticker= URL sync in MarketMap.tsx/TreemapChart.tsx. */
 const CHANGE_EVENT = "pseye:watchlistchange";
 
+const EMPTY_TICKERS: string[] = [];
+
+// useSyncExternalStore compares snapshots by reference (Object.is) — parsing
+// localStorage fresh on every call would return a new array each time even
+// when nothing changed, which React reads as "the store changed" on every
+// check and re-renders forever. Cache against the raw string so repeated
+// calls between actual writes return the same array reference.
+let cachedRaw: string | null = null;
+let cachedTickers: string[] = EMPTY_TICKERS;
+
 function readTickers(): string[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") return EMPTY_TICKERS;
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (raw === cachedRaw) return cachedTickers;
+  cachedRaw = raw;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === "string") : [];
+    if (!raw) {
+      cachedTickers = EMPTY_TICKERS;
+    } else {
+      const parsed = JSON.parse(raw);
+      cachedTickers = Array.isArray(parsed)
+        ? parsed.filter((t): t is string => typeof t === "string")
+        : EMPTY_TICKERS;
+    }
   } catch {
-    return [];
+    cachedTickers = EMPTY_TICKERS;
   }
+  return cachedTickers;
 }
 
 function writeTickers(tickers: string[]): void {
@@ -49,9 +67,10 @@ function subscribe(callback: () => void) {
 
 /** Server snapshot is always an empty list — matches the URL-sync components'
  * approach of defaulting to a value that never mismatches hydration, since
- * localStorage isn't available during SSR. */
+ * localStorage isn't available during SSR. Returns the same cached reference
+ * every call, not a fresh `[]` literal — see readTickers' comment above. */
 function emptySnapshot(): string[] {
-  return [];
+  return EMPTY_TICKERS;
 }
 
 export function useWatchlist(): { tickers: string[]; isWatched: (ticker: string) => boolean; toggle: (ticker: string) => void } {

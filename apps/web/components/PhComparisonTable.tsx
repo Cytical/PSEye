@@ -3,6 +3,7 @@ import type { PhComparisonResult, PhComparisonStatus } from "@/lib/phDataCompari
 const STATUS_LABEL: Record<PhComparisonStatus, string> = {
   match: "match",
   "na-mismatch": "N/A mismatch",
+  "pct-na-mismatch": "% N/A mismatch",
   "price-drift": "price drift",
   "pct-drift": "% drift",
 };
@@ -10,6 +11,7 @@ const STATUS_LABEL: Record<PhComparisonStatus, string> = {
 const STATUS_CLASS: Record<PhComparisonStatus, string> = {
   match: "text-black/60 dark:text-white/60",
   "na-mismatch": "text-red-700 dark:text-red-400 font-medium",
+  "pct-na-mismatch": "text-red-700 dark:text-red-400 font-medium",
   "price-drift": "text-amber-700 dark:text-amber-400",
   "pct-drift": "text-amber-700 dark:text-amber-400",
 };
@@ -23,13 +25,18 @@ export function PhComparisonTable({ result }: { result: PhComparisonResult }) {
 
   return (
     <div>
-      <dl className="grid grid-cols-3 gap-3 text-sm sm:grid-cols-4">
+      <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
         <Stat label="Tickers checked" value={total} />
         <Stat label="Match" value={result.matchCount} className="text-green-700 dark:text-green-400" />
         <Stat
           label="N/A mismatch"
           value={result.naMismatchCount}
           className={result.naMismatchCount > 0 ? "text-red-700 dark:text-red-400" : undefined}
+        />
+        <Stat
+          label="% N/A mismatch"
+          value={result.pctNaMismatchCount}
+          className={result.pctNaMismatchCount > 0 ? "text-red-700 dark:text-red-400" : undefined}
         />
         <Stat label="Drift (expected)" value={result.driftCount} />
       </dl>

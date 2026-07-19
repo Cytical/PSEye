@@ -83,9 +83,9 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
         onSubmit={(e) => e.preventDefault()}
       >
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-black/60 dark:text-white/60">Invest in</span>
+          <span className="text-panel-fg/60">Invest in</span>
           <select
-            className="rounded border border-black/15 bg-transparent px-2 py-1.5 dark:border-white/15"
+            className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
             value={ticker}
             onChange={(e) => setTicker(e.target.value)}
           >
@@ -99,10 +99,10 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-black/60 dark:text-white/60">Start date</span>
+          <span className="text-panel-fg/60">Start date</span>
           <input
             type="date"
-            className="rounded border border-black/15 bg-transparent px-2 py-1.5 dark:border-white/15"
+            className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
             value={startDate}
             max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => e.target.value && setStartDate(e.target.value)}
@@ -110,21 +110,21 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-black/60 dark:text-white/60">Contribution (₱)</span>
+          <span className="text-panel-fg/60">Contribution (₱)</span>
           <input
             type="number"
             min={100}
             step={100}
-            className="rounded border border-black/15 bg-transparent px-2 py-1.5 dark:border-white/15"
+            className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
             value={contribution}
             onChange={(e) => setContribution(Math.max(0, Number(e.target.value) || 0))}
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-black/60 dark:text-white/60">Frequency</span>
+          <span className="text-panel-fg/60">Frequency</span>
           <select
-            className="rounded border border-black/15 bg-transparent px-2 py-1.5 dark:border-white/15"
+            className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
             value={frequency}
             onChange={(e) => setFrequency(e.target.value as DcaFrequency)}
           >
@@ -134,7 +134,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
         </label>
       </form>
 
-      {loading && <p className="text-sm text-black/50 dark:text-white/50">Simulating…</p>}
+      {loading && <p className="text-sm text-panel-fg/50">Simulating…</p>}
 
       {!loading && result && (
         <div className="flex flex-col gap-4">
@@ -150,7 +150,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
           </div>
           <DcaChart timeline={result.timeline} />
           {isSampleData && (
-            <p className="text-xs text-black/60 dark:text-white/60">
+            <p className="text-xs text-panel-fg/60">
               Price history is sample data for this selection — a real EOD price history feed
               hasn&apos;t been backfilled for it yet. Results are illustrative, not historical fact.
             </p>
@@ -159,7 +159,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
       )}
 
       {!loading && !result && (
-        <p className="text-sm text-black/50 dark:text-white/50">
+        <p className="text-sm text-panel-fg/50">
           Pick a start date at least one period in the past to see results.
         </p>
       )}
@@ -175,8 +175,8 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "up
         ? "text-[#d03b3b]"
         : "";
   return (
-    <div className="rounded-md border border-black/10 p-3 dark:border-white/10">
-      <div className="text-[11px] text-black/50 dark:text-white/50">{label}</div>
+    <div className="rounded-md border border-panel-fg/10 p-3">
+      <div className="text-[11px] text-panel-fg/50">{label}</div>
       <div className={`mt-0.5 text-lg font-semibold tabular-nums ${toneClass}`}>{value}</div>
     </div>
   );

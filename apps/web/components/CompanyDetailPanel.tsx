@@ -84,7 +84,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
         aria-labelledby="company-detail-heading"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85vh] w-full max-w-sm flex-col overflow-hidden rounded-xl bg-panel text-panel-fg ring-1 ring-panel-border shadow-2xl outline-none"
+        className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-xl bg-panel text-panel-fg ring-1 ring-panel-border shadow-2xl outline-none"
       >
         <div className="flex items-start justify-between gap-3 border-b border-panel-border p-5">
           <div>
@@ -139,13 +139,12 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
               <p className="mt-2 text-sm text-panel-fg/50">No company description yet for {stock.ticker}.</p>
             ) : (
               <>
-                <div className="mt-2 flex flex-col gap-2.5">
-                  {profile.description.split("\n\n").map((paragraph, i) => (
-                    <p key={i} className="text-sm leading-snug text-panel-fg/80">
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
+                {/* Only the first paragraph — a summary, not the full profile — so
+                    this stays a quick-glance panel; the rest lives on the ticker
+                    page behind "See more". */}
+                <p className="mt-2 text-sm leading-snug text-panel-fg/80">
+                  {profile.description.split("\n\n")[0]}
+                </p>
                 <div className="mt-2.5 text-[11px] text-panel-fg/60">{profile.source}</div>
               </>
             )}
@@ -156,7 +155,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
               href={`/stocks/${stock.ticker}`}
               className="text-sm font-medium text-panel-fg/70 hover:text-panel-fg hover:underline"
             >
-              View full profile →
+              See more →
             </Link>
           )}
         </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { DISCLOSURE_TYPE_LABELS, type Disclosure, type DisclosureType } from "@pseye/source-disclosures";
+import { DISCLOSURE_TYPE_LABELS, DISCLOSURE_TYPE_ACCENT, type Disclosure } from "@pseye/source-disclosures";
 import { getDisclosures } from "@/lib/disclosures";
 
 export const revalidate = 3600;
@@ -8,16 +8,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Disclosures",
   description: "PSE Edge filings distilled into a per-company digest.",
-};
-
-/** Muted, theme-safe accent per filing type — same approach as the calendar page's TYPE_ACCENT, so a reader gets a consistent color language for "what kind of thing is this" across both pages. */
-const TYPE_ACCENT: Record<DisclosureType, string> = {
-  material_information: "#2f6f9f",
-  insider_trading_report: "#c2662f",
-  public_ownership_report: "#8a5fc2",
-  sec_filing: "#4a4a48",
-  analyst_briefing: "#2f8f4e",
-  other: "#7a7a76",
+  alternates: { canonical: "/disclosures" },
 };
 
 const RECENT_HOURS = 24;
@@ -52,7 +43,7 @@ export default async function DisclosuresPage() {
   const groups = groupByCompany(items);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-[1240px] px-4 py-8">
       <h1 className="text-2xl font-semibold tracking-tight">Insider Disclosure Digest</h1>
       <p className="mt-1.5 text-sm text-panel-fg/60">
         PSE Edge filings, grouped by company — who&apos;s filing what, without the raw
@@ -75,7 +66,7 @@ export default async function DisclosuresPage() {
             </div>
             <ul className="flex flex-col divide-y divide-panel-border">
               {group.filings.map((f) => {
-                const accent = TYPE_ACCENT[f.type];
+                const accent = DISCLOSURE_TYPE_ACCENT[f.type];
                 const recent = isRecent(f.filedAt);
                 return (
                   <li key={f.referenceNo} className="px-4 py-3 text-sm" style={{ borderLeft: `3px solid ${accent}` }}>

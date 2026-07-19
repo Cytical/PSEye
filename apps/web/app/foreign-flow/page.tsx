@@ -9,6 +9,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Foreign Fund Flow",
   description: "Weekly index-level and daily per-stock net foreign buying/selling on the PSE.",
+  alternates: { canonical: "/foreign-flow" },
 };
 
 function formatPeso(n: number): string {
@@ -22,18 +23,18 @@ export default async function ForeignFlowPage() {
   const { indexFlow, periodEnd, topBuying, topSelling, stockFlowSource } = await getForeignFlowPageData();
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-xl font-semibold">Foreign Fund Flow</h1>
-      <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+    <div className="mx-auto max-w-[1240px] px-4 py-8">
+      <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">Foreign Fund Flow</h1>
+      <p className="mt-1.5 text-sm text-panel-fg/60">
         Index-level foreign buying vs. selling by week, from PSE&apos;s Market Watch report, plus
         daily per-stock net foreign buying/selling from PSE&apos;s Daily Quotation Report.
       </p>
 
-      <div className="mt-6">
+      <div className="mt-8 rounded-lg bg-panel p-4 ring-1 ring-panel-border">
         {indexFlow.length > 0 ? (
           <>
             <ForeignFlowChart periods={indexFlow} />
-            <div className="mt-1 flex items-center gap-4 text-[11px] text-black/60 dark:text-white/60">
+            <div className="mt-1 flex items-center gap-4 text-[11px] text-panel-fg/60">
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-2 w-2 rounded-full bg-[#0ca30c]" />
                 Net buying
@@ -45,23 +46,23 @@ export default async function ForeignFlowPage() {
             </div>
 
             <details className="mt-3 text-sm">
-              <summary className="cursor-pointer text-xs text-black/50 hover:text-black/70 dark:text-white/50 dark:hover:text-white/70">
+              <summary className="cursor-pointer text-xs text-panel-fg/50 hover:text-panel-fg/80">
                 Show as table
               </summary>
               <IndexFlowTable periods={indexFlow} />
             </details>
           </>
         ) : (
-          <p className="text-sm text-black/50 dark:text-white/50">No index-level foreign flow on record yet.</p>
+          <p className="text-sm text-panel-fg/50">No index-level foreign flow on record yet.</p>
         )}
       </div>
 
-      <div className="mt-8 grid gap-6 sm:grid-cols-2">
+      <div className="mt-6 grid gap-6 sm:grid-cols-2">
         <FlowTable title="Top net foreign buying" rows={topBuying} tone="up" periodEnd={periodEnd} />
         <FlowTable title="Top net foreign selling" rows={topSelling} tone="down" periodEnd={periodEnd} />
       </div>
 
-      <p className="mt-6 text-xs text-black/60 dark:text-white/60">
+      <p className="mt-6 text-xs text-panel-fg/60">
         {stockFlowSource === "real"
           ? "Per-stock rankings are real daily net foreign buying/selling figures from PSE's Daily Quotation Report."
           : "Per-stock rankings above are sample data — the real daily source hasn't populated any rows yet."}
@@ -74,25 +75,25 @@ function IndexFlowTable({ periods }: { periods: IndexForeignFlow[] }) {
   return (
     <table className="mt-2 w-full text-xs">
       <thead>
-        <tr className="border-b border-black/10 text-left text-black/50 dark:border-white/10 dark:text-white/50">
+        <tr className="border-b border-panel-border text-left text-panel-fg/50">
           <th className="py-1.5 pr-4 font-medium">Week ending</th>
           <th className="py-1.5 pr-4 text-right font-medium">Foreign buy</th>
           <th className="py-1.5 pr-4 text-right font-medium">Foreign sell</th>
           <th className="py-1.5 text-right font-medium">Net</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody className="divide-y divide-panel-border">
         {periods.map((p) => (
-          <tr key={p.periodEnd} className="border-b border-black/5 dark:border-white/5">
-            <td className="py-1.5 pr-4">
+          <tr key={p.periodEnd}>
+            <td className="py-1.5 pr-4 text-panel-fg">
               {new Date(p.periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", {
                 month: "short",
                 day: "numeric",
                 timeZone: "UTC",
               })}
             </td>
-            <td className="py-1.5 pr-4 text-right tabular-nums">{formatPeso(p.foreignBuyValue)}</td>
-            <td className="py-1.5 pr-4 text-right tabular-nums">{formatPeso(p.foreignSellValue)}</td>
+            <td className="py-1.5 pr-4 text-right tabular-nums text-panel-fg">{formatPeso(p.foreignBuyValue)}</td>
+            <td className="py-1.5 pr-4 text-right tabular-nums text-panel-fg">{formatPeso(p.foreignSellValue)}</td>
             <td
               className={`py-1.5 text-right font-medium tabular-nums ${p.netValue >= 0 ? "text-[#006300] dark:text-[#0ca30c]" : "text-[#d03b3b]"}`}
             >
@@ -118,25 +119,30 @@ function FlowTable({
 }) {
   const toneClass = tone === "up" ? "text-[#006300] dark:text-[#0ca30c]" : "text-[#d03b3b]";
   return (
-    <div>
-      <h2 className="text-sm font-medium">{title}</h2>
-      <p className="text-[11px] text-black/60 dark:text-white/60">
+    <div className="rounded-lg bg-panel p-4 ring-1 ring-panel-border">
+      <h2 className="text-sm font-medium text-panel-fg">{title}</h2>
+      <p className="text-[11px] text-panel-fg/60">
         As of {new Date(periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "UTC" })}
       </p>
       {rows.length > 0 ? (
-        <ol className="mt-2 flex flex-col gap-1.5 text-sm">
+        <ol className="mt-2.5 flex flex-col divide-y divide-panel-border text-sm">
           {rows.map((r) => (
-            <li key={r.ticker} className="flex items-center justify-between gap-2">
-              <Link href={`/stocks/${r.ticker}`} className="hover:underline">
-                <span className="text-black/60 dark:text-white/60">{r.rank}.</span>{" "}
-                <span className="font-mono text-xs">{r.ticker}</span> {r.companyName}
+            <li key={r.ticker}>
+              <Link
+                href={`/stocks/${r.ticker}`}
+                className="-mx-1.5 flex items-center justify-between gap-2 rounded px-1.5 py-1.5 transition-colors hover:bg-panel-raised"
+              >
+                <span className="min-w-0 truncate text-panel-fg">
+                  <span className="text-panel-fg/50">{r.rank}.</span>{" "}
+                  <span className="font-mono text-xs">{r.ticker}</span> {r.companyName}
+                </span>
+                <span className={`shrink-0 tabular-nums ${toneClass}`}>{formatPeso(r.netValue)}</span>
               </Link>
-              <span className={`shrink-0 tabular-nums ${toneClass}`}>{formatPeso(r.netValue)}</span>
             </li>
           ))}
         </ol>
       ) : (
-        <p className="mt-2 text-sm text-black/50 dark:text-white/50">No data for this period.</p>
+        <p className="mt-2 text-sm text-panel-fg/50">No data for this period.</p>
       )}
     </div>
   );

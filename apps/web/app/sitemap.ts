@@ -1,7 +1,9 @@
 import type { MetadataRoute } from "next";
 import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.NODE_ENV === "production" ? "https://pseye.vercel.app" : "http://localhost:3000");
 
 const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }[] = [
   { path: "/", changeFrequency: "daily", priority: 1 },
@@ -14,6 +16,8 @@ const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["ch
   { path: "/offerings", changeFrequency: "daily", priority: 0.5 },
   { path: "/foreign-flow", changeFrequency: "weekly", priority: 0.5 },
   { path: "/dca", changeFrequency: "monthly", priority: 0.6 },
+  { path: "/stocks", changeFrequency: "daily", priority: 0.7 },
+  { path: "/contact", changeFrequency: "yearly", priority: 0.3 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

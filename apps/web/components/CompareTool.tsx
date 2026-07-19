@@ -79,10 +79,10 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-black/60 dark:text-white/60">Start date</span>
+          <span className="text-panel-fg/60">Start date</span>
           <input
             type="date"
-            className="rounded border border-black/15 bg-transparent px-2 py-1.5 dark:border-white/15"
+            className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
             value={startDate}
             max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => e.target.value && setStartDate(e.target.value)}
@@ -92,9 +92,9 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
         {selected.length < MAX_TICKERS && availableToAdd.length > 0 && (
           <div className="flex items-end gap-2">
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-black/60 dark:text-white/60">Add a stock</span>
+              <span className="text-panel-fg/60">Add a stock</span>
               <select
-                className="rounded border border-black/15 bg-transparent px-2 py-1.5 dark:border-white/15"
+                className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
                 value={pending}
                 onChange={(e) => setPending(e.target.value)}
               >
@@ -110,7 +110,7 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
               type="button"
               onClick={addTicker}
               disabled={!pending}
-              className="rounded-md border border-black/10 px-3 py-1.5 text-xs font-medium hover:bg-black/5 disabled:opacity-40 dark:border-white/15 dark:hover:bg-white/10"
+              className="rounded-md border border-panel-fg/10 px-3 py-1.5 text-xs font-medium hover:bg-panel-fg/5 disabled:opacity-40 dark:hover:bg-panel-fg/10"
             >
               Add
             </button>
@@ -123,14 +123,14 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
           {selected.map((ticker) => (
             <span
               key={ticker}
-              className="flex items-center gap-1.5 rounded-full border border-black/15 py-1 pl-2.5 pr-1 text-xs font-mono dark:border-white/15"
+              className="flex items-center gap-1.5 rounded-full border border-panel-fg/15 py-1 pl-2.5 pr-1 text-xs font-mono"
             >
               {ticker}
               <button
                 type="button"
                 onClick={() => removeTicker(ticker)}
                 aria-label={`Remove ${ticker}`}
-                className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+                className="rounded-full p-0.5 hover:bg-panel-fg/10"
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -143,15 +143,15 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
       )}
 
       {selected.length === 0 && (
-        <p className="text-sm text-black/50 dark:text-white/50">Add at least one stock to compare.</p>
+        <p className="text-sm text-panel-fg/50">Add at least one stock to compare.</p>
       )}
 
-      {loading && <p className="text-sm text-black/50 dark:text-white/50">Loading…</p>}
+      {loading && <p className="text-sm text-panel-fg/50">Loading…</p>}
 
       {!loading && selected.length > 0 && series.length > 0 && <CompareChart series={series} />}
 
       {!loading && selected.length > 0 && isSampleData && (
-        <p className="text-xs text-black/60 dark:text-white/60">
+        <p className="text-xs text-panel-fg/60">
           Price history is sample data for one or more of these tickers — a real EOD price
           history feed hasn&apos;t been backfilled for it yet. Results are illustrative, not
           historical fact.

@@ -12,13 +12,13 @@ export function RecentlyViewed({ excludeTicker }: { excludeTicker?: string }) {
 
   return (
     <div className="mt-8">
-      <h2 className="text-sm font-medium">Recently viewed</h2>
+      <h2 className="text-sm font-medium text-panel-fg">Recently viewed</h2>
       <div className="mt-2 flex flex-wrap gap-2">
         {tickers.map((ticker) => (
           <Link
             key={ticker}
             href={`/stocks/${ticker}`}
-            className="rounded-full border border-black/15 px-2.5 py-1 font-mono text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+            className="rounded-full border border-panel-border px-2.5 py-1 font-mono text-xs text-panel-fg transition-colors hover:bg-panel-raised"
           >
             {ticker}
           </Link>

@@ -12,7 +12,7 @@ import { newsSerif, newsSans } from "./fonts";
  */
 export default function Loading() {
   return (
-    <div className={`${newsSerif.variable} ${newsSans.variable} mx-auto max-w-7xl px-4 py-8 sm:px-6`}>
+    <div className={`${newsSerif.variable} ${newsSans.variable} mx-auto max-w-[1536px] px-4 py-8 sm:px-6`}>
       <header className="border-b-4 border-black pb-3 dark:border-white">
         <SkeletonBar className="h-3 w-40" />
         <SkeletonBar className="mt-2 h-10 w-72" />

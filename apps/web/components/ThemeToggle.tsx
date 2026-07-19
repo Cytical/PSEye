@@ -36,8 +36,8 @@ export function ThemeToggle() {
           suppressHydrationWarning
           className={`h-5 w-5 shrink-0 rounded-full border transition ${
             active === value
-              ? "border-black/60 ring-2 ring-offset-2 ring-offset-background ring-black/50 dark:border-white/70 dark:ring-white/50"
-              : "border-black/20 hover:scale-110 dark:border-white/25"
+              ? "border-foreground/60 ring-2 ring-offset-2 ring-offset-background ring-foreground/50"
+              : "border-foreground/20 hover:scale-110"
           }`}
           style={{ backgroundColor: swatch }}
         />

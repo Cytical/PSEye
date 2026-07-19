@@ -176,6 +176,51 @@ down&nbsp;
 </table>
 `;
 
+// Confirmed live 2026-07-17: on that day's after-close scrape, PSE Edge's
+// "Change(% Change)" cell rendered with no "up"/"down" word at all for every
+// down-moving ticker (~40 of 97 tracked tickers, none of them fetch
+// failures) even though both a real Last Traded Price and a real Previous
+// Close were present — the regression this fixture guards is
+// parseStockDataHtml silently returning null instead of falling back to
+// deriving the change from those two numbers.
+const MISSING_CHANGE_WORD_HTML = `
+<table class="view">
+<tr>
+  <th>Status</th>
+  <td>Active</td>
+  <th>Market Capitalization</th>
+  <td style="text-align:right;padding-right:1.5em;">
+    73,961,324,772.00</td>
+</tr>
+</table>
+<table class="view">
+<tr>
+  <th>Last Traded Price</th>
+  <td style="text-align:right;padding-right:1.2em;">
+50.60</td>
+  <th>Open</th>
+  <td style="text-align:right;padding-right:1.2em;">
+50.80</td>
+  <th>Previous Close and Date</th>
+  <td style="text-align:right;padding-right:1.2em;">
+50.80
+    (Jul 16, 2026)
+  </td>
+</tr>
+<tr>
+  <th>Change(% Change)</th>
+  <td style="text-align:right;padding-right:1.2em;">
+  </td>
+  <th>High</th>
+  <td style="text-align:right;padding-right:1.2em;">
+50.80</td>
+  <th>P/E Ratio</th>
+  <td style="text-align:right;padding-right:1.2em;">
+</td>
+</tr>
+</table>
+`;
+
 describe("parseStockDataHtml", () => {
   it("parses an actively-traded stock with a positive change", () => {
     expect(parseStockDataHtml(ACTIVE_STOCK_HTML)).toEqual({
@@ -198,6 +243,14 @@ describe("parseStockDataHtml", () => {
       price: 56.55,
       pctChange: -1.15,
       marketCap: 123_456_789,
+    });
+  });
+
+  it("derives change from price vs. previous close when the Change cell has no up/down word", () => {
+    expect(parseStockDataHtml(MISSING_CHANGE_WORD_HTML)).toEqual({
+      price: 50.6,
+      pctChange: -0.39,
+      marketCap: 73_961_324_772,
     });
   });
 

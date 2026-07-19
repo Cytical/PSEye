@@ -6,6 +6,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Offerings",
   description: "IPO, follow-on, and rights offer tracker with subscription-window countdowns.",
+  alternates: { canonical: "/offerings" },
 };
 
 /** Muted, theme-safe accent per offering type — same color-language approach as the calendar/disclosures pages. */
@@ -71,7 +72,7 @@ export default async function OfferingsPage() {
   const sorted = [...offerings].sort((a, b) => a.subscriptionEnd.localeCompare(b.subscriptionEnd));
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-[1240px] px-4 py-8">
       <h1 className="text-2xl font-semibold tracking-tight">IPO &amp; Follow-on Offerings</h1>
       <p className="mt-1.5 text-sm text-panel-fg/60">
         Subscription windows for new listings and follow-on offers, with plain-language
