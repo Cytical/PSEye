@@ -167,6 +167,16 @@ export async function getDailyQuotesByDate(db: Db, date: string) {
   return db.select().from(dailyQuotes).where(eq(dailyQuotes.tradeDate, date));
 }
 
+/** Distinct trade dates with quotes on record, newest first — the market-map time machine's picker options. */
+export async function getAvailableQuoteDates(db: Db, limit = 90) {
+  const rows = await db
+    .selectDistinct({ tradeDate: dailyQuotes.tradeDate })
+    .from(dailyQuotes)
+    .orderBy(desc(dailyQuotes.tradeDate))
+    .limit(limit);
+  return rows.map((r) => r.tradeDate);
+}
+
 export async function getBlockSalesByDate(db: Db, date: string) {
   return db.select().from(blockSales).where(eq(blockSales.tradeDate, date)).orderBy(desc(blockSales.value));
 }
