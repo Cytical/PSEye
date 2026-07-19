@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt } from "drizzle-orm";
 import type { Db } from "./client";
 import {
   dailyQuotes,
@@ -144,6 +144,57 @@ export async function getLatestStockForeignFlow(db: Db) {
     .orderBy(asc(stockForeignFlow.rank));
 
   return { periodEnd: latest.periodEnd, rows };
+}
+
+// ---- Per-trading-day reads for the /daily recap pages ----------------------
+
+/** The most recent `limit` snapshot dates on record, newest first — the site's notion of "trading days". */
+export async function getRecentSnapshotDates(db: Db, limit = 60) {
+  const rows = await db
+    .select({ snapshotDate: marketSnapshot.snapshotDate })
+    .from(marketSnapshot)
+    .orderBy(desc(marketSnapshot.snapshotDate))
+    .limit(limit);
+  return rows.map((r) => r.snapshotDate);
+}
+
+export async function getMarketSnapshotByDate(db: Db, date: string) {
+  const [row] = await db.select().from(marketSnapshot).where(eq(marketSnapshot.snapshotDate, date)).limit(1);
+  return row;
+}
+
+export async function getDailyQuotesByDate(db: Db, date: string) {
+  return db.select().from(dailyQuotes).where(eq(dailyQuotes.tradeDate, date));
+}
+
+export async function getBlockSalesByDate(db: Db, date: string) {
+  return db.select().from(blockSales).where(eq(blockSales.tradeDate, date)).orderBy(desc(blockSales.value));
+}
+
+export async function getStockForeignFlowByDate(db: Db, date: string) {
+  return db
+    .select()
+    .from(stockForeignFlow)
+    .where(eq(stockForeignFlow.periodEnd, date))
+    .orderBy(asc(stockForeignFlow.rank));
+}
+
+/** Disclosures filed within [from, to) — callers pass a Manila-day window since filed_at is a timestamp. */
+export async function getDisclosuresBetween(db: Db, from: Date, to: Date) {
+  return db
+    .select()
+    .from(disclosures)
+    .where(and(gte(disclosures.filedAt, from), lt(disclosures.filedAt, to)))
+    .orderBy(desc(disclosures.filedAt));
+}
+
+/** News published within [from, to), newest first — same Manila-day window convention as getDisclosuresBetween. */
+export async function getNewsBetween(db: Db, from: Date, to: Date) {
+  return db
+    .select()
+    .from(newsItems)
+    .where(and(gte(newsItems.publishedAt, from), lt(newsItems.publishedAt, to)))
+    .orderBy(desc(newsItems.publishedAt));
 }
 
 /** Daily closes for the given tickers from `fromDate` through the most recent one on record, ascending. */

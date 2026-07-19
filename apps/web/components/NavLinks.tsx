@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/charts", label: "Charts" },
   { href: "/compare", label: "Compare" },
   { href: "/news", label: "News" },
+  { href: "/daily", label: "Daily Recap" },
   { href: "/calendar", label: "Calendar" },
   { href: "/dividends", label: "Dividends" },
   { href: "/block-sales", label: "Block Sales" },
