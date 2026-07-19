@@ -24,7 +24,7 @@ export default async function MarketMapPage() {
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-8">
-      <h1 className="text-xl font-semibold">PSE Market Map</h1>
+      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">The Philippine Stock Market, Visualized</h1>
       <div className="mt-6">
         <MarketMap stocks={quotes} profileByTicker={profileByTicker} snapshot={snapshot} foreignFlow={foreignFlow} />
       </div>

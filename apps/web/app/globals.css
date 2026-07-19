@@ -80,6 +80,28 @@ body {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
+/* Custom pointer: a white arrow (visible on any theme) with a dark outline
+ * and a small brand-green accent dot echoing LogoMark's iris (#30cc5a on
+ * #0d0f14). The hotspot (4 4) lines up with the arrow's tip so clicks land
+ * where they visually appear to. Interactive elements keep the native
+ * pointer/hand cursor below so clickable vs. static content is still
+ * distinguishable — only the default/idle cursor is replaced. */
+html {
+  cursor:
+    url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgdmlld0JveD0nMCAwIDI0IDI0Jz48cGF0aCBkPSdNNCw0IEw0LDE4IEw4LDE0LjUgTDExLDIwLjUgTDEzLDE5LjUgTDEwLDEzLjUgTDE2LDEzLjUgWicgZmlsbD0nI2ZmZmZmZicgc3Ryb2tlPScjMGQwZjE0JyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjxjaXJjbGUgY3g9JzEyLjcnIGN5PScxNycgcj0nMS43JyBmaWxsPScjMzBjYzVhJyBzdHJva2U9JyMwZDBmMTQnIHN0cm9rZS13aWR0aD0nMC41Jy8+PC9zdmc+")
+      4 4,
+    auto;
+}
+
+a[href],
+button:not(:disabled),
+[role="button"],
+summary,
+select,
+label[for] {
+  cursor: pointer;
+}
+
 /* Keyboard-only focus ring, site-wide. Buttons/links here mostly rely on
  * background/opacity changes for :hover, which give a mouse user feedback
  * but leave a keyboard user with only the browser's default outline (often

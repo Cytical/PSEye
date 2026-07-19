@@ -19,12 +19,23 @@ const CONTACT_LINKS = [
     ),
   },
   {
-    href: "https://www.linkedin.com/in/ezraguiao",
-    label: "linkedin.com/in/ezraguiao",
+    href: "https://www.linkedin.com/in/ezra-guiao/",
+    label: "linkedin.com/in/ezra-guiao",
     sublabel: "LinkedIn",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.11 20.45H3.56V9h3.55v11.45z" />
+      </svg>
+    ),
+  },
+  {
+    href: "https://cytical.github.io/",
+    label: "cytical.github.io",
+    sublabel: "Personal Site",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z" />
       </svg>
     ),
   },
