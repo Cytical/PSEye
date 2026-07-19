@@ -1,13 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { HistoricalClose } from "@pseye/source-quotes";
+import { normalizeCompareSeries, type CompareSeriesInput } from "@/lib/compareStocks";
 
-export interface CompareSeries {
-  ticker: string;
-  companyName: string;
-  closes: HistoricalClose[];
-}
+export type CompareSeries = CompareSeriesInput;
 
 /**
  * Categorical identity colors — deliberately not the green/red % change
@@ -33,31 +29,9 @@ function formatPct(n: number): string {
   return `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 }
 
-/** Rebases each series to "% change since the first shared date" — the only
- * fair way to compare stocks with wildly different share prices on one chart. */
-function normalize(series: CompareSeries[]): { ticker: string; companyName: string; points: { date: string; pct: number }[] }[] {
-  const closeByDate = series.map((s) => new Map(s.closes.map((c) => [c.date, c.close])));
-  if (closeByDate.some((m) => m.size === 0)) return [];
-
-  const sharedDates = series[0].closes.map((c) => c.date).filter((date) => closeByDate.every((m) => m.has(date))).sort();
-  if (sharedDates.length === 0) return [];
-
-  const firstDate = sharedDates[0];
-  const baseCloses = closeByDate.map((m) => m.get(firstDate)!);
-
-  return series.map((s, i) => ({
-    ticker: s.ticker,
-    companyName: s.companyName,
-    points: sharedDates.map((date) => ({
-      date,
-      pct: ((closeByDate[i].get(date)! - baseCloses[i]) / baseCloses[i]) * 100,
-    })),
-  }));
-}
-
 export function CompareChart({ series }: { series: CompareSeries[] }) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
-  const normalized = useMemo(() => normalize(series), [series]);
+  const normalized = useMemo(() => normalizeCompareSeries(series), [series]);
 
   const { xForIndex, yForPct, plotWidth, plotHeight, yTicks, dateCount } = useMemo(() => {
     const plotWidth = WIDTH - PAD_LEFT - PAD_RIGHT;
