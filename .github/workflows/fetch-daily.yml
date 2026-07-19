@@ -1,4 +1,4 @@
-name: Fetch daily (news, disclosures, corporate actions, historical quotes, block sales, offerings)
+name: Fetch daily (news, disclosures, corporate actions, historical quotes, block sales)
 
 # One consolidated job replacing what used to be 6 separate workflows
 # (news-hourly, disclosures-hourly, corporate-actions-daily,
@@ -6,11 +6,14 @@ name: Fetch daily (news, disclosures, corporate actions, historical quotes, bloc
 # need better than daily freshness, and running them hourly (news/disclosures
 # in particular, at 24 runs/day each) was the majority of a ~1,900 workflow
 # runs/month total that blew past GitHub Actions' free monthly minutes.
-# Sharing one checkout/install across all six cuts that to ~30 runs/month.
+# Sharing one checkout/install cuts that to ~30 runs/month. (The offerings
+# step was later dropped entirely: it only ever wrote MockOfferingSource's
+# fabricated rows into the real table, which nothing reads — /offerings
+# renders the mock directly until a real source exists.)
 #
 # Scheduled after market close settles (9pm PHT) and after PSE's Daily
 # Quotation Report is typically published (~9:30pm PHT) — the latest
-# dependency among these six (block sales, which is extracted from that PDF).
+# dependency among these (block sales, which is extracted from that PDF).
 on:
   schedule:
     - cron: "30 13 * * *" # ~9:30pm PHT (UTC+8), daily
@@ -54,11 +57,6 @@ jobs:
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      - id: offerings
-        run: pnpm --filter @pseye/etl fetch-offerings
-        continue-on-error: true
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
       - id: blockSales
         run: pnpm --filter @pseye/etl fetch-block-sales
         continue-on-error: true
@@ -73,7 +71,6 @@ jobs:
             "${{ steps.disclosures.outcome }}" \
             "${{ steps.corporateActions.outcome }}" \
             "${{ steps.historicalQuotes.outcome }}" \
-            "${{ steps.offerings.outcome }}" \
             "${{ steps.blockSales.outcome }}"; do
             if [ "$outcome" = "failure" ]; then
               echo "At least one fetch step failed — see step logs above."

@@ -20,6 +20,8 @@ interface MarketMapProps {
   profileByTicker?: Record<string, CompanyProfile>;
   snapshot: MarketSnapshot;
   foreignFlow: LatestForeignFlow;
+  /** Ticker -> real trailing-month closes for the hover sparkline (see lib/sparklines.ts); tickers without real history are absent. */
+  sparklineByTicker?: Record<string, number[]>;
 }
 
 const FILTER_KEYS = new Set(MARKET_MAP_FILTERS.map((f) => f.key));
@@ -109,7 +111,7 @@ function formatPickerDate(iso: string): string {
  * pattern in TreemapChart.tsx (server snapshot "all" so hydration never mismatches
  * a client that might land on a deep-linked, non-default filter).
  */
-export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: MarketMapProps) {
+export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, sparklineByTicker }: MarketMapProps) {
   const filter = useSyncExternalStore(subscribeToFilterUrl, getFilterFromUrl, (): MarketMapFilter => "all");
   const sharedTickers = useSyncExternalStore(
     subscribeToFilterUrl,
@@ -377,6 +379,8 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow }: Ma
             <TreemapChart
               stocks={filteredStocks}
               profileByTicker={profileByTicker}
+              // The sparkline is the *current* trailing month — misleading next to a past-date view, so it's withheld there.
+              sparklineByTicker={isPastView ? undefined : sparklineByTicker}
               onAddTileClick={filter === "watchlist" && !isSharedWatchlistView ? () => setAddModalOpen(true) : undefined}
             />
           )}

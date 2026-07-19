@@ -3,6 +3,7 @@ import { getDailyQuotes } from "@/lib/quotes";
 import { getCompanyProfiles } from "@/lib/companyProfiles";
 import { getMarketSnapshot } from "@/lib/marketSnapshot";
 import { getLatestForeignFlow } from "@/lib/latestForeignFlow";
+import { getRealSparklines } from "@/lib/sparklines";
 import { MarketMap } from "@/components/MarketMap";
 
 export const revalidate = 3600; // hourly; matches the intraday ETL cadence
@@ -21,12 +22,19 @@ export default async function MarketMapPage() {
     getMarketSnapshot(),
     getLatestForeignFlow(),
   ]);
+  const sparklineByTicker = await getRealSparklines(quotes.map((q) => q.ticker));
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-8">
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">The Philippine Stock Market, Visualized</h1>
       <div className="mt-6">
-        <MarketMap stocks={quotes} profileByTicker={profileByTicker} snapshot={snapshot} foreignFlow={foreignFlow} />
+        <MarketMap
+          stocks={quotes}
+          profileByTicker={profileByTicker}
+          snapshot={snapshot}
+          foreignFlow={foreignFlow}
+          sparklineByTicker={sparklineByTicker}
+        />
       </div>
     </div>
   );

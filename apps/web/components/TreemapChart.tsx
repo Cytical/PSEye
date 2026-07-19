@@ -12,7 +12,6 @@ import {
   NO_DATA_COLOR,
   type TreemapInput,
 } from "@pseye/treemap-layout";
-import { generateSparklineHistory } from "@/lib/syntheticSparkline";
 import type { CompanyProfile } from "@/lib/companyProfiles";
 import { CompanyDetailPanel } from "./CompanyDetailPanel";
 
@@ -36,6 +35,10 @@ interface TreemapChartProps {
   height?: number;
   /** Ticker -> one-time-fetched company description (see apps/web/lib/companyProfiles.ts). */
   profileByTicker?: Record<string, CompanyProfile>;
+  /** Ticker -> real trailing-month closes (see apps/web/lib/sparklines.ts). The hover
+   * tooltip's mini chart only renders from this — a ticker with no real history gets
+   * no sparkline, never a synthetic one. */
+  sparklineByTicker?: Record<string, number[]>;
   /** When set, an extra "+" tile is laid out into the grid itself (see ADD_TILE_TICKER below) that calls this on click — used by the "My Watchlist" filter so bookmarking stays on the map. */
   onAddTileClick?: () => void;
 }
@@ -105,6 +108,7 @@ export function TreemapChart({
   width: widthProp,
   height = DEFAULT_HEIGHT,
   profileByTicker,
+  sparklineByTicker,
   onAddTileClick,
 }: TreemapChartProps) {
   const [hovered, setHovered] = useState<TreemapStock | null>(null);
@@ -150,10 +154,7 @@ export function TreemapChart({
   const byTicker = useMemo(() => new Map(stocks.map((s) => [s.ticker, s])), [stocks]);
   const selected = selectedTicker ? (byTicker.get(selectedTicker) ?? null) : null;
 
-  const sparkline = useMemo(
-    () => (hovered?.price != null ? generateSparklineHistory(hovered.ticker, hovered.price) : null),
-    [hovered]
-  );
+  const sparkline = hovered ? (sparklineByTicker?.[hovered.ticker] ?? null) : null;
 
   /** 1-based market-cap rank among the stocks currently shown (respects the active filter) — shown in the detail panel. */
   const rankByTicker = useMemo(() => {
@@ -163,10 +164,13 @@ export function TreemapChart({
 
   return (
     <div ref={containerRef} className="flex w-full flex-col items-center gap-3">
+      {/* role="group", NOT role="img" — an img role tells assistive tech to
+          treat the contents as one flat picture, which would hide every
+          per-stock button inside from screen readers entirely. */}
       <div
         className="relative select-none overflow-hidden rounded-lg ring-1 ring-panel-border"
         style={{ width, height, background: CANVAS_BG }}
-        role="img"
+        role="group"
         aria-label="PSE market map: box size is market cap, color is today's percent change"
       >
         {layout.sectors

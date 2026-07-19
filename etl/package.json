@@ -9,7 +9,6 @@
     "fetch-corporate-actions": "tsx jobs/fetch-corporate-actions.ts",
     "fetch-block-sales": "tsx jobs/fetch-block-sales.ts",
     "fetch-disclosures": "tsx jobs/fetch-disclosures.ts",
-    "fetch-offerings": "tsx jobs/fetch-offerings.ts",
     "fetch-foreign-flow": "tsx jobs/fetch-foreign-flow.ts",
     "fetch-historical-quotes": "tsx jobs/fetch-historical-quotes.ts",
     "fetch-market-snapshot": "tsx jobs/fetch-market-snapshot.ts",
@@ -24,7 +23,6 @@
     "@pseye/source-news": "workspace:*",
     "@pseye/source-corporate-actions": "workspace:*",
     "@pseye/source-disclosures": "workspace:*",
-    "@pseye/source-offerings": "workspace:*",
     "@pseye/source-foreign-flow": "workspace:*",
     "drizzle-orm": "^0.36.4",
     "pdfjs-dist": "4.0.379"
