@@ -1,5 +1,8 @@
 # PSEye
 
+[![CI](https://github.com/Cytical/PSEye/actions/workflows/ci.yml/badge.svg)](https://github.com/Cytical/PSEye/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A free, community-first tracker for the Philippine Stock Exchange (PSE) — built to fill
 gaps that existing PH tools (PSE EQUIP, Investagrams/Rival, broker platforms, TradingView)
 either don't cover or gate behind paywalls. Read-only and informational only: no brokerage
@@ -79,7 +82,8 @@ pnpm --filter @pseye/etl fetch-quotes   # populate a table locally, e.g.
 ```
 
 In production, each `etl/jobs/*.ts` script runs on its own schedule via GitHub Actions
-(daily/hourly/weekly/monthly depending on the feature) — see `.github/workflows/`.
+(every 15 min for quotes/market-snapshot, daily or weekly for everything else) — see
+`.github/workflows/`.
 
 Other useful commands:
 
@@ -88,6 +92,13 @@ pnpm build       # turbo run build across all packages
 pnpm lint        # eslint (apps/web)
 pnpm typecheck   # tsc --noEmit across all packages
 ```
+
+### Optional environment variables
+
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_SITE_URL` | Canonical site origin used for metadata/OG URLs and the sitemap; falls back to `https://pseye.vercel.app` in production, `http://localhost:3000` in dev. |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Google Search Console's HTML-tag verification token (Search Console → Add property → HTML tag method). Omitted entirely from the page's `<head>` when unset. |
 
 ## Data sources
 

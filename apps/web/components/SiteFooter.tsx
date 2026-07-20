@@ -5,6 +5,7 @@ const FOOTER_LINKS = [
   { href: "/stocks", label: "All Stocks" },
   { href: "/news", label: "News" },
   { href: "/feed.xml", label: "RSS" },
+  { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 

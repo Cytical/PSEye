@@ -1,7 +1,19 @@
 {
   "name": "@pseye/web",
   "version": "0.1.0",
+  "description": "PSEye's Next.js frontend — market map, per-stock pages, dividends, foreign flow, and the DCA calculator.",
   "private": true,
+  "license": "MIT",
+  "author": "Ezra Guiao <guiaomikhail@gmail.com>",
+  "homepage": "https://pseye.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cytical/PSEye.git",
+    "directory": "apps/web"
+  },
+  "bugs": {
+    "url": "https://github.com/Cytical/PSEye/issues"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

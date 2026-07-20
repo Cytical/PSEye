@@ -23,6 +23,12 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
   (process.env.NODE_ENV === "production" ? "https://pseye.vercel.app" : "http://localhost:3000");
 
+// Set once the Search Console property is verified for real (Search Console >
+// Add property > HTML tag method > paste the content value here as a Vercel
+// env var). Omitted entirely rather than rendered empty/undefined when unset,
+// since an empty verification meta tag is worse than none.
+const GOOGLE_SITE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -41,6 +47,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
+  ...(GOOGLE_SITE_VERIFICATION ? { verification: { google: GOOGLE_SITE_VERIFICATION } } : {}),
 };
 
 // Site-wide identity markup — no SearchAction claimed here since there's no

@@ -1,6 +1,17 @@
 {
   "name": "pseye",
+  "description": "A free, community-first tracker for the Philippine Stock Exchange (PSE).",
   "private": true,
+  "license": "MIT",
+  "author": "Ezra Guiao <guiaomikhail@gmail.com>",
+  "homepage": "https://pseye.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cytical/PSEye.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Cytical/PSEye/issues"
+  },
   "packageManager": "pnpm@9.15.9",
   "engines": {
     "node": ">=20"
