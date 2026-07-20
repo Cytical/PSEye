@@ -41,8 +41,8 @@ export async function generateMetadata({
   const company = findCompany(ticker);
   if (!company) return {};
 
-  const title = `${company.ticker} — ${company.companyName} Stock Price & Info`;
-  const description = `${company.companyName} (${company.ticker}) on the Philippine Stock Exchange: latest EOD price, market cap rank, sector, recent disclosures, and dividend history.`;
+  const title = `${company.ticker} Stock Price Today — ${company.companyName} (PSE)`;
+  const description = `${company.companyName} (PSE: ${company.ticker}) stock price today, market-cap rank, sector, 52-week high/low, dividend history, and latest disclosures on the Philippine Stock Exchange.`;
 
   return {
     title,

@@ -5,7 +5,7 @@ import { getRecentRecapDates } from "@/lib/dailyRecap";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Daily Recap",
+  title: "PSE Market Recap — PSEi Today's Movers & Flow",
   description: "One page per PSE trading day: index move, top movers, foreign flow, block sales, and disclosures.",
   alternates: { canonical: "/daily" },
 };

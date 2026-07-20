@@ -7,7 +7,7 @@ import { getForeignFlowPageData } from "@/lib/foreignFlow";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Foreign Fund Flow",
+  title: "PSE Foreign Buying & Selling — Net Fund Flow",
   description: "Weekly index-level and daily per-stock net foreign buying/selling on the PSE.",
   alternates: { canonical: "/foreign-flow" },
 };

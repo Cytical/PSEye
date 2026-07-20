@@ -6,7 +6,7 @@ import { DividendScreenerTable } from "@/components/DividendScreenerTable";
 export const revalidate = 3600; // dividends move daily at most, but keep price-based yields fresh-ish
 
 export const metadata: Metadata = {
-  title: "Dividend Screener",
+  title: "PSE Dividend Stocks — Highest Yield Screener",
   description:
     "PSE dividend yields, ranked — trailing-12-month cash dividends per share, payout counts, and upcoming ex-dates for every tracked company.",
   alternates: { canonical: "/dividends" },

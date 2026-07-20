@@ -5,7 +5,7 @@ import { CompareTool } from "@/components/CompareTool";
 export const revalidate = 3600; // hourly; matches the quotes ETL cadence
 
 export const metadata: Metadata = {
-  title: "Compare Stocks",
+  title: "Compare PSE Stocks — Performance Chart",
   description: "Compare normalized % price performance of up to 4 PSE-listed stocks over time.",
   alternates: { canonical: "/compare" },
 };

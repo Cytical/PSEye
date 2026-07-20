@@ -11,7 +11,7 @@ import { getCorporateActions } from "@/lib/corporateActions";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Calendar",
+  title: "PSE Dividend Calendar — Ex-Date & Pay Dates",
   description: "Dividend and corporate actions calendar — ex-date, record date, and payment date.",
   alternates: { canonical: "/calendar" },
 };

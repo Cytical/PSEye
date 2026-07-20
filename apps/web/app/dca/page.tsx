@@ -5,7 +5,7 @@ import { DcaCalculator } from "@/components/DcaCalculator";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "DCA Calculator",
+  title: "PSE DCA Calculator — Peso Cost Averaging",
   description: "Simulate dollar-cost-averaging into a PSE stock or an equal-weighted market proxy.",
   alternates: { canonical: "/dca" },
 };

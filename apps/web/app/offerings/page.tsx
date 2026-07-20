@@ -4,7 +4,7 @@ import { MockOfferingSource, OFFERING_TYPE_LABELS, type Offering, type OfferingT
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Offerings",
+  title: "PSE IPO & Offerings Tracker",
   description: "IPO, follow-on, and rights offer tracker with subscription-window countdowns.",
   alternates: { canonical: "/offerings" },
 };

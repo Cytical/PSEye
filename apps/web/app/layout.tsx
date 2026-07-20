@@ -23,10 +23,11 @@ const SITE_URL =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "PSEye",
+    default: "PSEye — Philippine Stock Exchange (PSE) Tracker",
     template: "%s | PSEye",
   },
-  description: "A free, community-first tracker for the Philippine Stock Exchange.",
+  description:
+    "Free Philippine Stock Exchange tracker: live PSEi heatmap, PSE stock prices, dividend yields, foreign flow, and daily market recaps — no login, no paywall.",
   alternates: {
     types: { "application/rss+xml": "/feed.xml" },
   },

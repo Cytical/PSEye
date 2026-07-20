@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ChartExplorer } from "@/components/ChartExplorer";
 
 export const metadata: Metadata = {
-  title: "Charts",
+  title: "Stock Charts — NASDAQ Candlesticks",
   description: "Interactive candlestick charts for major NASDAQ stocks, powered by TradingView.",
   alternates: { canonical: "/charts" },
 };

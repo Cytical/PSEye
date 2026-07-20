@@ -9,7 +9,7 @@ import { newsSerif, newsSans } from "./fonts";
 export const revalidate = 3600; // hourly, matches the news ETL cadence
 
 export const metadata: Metadata = {
-  title: "News",
+  title: "PSE Stock Market News — PH Business Headlines",
   description: "The most relevant PH business headlines, auto-tagged by PSE ticker.",
   alternates: { canonical: "/news" },
 };

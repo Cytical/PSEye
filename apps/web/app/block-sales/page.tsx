@@ -5,7 +5,7 @@ import { getBlockSales } from "@/lib/blockSales";
 export const revalidate = 86400; // daily; matches the ETL job's cadence
 
 export const metadata: Metadata = {
-  title: "Block Sales",
+  title: "PSE Block Sales — Large Negotiated Trades",
   description: "Large negotiated trades from PSE's Daily Quotation Report, sorted by value.",
   alternates: { canonical: "/block-sales" },
 };

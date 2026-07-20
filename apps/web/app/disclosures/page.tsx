@@ -6,7 +6,7 @@ import { getDisclosures } from "@/lib/disclosures";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Disclosures",
+  title: "PSE Disclosures — PSE Edge Filings Digest",
   description: "PSE Edge filings distilled into a per-company digest.",
   alternates: { canonical: "/disclosures" },
 };
