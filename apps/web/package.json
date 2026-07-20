@@ -11,18 +11,20 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@pseye/db": "workspace:*",
+    "@pseye/source-block-sales": "workspace:*",
+    "@pseye/source-corporate-actions": "workspace:*",
+    "@pseye/source-disclosures": "workspace:*",
+    "@pseye/source-foreign-flow": "workspace:*",
+    "@pseye/source-news": "workspace:*",
+    "@pseye/source-offerings": "workspace:*",
+    "@pseye/source-quotes": "workspace:*",
+    "@pseye/treemap-layout": "workspace:*",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "next": "16.2.10",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "@pseye/db": "workspace:*",
-    "@pseye/source-quotes": "workspace:*",
-    "@pseye/source-news": "workspace:*",
-    "@pseye/source-corporate-actions": "workspace:*",
-    "@pseye/source-block-sales": "workspace:*",
-    "@pseye/source-disclosures": "workspace:*",
-    "@pseye/source-offerings": "workspace:*",
-    "@pseye/source-foreign-flow": "workspace:*",
-    "@pseye/treemap-layout": "workspace:*"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

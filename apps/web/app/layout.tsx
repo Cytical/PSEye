@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { DevToolsLink } from "@/components/DevToolsLink";
@@ -89,6 +91,8 @@ export default function RootLayout({
         <SiteFooter />
         <DevToolsLink />
         <InstallPrompt />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
