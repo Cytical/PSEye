@@ -32,7 +32,7 @@ const FAQ = [
   },
   {
     q: "What can I track on PSEye?",
-    a: "PSE stock prices and market-cap rankings, dividend yields, ex-dividend dates, net foreign buying and selling, block sales, disclosures, IPO offerings, and a per-day market recap.",
+    a: "PSE stock prices and market-cap rankings, dividend yields, ex-dividend dates, net foreign buying and selling, block sales, disclosures, and a per-day market recap.",
   },
 ];
 

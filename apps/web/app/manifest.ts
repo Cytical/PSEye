@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 /**
  * Enables "Add to Home Screen" / installable-PWA prompts. Dark canvas/icon
  * colors match the treemap and OG-image brand identity (see LogoMark.tsx)
- * rather than the sepia default site theme, since theme_color/background_color
- * are static and can't follow the visitor's saved light/dark/sepia choice.
+ * rather than the site's light default theme, since theme_color/background_color
+ * are static and can't follow the visitor's saved light/dark choice.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {

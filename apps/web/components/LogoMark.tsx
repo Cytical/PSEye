@@ -5,7 +5,7 @@
  * pupil nodding to a chart data-point rather than a plain dot. The dark chip
  * background matches the treemap/OG canvas color (#0d0f14) deliberately —
  * on a dark surface the chip disappears and only the eye floats free; on a
- * light surface (browser chrome, light/sepia theme header) it reads as a
+ * light surface (browser chrome, light theme header) it reads as a
  * badge. Plain SVG primitives only (rect/path/circle/polygon) so this same
  * component renders both as normal JSX (header) and inside next/og's
  * ImageResponse (icon.tsx, apple-icon.tsx, opengraph-image.tsx), which is

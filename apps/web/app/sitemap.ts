@@ -15,7 +15,8 @@ const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["ch
   { path: "/dividends", changeFrequency: "daily", priority: 0.7 },
   { path: "/block-sales", changeFrequency: "monthly", priority: 0.5 },
   { path: "/disclosures", changeFrequency: "hourly", priority: 0.6 },
-  { path: "/offerings", changeFrequency: "daily", priority: 0.5 },
+  // /offerings deliberately excluded — hidden from nav (still mock-only, no
+  // real source found after two investigations), not worth indexing.
   { path: "/foreign-flow", changeFrequency: "weekly", priority: 0.5 },
   { path: "/dca", changeFrequency: "monthly", priority: 0.6 },
   { path: "/daily", changeFrequency: "daily", priority: 0.7 },

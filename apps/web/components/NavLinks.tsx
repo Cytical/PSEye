@@ -8,21 +8,36 @@ import { usePathname } from "next/navigation";
 const PRIMARY = [
   { href: "/", label: "Market Map" },
   { href: "/daily", label: "Daily Recap" },
+  { href: "/news", label: "News" },
 ];
 
-/** Collapsed behind a "More" dropdown on desktop; shown flat on mobile. */
-const MORE = [
-  { href: "/charts", label: "Charts" },
-  { href: "/compare", label: "Compare" },
-  { href: "/news", label: "News" },
-  { href: "/calendar", label: "Calendar" },
-  { href: "/dividends", label: "Dividends" },
-  { href: "/block-sales", label: "Block Sales" },
-  { href: "/disclosures", label: "Disclosures" },
-  { href: "/offerings", label: "Offerings" },
-  { href: "/foreign-flow", label: "Foreign Flow" },
-  { href: "/dca", label: "DCA Calculator" },
+/**
+ * Each becomes its own inline dropdown on desktop, shown flat (ungrouped) on
+ * mobile, where vertical stacking has no scanability problem. Two separate
+ * dropdowns (rather than one "More" dropdown with two labeled sections)
+ * keeps each menu short and its topic obvious from the trigger label alone.
+ */
+const DROPDOWNS: { label: string; links: { href: string; label: string }[] }[] = [
+  {
+    label: "Market Data",
+    links: [
+      { href: "/dividends", label: "Dividends" },
+      { href: "/calendar", label: "Calendar" },
+      { href: "/foreign-flow", label: "Foreign Flow" },
+      { href: "/block-sales", label: "Block Sales" },
+      { href: "/disclosures", label: "Disclosures" },
+    ],
+  },
+  {
+    label: "Tools",
+    links: [
+      { href: "/charts", label: "Charts" },
+      { href: "/compare", label: "Compare" },
+      { href: "/dca", label: "DCA Calculator" },
+    ],
+  },
 ];
+const ALL_DROPDOWN_LINKS = DROPDOWNS.flatMap((g) => g.links);
 
 function useIsActive() {
   const pathname = usePathname();
@@ -35,11 +50,13 @@ function navLinkClass(active: boolean) {
 }
 
 /**
- * Nav is split so Market Map + Daily Recap stay one click away while the other
- * ten pages collapse behind a "More" dropdown — twelve top-level links had
- * grown into visual clutter. `variant="stacked"` (mobile hamburger panel)
- * skips the dropdown and lists everything flat, since vertical stacking has no
- * clutter problem there.
+ * Nav is split so Market Map, Daily Recap, and News stay one click away (the
+ * three highest-traffic/most-frequently-updated pages) while the other nine
+ * collapse behind two topic dropdowns — "Market Data" and "Tools" — instead
+ * of one flat "More" list, so each menu stays short and its trigger label
+ * tells you what's inside before you open it. `variant="stacked"` (mobile
+ * hamburger panel) skips the dropdowns and lists everything flat, since
+ * vertical stacking has no clutter problem there.
  */
 export function NavLinks({ variant = "inline" }: { variant?: "inline" | "stacked" }) {
   const isActive = useIsActive();
@@ -47,7 +64,7 @@ export function NavLinks({ variant = "inline" }: { variant?: "inline" | "stacked
   if (variant === "stacked") {
     return (
       <>
-        {[...PRIMARY, ...MORE].map((link) => (
+        {[...PRIMARY, ...ALL_DROPDOWN_LINKS].map((link) => (
           <Link
             key={link.href}
             href={link.href}
@@ -73,15 +90,25 @@ export function NavLinks({ variant = "inline" }: { variant?: "inline" | "stacked
           {link.label}
         </Link>
       ))}
-      <MoreDropdown isActive={isActive} />
+      {DROPDOWNS.map((group) => (
+        <NavDropdown key={group.label} label={group.label} links={group.links} isActive={isActive} />
+      ))}
     </>
   );
 }
 
-function MoreDropdown({ isActive }: { isActive: (href: string) => boolean }) {
+function NavDropdown({
+  label,
+  links,
+  isActive,
+}: {
+  label: string;
+  links: { href: string; label: string }[];
+  isActive: (href: string) => boolean;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const hasActiveChild = MORE.some((link) => isActive(link.href));
+  const hasActiveChild = links.some((link) => isActive(link.href));
 
   // Close on outside click / Escape.
   useEffect(() => {
@@ -109,7 +136,7 @@ function MoreDropdown({ isActive }: { isActive: (href: string) => boolean }) {
         aria-haspopup="menu"
         className={`flex items-center gap-1 ${navLinkClass(hasActiveChild)}`}
       >
-        More
+        {label}
         <svg
           width="12"
           height="12"
@@ -129,9 +156,9 @@ function MoreDropdown({ isActive }: { isActive: (href: string) => boolean }) {
       {open && (
         <div
           role="menu"
-          className="absolute left-0 top-full z-20 mt-2 flex min-w-44 flex-col rounded-lg border border-black/10 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-neutral-900"
+          className="absolute left-0 top-full z-20 mt-2 flex min-w-40 flex-col rounded-lg border border-black/10 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-neutral-900"
         >
-          {MORE.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}

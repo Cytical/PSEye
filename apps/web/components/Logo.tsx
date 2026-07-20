@@ -1,7 +1,7 @@
 import { LogoMark } from "./LogoMark";
 
 /** Icon + wordmark lockup for the header. The mark always renders with its own
- * dark chip regardless of the active site theme (light/dark/sepia) — a
+ * dark chip regardless of the active site theme (light/dark) — a
  * consistent badge, same reasoning as LogoMark's own doc comment. */
 export function Logo({ size = 26 }: { size?: number }) {
   return (

@@ -6,11 +6,11 @@ import { applyTheme, THEME_STORAGE_KEY, THEMES, type Theme } from "@/lib/theme";
 export function ThemeToggle() {
   // Lazy initializer reads the same DOM attribute the pre-hydration script
   // in layout.tsx sets, so the client render always agrees with the server's
-  // default ("sepia") plus whatever the script already applied by the time
+  // default ("light") plus whatever the script already applied by the time
   // this component mounts.
   const [active, setActive] = useState<Theme>(() => {
-    if (typeof document === "undefined") return "sepia";
-    return (document.documentElement.dataset.theme as Theme | undefined) ?? "sepia";
+    if (typeof document === "undefined") return "light";
+    return (document.documentElement.dataset.theme as Theme | undefined) ?? "light";
   });
 
   function select(theme: Theme) {

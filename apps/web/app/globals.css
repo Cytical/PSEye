@@ -58,21 +58,6 @@
   color-scheme: dark;
 }
 
-/* Financial Times-style warm paper tone. Panel surfaces are a deeper cream
- * than the page background so the sidebar/canvas/modal still read as raised
- * surfaces rather than blending flat into the page. */
-[data-theme="sepia"] {
-  --background: #fff1e5;
-  --foreground: #33302e;
-  --panel-bg: #f7e6d2;
-  --panel-bg-raised: #efd6b8;
-  --panel-bg-active: #e6c49a;
-  --panel-border: rgba(51, 48, 46, 0.14);
-  --panel-fg: #33302e;
-  --panel-canvas: #fbeadb;
-  --panel-grid: #fff8ef;
-}
-
 body {
   background: var(--background);
   color: var(--foreground);

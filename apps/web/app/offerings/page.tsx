@@ -3,10 +3,15 @@ import { MockOfferingSource, OFFERING_TYPE_LABELS, type Offering, type OfferingT
 
 export const revalidate = 86400;
 
+// Unlinked from nav and sitemap (see NavLinks.tsx / sitemap.ts) — still on
+// MockOfferingSource with no real data source found, so this page stays
+// reachable by direct URL only, not discoverable/indexed, until a real
+// source exists.
 export const metadata: Metadata = {
   title: "PSE IPO & Offerings Tracker",
   description: "IPO, follow-on, and rights offer tracker with subscription-window countdowns.",
   alternates: { canonical: "/offerings" },
+  robots: { index: false, follow: false },
 };
 
 /** Muted, theme-safe accent per offering type — same color-language approach as the calendar/disclosures pages. */

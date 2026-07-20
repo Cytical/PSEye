@@ -12,14 +12,18 @@ Full product/technical planning brief: [`docs/PLANNING.md`](docs/PLANNING.md).
 | Route | What it does |
 |---|---|
 | `/` | PSEi market map — a treemap heatmap sized by market cap, colored by day's % change, grouped by PSE's 6 sectors |
-| `/charts` | Interactive candlestick charts via TradingView's free embed (NASDAQ names only — see "Data sources") |
+| `/daily` | Redirects to today's market recap (`/daily/[date]`) — PSEi close, top movers, foreign flow, shareable per-day OG card |
+| `/stocks/[ticker]` | Per-company page: price/%change, market-cap/sector rank, closing-price chart, profile, disclosures, dividend history, news mentions, and its own RSS feed |
 | `/news` | PH business news headlines, auto-tagged by PSE ticker |
+| `/dividends` | Dividend-yield screener across all PSE-listed stocks |
 | `/calendar` | Dividend & corporate actions calendar (ex-date/record/payment dates, plain-language explainers) |
-| `/block-sales` | Large negotiated "cross" trades from PSE's Monthly Report |
+| `/compare` | Overlay closing-price performance across multiple tickers on one chart |
+| `/block-sales` | Large negotiated "cross" trades from PSE's daily Quotation Report |
 | `/disclosures` | PSE Edge filings distilled into a per-company digest |
-| `/offerings` | IPO / follow-on / rights offer tracker with subscription countdowns |
-| `/foreign-flow` | Weekly index-level and per-stock net foreign buying/selling |
+| `/offerings` | IPO / follow-on / rights offer tracker with subscription countdowns — unlinked from nav/sitemap for now, still mock-only (see "Data sources") |
+| `/foreign-flow` | Index-level (weekly) and per-stock (daily) net foreign buying/selling |
 | `/dca` | Cost-averaging calculator — simulate DCA into a stock or an equal-weighted market proxy |
+| `/charts` | Interactive candlestick charts via TradingView's free embed (NASDAQ names only — see "Data sources") |
 
 Several features now run on real data scraped from public PSE Edge pages/PDFs; others
 still run on fabricated sample data pending a legally-sound real source — see "Data
@@ -99,16 +103,17 @@ Current status per feature:
 | Disclosures | Real | PSE Edge's announcements search |
 | Corporate actions (dividends) | Real | PSE Edge's dividends & rights listing |
 | Foreign flow — index-level | Real | PSE's free weekly Market Watch PDF |
-| Foreign flow — per-stock rankings | Sample data | no free public source found (needs the full Monthly Report, which isn't freely published) |
-| Block sales | Sample data | same reason as above |
-| Offerings / IPO tracker | Sample data | the one free feed found is currently empty and lacks the dates this feature needs |
+| Foreign flow — per-stock rankings | Real | PSE's free daily Quotation Report PDF (the "Net Foreign Buying/(Selling)" column, top/bottom 10 by value) |
+| Block sales | Real | PSE's free daily Quotation Report PDF (BLOCK SALES table) |
+| Offerings / IPO tracker | Sample data | the one free feed found ("Listing Applicants") is currently empty and lacks the subscription-window dates this feature needs; re-investigated twice, no viable source found |
 | Charts (TradingView embed) | Real, but NASDAQ only | TradingView's free widgets refuse PSE-listed symbols (verified) |
 
-PSE's published reports (Monthly Report, Market Watch PDF) restrict reproduction/
-redistribution, and true real-time market data is a licensed, paid product — every real
-source above reads a public page/PDF for delayed/EOD figures, not a licensed feed, and
-none of it re-hosts PSE's documents themselves. See `docs/PLANNING.md`'s execution log
-for the full reasoning, what was investigated for the still-mock features, and why.
+PSE's published reports (Monthly Report, Market Watch PDF, daily Quotation Report)
+restrict reproduction/redistribution, and true real-time market data is a licensed, paid
+product — every real source above reads a public page/PDF for delayed/EOD figures, not a
+licensed feed, and none of it re-hosts PSE's documents themselves. See `docs/PLANNING.md`'s
+execution log for the full reasoning, what was investigated for the still-mock features,
+and why.
 
 ## Non-goals
 
