@@ -1,0 +1,30 @@
+name: Fetch quotes (every 15 min)
+
+on:
+  schedule:
+    # Every 15 min, 9:00am-4:45pm PHT (UTC+8) on weekdays — covers PSE's
+    # 9:30-3:30 trading session plus a settle run after close, at the same
+    # cadence as PSE's own public-data delay floor (15 min — see
+    # pse.com.ph/data-products/). Polling tighter than that wouldn't surface
+    # anything fresher, since the source page itself isn't updated faster
+    # than its regulatory delay. Was hourly; bumped to 15 min since GitHub
+    # Actions minutes are unlimited on this now-public repo and Neon's free
+    # compute budget (100 CU-hours/project/month) has plenty of headroom at
+    # this cadence — see the ETL doc comment in fetch-quotes.ts for the math.
+    - cron: "*/15 1-8 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-quotes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-quotes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

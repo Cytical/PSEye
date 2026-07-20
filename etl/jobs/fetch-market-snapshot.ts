@@ -7,8 +7,10 @@ const USER_AGENT =
   "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching public EOD/delayed stock data pages";
 
 /**
- * Runs hourly during PSE trading hours (see .github/workflows/market-snapshot-hourly.yml),
- * same cadence as fetch-quotes.ts. Two sources, both free/public:
+ * Runs every 15 min during PSE trading hours (see
+ * .github/workflows/market-snapshot-15min.yml), same cadence as
+ * fetch-quotes.ts — see that file's doc comment for why 15 min. Two sources,
+ * both free/public:
  *  - PSEi value/change: PSE Edge's homepage "Index Summary" widget (same legal
  *    tradeoff as PseEdgeQuoteSource — see docs/PLANNING.md Open Question #1).
  *  - USD/PHP rate: Frankfurter (frankfurter.dev), a free no-key API built on
