@@ -99,9 +99,6 @@ importers:
       '@pseye/source-news':
         specifier: workspace:*
         version: link:../packages/sources/news
-      '@pseye/source-offerings':
-        specifier: workspace:*
-        version: link:../packages/sources/offerings
       '@pseye/source-quotes':
         specifier: workspace:*
         version: link:../packages/sources/quotes
