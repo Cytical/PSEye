@@ -6,7 +6,7 @@ import { getLatestForeignFlow } from "@/lib/latestForeignFlow";
 import { getRealSparklines } from "@/lib/sparklines";
 import { MarketMap } from "@/components/MarketMap";
 
-export const revalidate = 3600; // hourly; matches the intraday ETL cadence
+export const revalidate = 900; // 15 min; matches quotes-15min.yml/market-snapshot-15min.yml's ETL cadence
 
 export const metadata: Metadata = {
   title: "PSE Market Map — Live PSEi Heatmap",

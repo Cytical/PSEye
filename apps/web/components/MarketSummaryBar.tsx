@@ -25,6 +25,18 @@ function formatPeriodLabel(periodEnd: string): string {
   });
 }
 
+// Fixed to Asia/Manila rather than the visitor's local timezone — otherwise
+// the server (UTC) and a client browser in a different zone would format the
+// same instant differently and trip a hydration mismatch, same reasoning as
+// formatPickerDate's fixed UTC above.
+function formatUpdatedAt(capturedAt: string): string {
+  return new Date(capturedAt).toLocaleTimeString("en-PH", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "Asia/Manila",
+  });
+}
+
 /** Lives at the bottom of the market map's filter sidebar (see MarketMap.tsx), styled with the same panel-* vars so it matches whichever theme is active. */
 export function MarketSummaryBar({ snapshot, foreignFlow }: MarketSummaryBarProps) {
   return (
@@ -37,6 +49,9 @@ export function MarketSummaryBar({ snapshot, foreignFlow }: MarketSummaryBarProp
         {snapshot.pseiChange >= 0 ? "+" : ""}
         {snapshot.pseiChange.toFixed(2)} ({snapshot.pseiPctChange >= 0 ? "+" : ""}
         {snapshot.pseiPctChange.toFixed(2)}%)
+      </div>
+      <div className="mt-0.5 text-[10px] tabular-nums text-panel-fg/45">
+        Updated {formatUpdatedAt(snapshot.capturedAt)} PHT
       </div>
 
       <div className="pointer-events-none absolute bottom-full left-3 z-10 mb-2 w-max max-w-[220px] rounded-lg border border-panel-border bg-panel-raised px-3 py-2 opacity-0 shadow-2xl transition-opacity duration-100 group-hover:opacity-100">
