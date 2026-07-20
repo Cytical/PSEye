@@ -11,7 +11,12 @@ on:
     # Actions minutes are unlimited on this now-public repo and Neon's free
     # compute budget (100 CU-hours/project/month) has plenty of headroom at
     # this cadence — see the ETL doc comment in fetch-quotes.ts for the math.
-    - cron: "*/15 1-8 * * 1-5"
+    # Offset to :07/:22/:37/:52 rather than the exact quarter-hour — GitHub's
+    # own docs warn scheduled runs queue behind everyone else's at :00/:15/
+    # :30/:45 and can be delayed or dropped; confirmed live here (this
+    # workflow, on the exact-quarter-hour schedule, produced zero scheduled
+    # runs for ~2 days straight despite being active and valid).
+    - cron: "7,22,37,52 1-8 * * 1-5"
   workflow_dispatch: {}
 
 jobs:

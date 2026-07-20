@@ -3,8 +3,10 @@ name: Fetch market snapshot (every 15 min)
 on:
   schedule:
     # Every 15 min, 9:00am-4:45pm PHT (UTC+8) on weekdays — same cadence and
-    # same reasoning as quotes-15min.yml.
-    - cron: "*/15 1-8 * * 1-5"
+    # same reasoning as quotes-15min.yml, including the :07/:22/:37/:52
+    # offset (see that file's comment — avoids GitHub's exact-quarter-hour
+    # scheduling congestion, confirmed live to cause multi-day silent gaps).
+    - cron: "7,22,37,52 1-8 * * 1-5"
   workflow_dispatch: {}
 
 jobs:
