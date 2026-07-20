@@ -69,7 +69,7 @@ export function SiteHeader() {
             <TickerSearch />
           </div>
           <nav className="flex flex-col gap-2.5 text-sm" aria-label="Main" onClick={() => setOpen(false)}>
-            <NavLinks />
+            <NavLinks variant="stacked" />
           </nav>
         </div>
       )}
