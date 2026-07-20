@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { DevToolsLink } from "@/components/DevToolsLink";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -87,6 +88,7 @@ export default function RootLayout({
         <main className="flex-1">{children}</main>
         <SiteFooter />
         <DevToolsLink />
+        <InstallPrompt />
       </body>
     </html>
   );

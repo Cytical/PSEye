@@ -3,20 +3,28 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Always copies straight to the clipboard rather than opening the native
- * share sheet (navigator.share) — a picker adds a tap and a delay when the
- * whole point is "grab me a link fast". Confirms with a floating toast
- * instead of only swapping the button's own label, since the button can be
- * scrolled out of view (e.g. the watchlist's share button) before someone
- * would notice a label change.
+ * On touch devices, opens the native share sheet (navigator.share) so a link
+ * can go straight into Messenger/Viber/Facebook — how sharing actually spreads
+ * in the PH — carrying a title/text hook, not a bare URL. On desktop (fine
+ * pointer, where the share sheet is clumsy or absent) it copies to the
+ * clipboard instead, since "grab me a link fast" is the desktop expectation.
+ * The clipboard path confirms with a floating toast rather than only swapping
+ * the button label, since the button can be scrolled out of view (e.g. the
+ * watchlist share button) before someone would notice a label change.
  */
 export function ShareButton({
   getShareUrl,
+  shareTitle,
+  shareText,
 }: {
   /** Defaults to the current page URL. Pass this to share a different URL than
    * the one currently in the address bar — e.g. the watchlist share link,
    * which encodes state (?tickers=) that isn't kept synced to the address bar. */
   getShareUrl?: () => string;
+  /** Native-share sheet title (ignored on the clipboard/desktop path). */
+  shareTitle?: string;
+  /** Native-share sheet body hook, e.g. "BDO ₱126.80 (+1.2%) today". */
+  shareText?: string;
 }) {
   const [showToast, setShowToast] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -27,6 +35,25 @@ export function ShareButton({
 
   async function handleShare() {
     const url = getShareUrl ? getShareUrl() : window.location.href;
+
+    // Native sheet only on touch devices: desktop Chrome exposes navigator.share
+    // too, but there the fast clipboard copy is the better fit.
+    const canNativeShare =
+      typeof navigator !== "undefined" &&
+      typeof navigator.share === "function" &&
+      (navigator.maxTouchPoints ?? 0) > 0;
+
+    if (canNativeShare) {
+      try {
+        await navigator.share({ title: shareTitle, text: shareText, url });
+        return;
+      } catch (err) {
+        // User dismissed the sheet — not an error, and not a reason to then
+        // silently copy. Only fall through to clipboard on a real failure.
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }
+
     await navigator.clipboard.writeText(url);
     setShowToast(true);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);

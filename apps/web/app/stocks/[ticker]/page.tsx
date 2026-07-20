@@ -197,7 +197,18 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <ShareButton />
+          <ShareButton
+            shareTitle={`${company.ticker} — ${company.companyName}`}
+            shareText={
+              quote?.price == null
+                ? `${company.ticker} (${company.companyName}) on the PSE — via PSEye`
+                : `${company.ticker} ${formatPeso(quote.price)}${
+                    quote.pctChange == null
+                      ? ""
+                      : ` (${quote.pctChange >= 0 ? "+" : ""}${quote.pctChange.toFixed(2)}%)`
+                  } on the PSE — via PSEye`
+            }
+          />
           <a
             href={`/stocks/${company.ticker}/feed.xml`}
             title={`RSS feed: ${company.ticker} disclosures, dividends & news`}

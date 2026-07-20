@@ -140,7 +140,19 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
               {formatShortDate(recap.nextDate)} →
             </Link>
           )}
-          <ShareButton />
+          <ShareButton
+            shareTitle={`PSE Daily Recap — ${formatLongDate(recap.date)}`}
+            shareText={
+              snapshot
+                ? `PSEi closed at ${snapshot.pseiValue.toLocaleString("en-PH", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })} (${snapshot.pseiPctChange >= 0 ? "+" : ""}${snapshot.pseiPctChange.toFixed(
+                    2
+                  )}%) — full PSE recap on PSEye`
+                : `The full PSE market recap for ${formatLongDate(recap.date)} on PSEye`
+            }
+          />
         </div>
       </div>
 
