@@ -10,10 +10,17 @@
 // *trigger*: Vercel Cron (a reliable scheduler) hits this route on schedule,
 // and this route dispatches the two workflows via the API.
 //
-// Auth: Vercel automatically sends `Authorization: Bearer $CRON_SECRET` on cron
-// invocations when the CRON_SECRET env var is set — we reject anything else so
-// the endpoint can't be triggered by the public. The GitHub PAT lives in
-// GH_DISPATCH_TOKEN (fine-grained, repo-scoped, Actions: read/write).
+// Two callers hit this same route, both sending `Authorization: Bearer
+// $CRON_SECRET`:
+//   1. Vercel Cron (vercel.json) — on the Hobby plan this can only fire ONCE
+//      per day (Pro unlocks 15-min), so it's just the daily market-open anchor.
+//      Vercel injects the CRON_SECRET bearer automatically.
+//   2. An external cron service (cron-job.org) configured to send the same
+//      bearer manually — this is what drives the reliable intraday 15-min
+//      polling that Hobby's Vercel Cron can't.
+// Anything without the matching bearer is rejected so the endpoint can't be
+// triggered by the public. The GitHub PAT lives in GH_DISPATCH_TOKEN
+// (fine-grained, repo-scoped, Actions: read/write).
 
 export const dynamic = "force-dynamic";
 
