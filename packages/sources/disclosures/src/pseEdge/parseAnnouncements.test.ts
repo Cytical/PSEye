@@ -47,7 +47,7 @@ describe("parseAnnouncementsHtml", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       ticker: "BDO",
-      companyName: "BDO Unibank",
+      companyName: bdo.companyName,
       type: "material_information",
       headline: "Material Information/Transactions",
       referenceNo: "C05437-2026",

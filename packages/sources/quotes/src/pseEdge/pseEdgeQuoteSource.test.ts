@@ -40,7 +40,7 @@ describe("PseEdgeQuoteSource", () => {
 
     const bdo = quotes.find((q) => q.ticker === "BDO");
     expect(bdo).toMatchObject({
-      companyName: "BDO Unibank",
+      companyName: PSE_EDGE_COMPANIES.find((c) => c.ticker === "BDO")!.companyName,
       sector: "Financials",
       price: 100,
       pctChange: 1,

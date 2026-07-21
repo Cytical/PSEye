@@ -5,6 +5,11 @@ export const PSE_SECTORS = [
   "Property",
   "Services",
   "Mining & Oil",
+  // PSE Edge's Company Directory classifies these outside the six main boards:
+  // SME-board issues and the lone equity ETF (FMETF). Kept as their own groups
+  // rather than force-fit into a main sector — see pseEdgeCompanyDirectory.ts.
+  "SME Board",
+  "ETF",
 ] as const;
 
 export type PseSector = (typeof PSE_SECTORS)[number];

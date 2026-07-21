@@ -75,7 +75,7 @@ describe("parseDividendsHtml", () => {
     const bdoRow = result.find((r) => r.ticker === "BDO");
 
     expect(bdoRow).toMatchObject({
-      companyName: "BDO Unibank",
+      companyName: bdo.companyName,
       type: "cash_dividend",
       exDate: "2026-12-01",
       recordDate: "2026-12-02",
