@@ -1,0 +1,26 @@
+name: Fetch market snapshot (once daily, post-close)
+
+on:
+  schedule:
+    # Once a day at 13:38 UTC (9:38pm PHT), weekdays — same cadence and
+    # reasoning as quotes-daily.yml (see its comment): captures the day's
+    # final PSEi close from PSE Edge's Index Summary widget after settle,
+    # once-daily because GitHub drops high-frequency scheduled runs. Offset
+    # off the :30 quarter-hour and a couple minutes ahead of the quotes run.
+    - cron: "38 13 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-market-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-market-snapshot
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

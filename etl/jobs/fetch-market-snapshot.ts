@@ -7,9 +7,10 @@ const USER_AGENT =
   "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching public EOD/delayed stock data pages";
 
 /**
- * Runs every 15 min during PSE trading hours (see
- * .github/workflows/market-snapshot-15min.yml), same cadence as
- * fetch-quotes.ts — see that file's doc comment for why 15 min. One free/public
+ * Runs once a day after PSE's close settles (see
+ * .github/workflows/market-snapshot-daily.yml, 13:38 UTC / 9:38pm PHT
+ * weekdays), same cadence as fetch-quotes.ts — see that file's doc comment for
+ * why once-daily rather than the old 15-min schedule. One free/public
  * source: the PSEi value/change from PSE Edge's homepage "Index Summary" widget
  * (same legal tradeoff as PseEdgeQuoteSource — see docs/PLANNING.md Open
  * Question #1). Upserts one row per calendar day — "today's" reading, not an

@@ -4,19 +4,22 @@ import { createDb, dailyQuotes } from "@pseye/db";
 import { PseEdgeQuoteSource } from "@pseye/source-quotes";
 
 /**
- * Runs every 15 min during PSE trading hours (see
- * .github/workflows/quotes-15min.yml) and scrapes PSE Edge's public
- * per-company pages — see PseEdgeQuoteSource's doc comment for the
- * caching/rate-limit reasoning and docs/PLANNING.md for the legal tradeoffs
- * behind that choice (Open Question #1). 15 min matches PSE's own public-data
- * delay floor (pse.com.ph/data-products/) — polling faster wouldn't surface
- * anything the source itself hasn't updated yet. At this cadence, this job
- * plus fetch-market-snapshot.ts together cost roughly 30 CU-hours/month on
- * Neon's free tier (~1,400 combined runs/month, each a cold wake that idles
- * ~5 min at the free tier's fixed 0.25 CU before auto-suspending) — well
- * inside the 100 CU-hour/project/month budget. GitHub Actions minutes aren't
- * a constraint either: this repo is public, so standard-runner minutes are
- * free and uncapped.
+ * Runs once a day after PSE's close settles (see
+ * .github/workflows/quotes-daily.yml, 13:40 UTC / 9:40pm PHT weekdays) and
+ * scrapes PSE Edge's public per-company pages — see PseEdgeQuoteSource's doc
+ * comment for the caching/rate-limit reasoning and docs/PLANNING.md for the
+ * legal tradeoffs behind that choice (Open Question #1). Post-close, each
+ * ticker's Stock Data page shows its FINAL closing price, so one daily run
+ * captures a complete, accurate EOD board.
+ *
+ * This used to run every 15 min for near-live intraday prices, but GitHub
+ * silently drops high-frequency scheduled runs (this workflow, on a 15-min
+ * schedule, produced multi-day gaps with zero runs — confirmed live).
+ * Reliable 15-min polling would need an external trigger (Vercel Cron or
+ * cron-job.org -> workflow_dispatch), not worth it on a free Vercel plan for
+ * a casual tracker — so the site shows one EOD board per trading day rather
+ * than intraday. GitHub Actions minutes aren't a constraint (public repo,
+ * free/uncapped), and Neon compute has ample headroom at one run/day.
  */
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;

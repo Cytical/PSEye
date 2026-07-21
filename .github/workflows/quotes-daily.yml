@@ -1,0 +1,34 @@
+name: Fetch quotes (once daily, post-close)
+
+on:
+  schedule:
+    # Once a day at 13:40 UTC (9:40pm PHT), weekdays — after PSE's 3:30pm
+    # close has fully settled, so edge.pse.com.ph's per-company Stock Data
+    # pages show each ticker's FINAL closing price for the day (not an
+    # intraday snapshot that a later run would overwrite). Deliberately
+    # once-daily, not the old every-15-min cadence: GitHub silently drops
+    # high-frequency scheduled runs (this workflow, on a 15-min schedule,
+    # produced multi-day gaps with zero runs — confirmed live), whereas a
+    # single low-frequency run at an off-quarter-hour minute is honored
+    # reliably. Reliable 15-min intraday polling would need an external
+    # trigger (Vercel Cron/cron-job.org -> workflow_dispatch), which isn't
+    # worth it on a free plan for a casual tracker — one accurate EOD board
+    # per trading day is the tradeoff. Runs alongside fetch-daily.yml (13:30
+    # UTC), just offset off the :30 quarter-hour.
+    - cron: "40 13 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-quotes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-quotes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
