@@ -26,10 +26,21 @@ async function main() {
 
   const [index, usdPhpRate] = await Promise.all([fetchPseiSummary(), fetchUsdPhpRate()]);
 
+  // The PSE Edge homepage's Index Summary widget is only populated
+  // server-side intermittently — it's frequently blank (empty <tbody>) even
+  // mid-session, then populated on other reads the same day (confirmed live:
+  // the same widget produced a real PSEi value at 1pm one day and an empty
+  // table the next morning). Since this job runs every 15 min, a blank widget
+  // is an expected transient, not an error: soft-skip so the run stays green
+  // and never overwrites a good PSEi already stored for today — a later run
+  // (or the post-close settle run) captures it once the widget fills. USD/PHP
+  // alone can't be stored (psei_* columns are NOT NULL), and it's ECB
+  // daily-cadence anyway, so there's nothing lost by skipping.
   if (!index || usdPhpRate === null) {
-    throw new Error(
-      `fetch-market-snapshot: missing data (index=${index ? "ok" : "null"}, usdPhpRate=${usdPhpRate})`
+    console.warn(
+      `fetch-market-snapshot: incomplete data (index=${index ? "ok" : "empty"}, usdPhpRate=${usdPhpRate}); skipping this run.`
     );
+    return;
   }
 
   const db = createDb(databaseUrl);
