@@ -64,7 +64,6 @@ export const marketSnapshot = pgTable("market_snapshot", {
   pseiValue: numeric("psei_value", { precision: 12, scale: 4 }).notNull(),
   pseiChange: numeric("psei_change", { precision: 12, scale: 4 }).notNull(),
   pseiPctChange: numeric("psei_pct_change", { precision: 8, scale: 4 }).notNull(),
-  usdPhpRate: numeric("usd_php_rate", { precision: 10, scale: 4 }).notNull(),
   capturedAt: timestamp("captured_at", { withTimezone: true }).notNull(),
 });
 

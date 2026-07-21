@@ -180,12 +180,6 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
                   </span>
                 </p>
               </div>
-              <div className="rounded-lg bg-panel p-4 ring-1 ring-panel-border">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-panel-fg/50">USD/PHP</p>
-                <p className="mt-1 text-xl font-semibold tabular-nums text-panel-fg">
-                  {snapshot.usdPhpRate.toFixed(2)}
-                </p>
-              </div>
             </>
           )}
           {breadth && (

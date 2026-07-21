@@ -1,0 +1,1 @@
+ALTER TABLE "market_snapshot" DROP COLUMN IF EXISTS "usd_php_rate";

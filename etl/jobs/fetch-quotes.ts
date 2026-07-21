@@ -35,8 +35,28 @@ async function main() {
   // with a spurious null for the rest of the day. Skip it instead and leave
   // whatever's already stored (this run's fetch failure, not real news).
   const failed = results.filter((r) => r.fetchFailed);
-  const rows = results
-    .filter((r) => !r.fetchFailed)
+  const usable = results.filter((r) => !r.fetchFailed);
+
+  // Before the day's first (15-min-delayed) trades post, PSE Edge serves a
+  // blank "Last Traded Price" for EVERY ticker — only the Previous Close
+  // carries a value (see parseStockData). Those all parse to price=null. If we
+  // stamped that pre-open/thin-session read with *today's* date, today would
+  // become the newest trade_date with no prices at all, and getLatestDailyQuotes
+  // would hand the site a board that's N/A across the board — masking
+  // yesterday's real closes. (This is exactly the "everything shows N/A" bug.)
+  // So only materialize today's snapshot once a real session's worth of tickers
+  // have actually traded; until then, leave the last complete trading day in
+  // place. Once past the threshold we still write the full board (including the
+  // few stragglers as genuine N/A), so no ticker drops off the map.
+  const pricedCount = usable.filter((r) => r.quote.price != null).length;
+  if (pricedCount < usable.length / 2) {
+    console.warn(
+      `fetch-quotes: only ${pricedCount}/${usable.length} tickers have a traded price for ${tradeDate} (pre-open / thin session) — skipping write to keep the last complete trading day's closes instead of an all-N/A board.`
+    );
+    return;
+  }
+
+  const rows = usable
     .map(({ quote }) => ({
       ticker: quote.ticker,
       companyName: quote.companyName,

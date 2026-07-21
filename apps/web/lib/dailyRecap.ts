@@ -46,7 +46,7 @@ export interface RecapNewsItem {
 
 export interface DailyRecap {
   date: string;
-  snapshot: { pseiValue: number; pseiChange: number; pseiPctChange: number; usdPhpRate: number } | null;
+  snapshot: { pseiValue: number; pseiChange: number; pseiPctChange: number } | null;
   /** Market breadth across every tracked stock that day. */
   breadth: { advancers: number; decliners: number; unchanged: number; noTrade: number } | null;
   gainers: RecapMover[];
@@ -131,7 +131,6 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
             pseiValue: Number(snapshotRow.pseiValue),
             pseiChange: Number(snapshotRow.pseiChange),
             pseiPctChange: Number(snapshotRow.pseiPctChange),
-            usdPhpRate: Number(snapshotRow.usdPhpRate),
           }
         : null,
       breadth,

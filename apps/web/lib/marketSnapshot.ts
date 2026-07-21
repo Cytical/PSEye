@@ -4,7 +4,6 @@ export interface MarketSnapshot {
   pseiValue: number;
   pseiChange: number;
   pseiPctChange: number;
-  usdPhpRate: number;
   /** ISO timestamp of when this reading was captured. */
   capturedAt: string;
 }
@@ -14,7 +13,6 @@ const SAMPLE_SNAPSHOT: MarketSnapshot = {
   pseiValue: 6325.15,
   pseiChange: 22.65,
   pseiPctChange: 0.36,
-  usdPhpRate: 58.7,
   capturedAt: new Date().toISOString(),
 };
 
@@ -37,7 +35,6 @@ export async function getMarketSnapshot(): Promise<MarketSnapshot> {
       pseiValue: Number(row.pseiValue),
       pseiChange: Number(row.pseiChange),
       pseiPctChange: Number(row.pseiPctChange),
-      usdPhpRate: Number(row.usdPhpRate),
       capturedAt: row.capturedAt.toISOString(),
     };
   } catch (err) {

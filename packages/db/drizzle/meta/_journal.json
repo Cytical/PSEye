@@ -57,6 +57,13 @@
       "when": 1784387988516,
       "tag": "0007_young_quicksilver",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784603592669,
+      "tag": "0008_wild_oracle",
+      "breakpoints": true
     }
   ]
 }

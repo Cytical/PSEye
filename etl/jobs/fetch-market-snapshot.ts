@@ -9,14 +9,11 @@ const USER_AGENT =
 /**
  * Runs every 15 min during PSE trading hours (see
  * .github/workflows/market-snapshot-15min.yml), same cadence as
- * fetch-quotes.ts — see that file's doc comment for why 15 min. Two sources,
- * both free/public:
- *  - PSEi value/change: PSE Edge's homepage "Index Summary" widget (same legal
- *    tradeoff as PseEdgeQuoteSource — see docs/PLANNING.md Open Question #1).
- *  - USD/PHP rate: Frankfurter (frankfurter.dev), a free no-key API built on
- *    the ECB's daily reference rates. It's informational context for retail
- *    users, not a trading input, so ECB-cadence (not intraday) is fine.
- * Upserts one row per calendar day — "today's" reading, not an intraday history.
+ * fetch-quotes.ts — see that file's doc comment for why 15 min. One free/public
+ * source: the PSEi value/change from PSE Edge's homepage "Index Summary" widget
+ * (same legal tradeoff as PseEdgeQuoteSource — see docs/PLANNING.md Open
+ * Question #1). Upserts one row per calendar day — "today's" reading, not an
+ * intraday history.
  */
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -24,7 +21,7 @@ async function main() {
     throw new Error("DATABASE_URL is required");
   }
 
-  const [index, usdPhpRate] = await Promise.all([fetchPseiSummary(), fetchUsdPhpRate()]);
+  const index = await fetchPseiSummary();
 
   // The PSE Edge homepage's Index Summary widget is only populated
   // server-side intermittently — it's frequently blank (empty <tbody>) even
@@ -33,13 +30,9 @@ async function main() {
   // table the next morning). Since this job runs every 15 min, a blank widget
   // is an expected transient, not an error: soft-skip so the run stays green
   // and never overwrites a good PSEi already stored for today — a later run
-  // (or the post-close settle run) captures it once the widget fills. USD/PHP
-  // alone can't be stored (psei_* columns are NOT NULL), and it's ECB
-  // daily-cadence anyway, so there's nothing lost by skipping.
-  if (!index || usdPhpRate === null) {
-    console.warn(
-      `fetch-market-snapshot: incomplete data (index=${index ? "ok" : "empty"}, usdPhpRate=${usdPhpRate}); skipping this run.`
-    );
+  // (or the post-close settle run) captures it once the widget fills.
+  if (!index) {
+    console.warn("fetch-market-snapshot: PSE Edge Index Summary widget was empty; skipping this run.");
     return;
   }
 
@@ -53,7 +46,6 @@ async function main() {
       pseiValue: index.value.toString(),
       pseiChange: index.change.toString(),
       pseiPctChange: index.pctChange.toString(),
-      usdPhpRate: usdPhpRate.toString(),
       capturedAt: new Date(),
     })
     .onConflictDoUpdate({
@@ -62,13 +54,12 @@ async function main() {
         pseiValue: sql`excluded.psei_value`,
         pseiChange: sql`excluded.psei_change`,
         pseiPctChange: sql`excluded.psei_pct_change`,
-        usdPhpRate: sql`excluded.usd_php_rate`,
         capturedAt: sql`excluded.captured_at`,
       },
     });
 
   console.log(
-    `Upserted market snapshot for ${snapshotDate}: PSEi ${index.value} (${index.pctChange}%), USD/PHP ${usdPhpRate}`
+    `Upserted market snapshot for ${snapshotDate}: PSEi ${index.value} (${index.pctChange}%)`
   );
 }
 
@@ -82,22 +73,6 @@ async function fetchPseiSummary() {
     return parseIndexSummaryHtml(await res.text());
   } catch (err) {
     console.error("fetch-market-snapshot: PSE Edge homepage fetch failed", err);
-    return null;
-  }
-}
-
-async function fetchUsdPhpRate(): Promise<number | null> {
-  try {
-    const res = await fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols=PHP");
-    if (!res.ok) {
-      console.error(`fetch-market-snapshot: Frankfurter returned HTTP ${res.status}`);
-      return null;
-    }
-    const body = (await res.json()) as { rates?: { PHP?: number } };
-    const rate = body.rates?.PHP;
-    return typeof rate === "number" && Number.isFinite(rate) ? rate : null;
-  } catch (err) {
-    console.error("fetch-market-snapshot: Frankfurter fetch failed", err);
     return null;
   }
 }
