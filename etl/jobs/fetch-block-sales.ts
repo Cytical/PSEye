@@ -7,8 +7,10 @@ import { PseQuotationReportBlockSaleSource } from "../lib/pseQuotationReport/pse
 const TOP_N = 10;
 
 /**
- * Runs daily (see .github/workflows/fetch-daily.yml), matching PSE's own
- * daily EOD "Daily Quotation Report" cadence — see
+ * Runs daily ~9:30pm PHT (see .github/workflows/block-sales-daily.yml — its
+ * own workflow, separate from fetch-daily.yml, because PSE only publishes the
+ * source PDF hours after close), matching PSE's own daily EOD "Daily
+ * Quotation Report" cadence — see
  * PseQuotationReportBlockSaleSource's doc comment for why this replaced the
  * old monthly cadence built around the Monthly Report (which turned out to
  * only publish a cover-page preview, never real block-sale tables).

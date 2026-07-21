@@ -1,22 +1,27 @@
-name: Fetch daily (news, disclosures, corporate actions, historical quotes, block sales)
+name: Fetch daily (news, disclosures, corporate actions, historical quotes)
 
-# One consolidated job replacing what used to be 6 separate workflows
-# (news-hourly, disclosures-hourly, corporate-actions-daily,
-# historical-quotes-daily, block-sales-daily, offerings-daily). None of these
-# need better than daily freshness, and running them hourly (news/disclosures
-# in particular, at 24 runs/day each) was the majority of a ~1,900 workflow
-# runs/month total that blew past GitHub Actions' free monthly minutes.
-# Sharing one checkout/install cuts that to ~30 runs/month. (The offerings
-# step was later dropped entirely: it only ever wrote MockOfferingSource's
-# fabricated rows into the real table, which nothing reads — /offerings
-# renders the mock directly until a real source exists.)
+# One consolidated job (shared checkout/install) for the sources that are all
+# available right after PSE's 3:30pm close: news (RSS, continuous),
+# disclosures + corporate actions (PSE Edge, filed through the day), and
+# historical quotes (PSE Edge's per-company chart feed, which has today's EOD
+# close within its 15-min delay). Runs at 08:20 UTC (~4:20pm PHT) so the
+# day's /daily/[date] recap is populated right after close — off the exact
+# :15 quarter-hour GitHub flags as congested.
 #
-# Scheduled after market close settles (9pm PHT) and after PSE's Daily
-# Quotation Report is typically published (~9:30pm PHT) — the latest
-# dependency among these (block sales, which is extracted from that PDF).
+# Block sales is deliberately NOT here — it's extracted from PSE's Daily
+# Quotation Report PDF, which PSE only publishes ~9:30pm PHT, so it has its
+# own workflow (block-sales-daily.yml) at that later time. It still lands in
+# the SAME Manila-day recap (block sales are keyed by the report's trade
+# date), just filled in later in the evening.
+#
+# History: these five sources (plus a since-removed offerings step) used to be
+# 6 separate workflows, several hourly — ~1,900 runs/month that blew past
+# GitHub Actions' free minutes on the then-private repo. Consolidating to one
+# daily job cut that dramatically; block sales was split back out 2026-07-21
+# only because its source publishes hours later than the rest.
 on:
   schedule:
-    - cron: "30 13 * * *" # ~9:30pm PHT (UTC+8), daily
+    - cron: "20 8 * * *" # ~4:20pm PHT (UTC+8), daily
   workflow_dispatch: {}
 
 jobs:
@@ -57,11 +62,6 @@ jobs:
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      - id: blockSales
-        run: pnpm --filter @pseye/etl fetch-block-sales
-        continue-on-error: true
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Fail job if any step failed
         if: always()
@@ -70,8 +70,7 @@ jobs:
             "${{ steps.news.outcome }}" \
             "${{ steps.disclosures.outcome }}" \
             "${{ steps.corporateActions.outcome }}" \
-            "${{ steps.historicalQuotes.outcome }}" \
-            "${{ steps.blockSales.outcome }}"; do
+            "${{ steps.historicalQuotes.outcome }}"; do
             if [ "$outcome" = "failure" ]; then
               echo "At least one fetch step failed — see step logs above."
               exit 1

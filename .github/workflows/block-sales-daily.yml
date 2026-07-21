@@ -1,0 +1,29 @@
+name: Fetch block sales (daily, post-report)
+
+# Block sales are extracted from PSE's Daily Quotation Report PDF ("End of Day
+# Quotes" on pse.com.ph/market-report/), which PSE only publishes ~9:30pm PHT
+# — hours after the 3:30pm close and after the other daily sources (which run
+# in fetch-daily.yml at ~4:20pm PHT). So this runs on its own at 13:30 UTC
+# (~9:30pm PHT), weekdays. It still populates the SAME Manila-day recap: block
+# sales are keyed by the report's own trade date (parsed from the PDF
+# filename), not by when this job runs. Split out of fetch-daily.yml
+# 2026-07-21 so that job could move earlier without waiting on this PDF.
+on:
+  schedule:
+    - cron: "30 13 * * 1-5" # ~9:30pm PHT (UTC+8), weekdays
+  workflow_dispatch: {}
+
+jobs:
+  fetch-block-sales:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-block-sales
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
