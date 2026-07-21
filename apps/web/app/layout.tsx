@@ -23,11 +23,12 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
   (process.env.NODE_ENV === "production" ? "https://pseye.vercel.app" : "http://localhost:3000");
 
-// Set once the Search Console property is verified for real (Search Console >
-// Add property > HTML tag method > paste the content value here as a Vercel
-// env var). Omitted entirely rather than rendered empty/undefined when unset,
-// since an empty verification meta tag is worse than none.
-const GOOGLE_SITE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+// Google Search Console verification token (HTML-tag method). Hardcoded to the
+// verified property's token so the meta tag renders in production without a
+// Vercel env var; still overridable via NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION if
+// the property is ever re-verified under a new token.
+const GOOGLE_SITE_VERIFICATION =
+  process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? "Q-zI7r8RYWmKcsp-_QFiMqAqIuAyHuo8g33lNzPx40c";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
