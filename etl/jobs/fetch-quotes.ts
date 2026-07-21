@@ -4,22 +4,23 @@ import { createDb, dailyQuotes } from "@pseye/db";
 import { PseEdgeQuoteSource } from "@pseye/source-quotes";
 
 /**
- * Runs once a day after PSE's close settles (see
- * .github/workflows/quotes-daily.yml, 13:40 UTC / 9:40pm PHT weekdays) and
- * scrapes PSE Edge's public per-company pages — see PseEdgeQuoteSource's doc
- * comment for the caching/rate-limit reasoning and docs/PLANNING.md for the
- * legal tradeoffs behind that choice (Open Question #1). Post-close, each
- * ticker's Stock Data page shows its FINAL closing price, so one daily run
- * captures a complete, accurate EOD board.
+ * Runs hourly during PSE trading hours (see
+ * .github/workflows/quotes-hourly.yml, :17 past 01-08 UTC / 9:17am-4:17pm
+ * PHT weekdays) and scrapes PSE Edge's public per-company pages — see
+ * PseEdgeQuoteSource's doc comment for the caching/rate-limit reasoning and
+ * docs/PLANNING.md for the legal tradeoffs behind that choice (Open Question
+ * #1). The board refreshes through the day; the post-close 4:17pm run
+ * captures each ticker's FINAL close.
  *
- * This used to run every 15 min for near-live intraday prices, but GitHub
- * silently drops high-frequency scheduled runs (this workflow, on a 15-min
- * schedule, produced multi-day gaps with zero runs — confirmed live).
- * Reliable 15-min polling would need an external trigger (Vercel Cron or
- * cron-job.org -> workflow_dispatch), not worth it on a free Vercel plan for
- * a casual tracker — so the site shows one EOD board per trading day rather
- * than intraday. GitHub Actions minutes aren't a constraint (public repo,
- * free/uncapped), and Neon compute has ample headroom at one run/day.
+ * Hourly is the balance point. This used to run every 15 min for near-live
+ * prices, but GitHub silently drops high-frequency scheduled runs (this
+ * workflow, on a 15-min schedule, produced multi-day gaps with zero runs —
+ * confirmed live); reliable 15-min polling would need an external trigger
+ * (Vercel Cron/cron-job.org -> workflow_dispatch), not worth it on a free
+ * Vercel plan. Once-daily was reliable but lost all intraday freshness. ~8
+ * runs/day is low enough that GitHub honors it yet still updates through the
+ * session. GitHub Actions minutes aren't a constraint (public repo,
+ * free/uncapped) and Neon compute has ample headroom at this cadence.
  */
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;

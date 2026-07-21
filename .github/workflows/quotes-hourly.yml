@@ -1,0 +1,33 @@
+name: Fetch quotes (hourly during trading)
+
+on:
+  schedule:
+    # Hourly at :17 past, 01:17-08:17 UTC (9:17am-4:17pm PHT) on weekdays —
+    # covers PSE's 9:30-3:30 session plus a settle run after close (the
+    # 4:17pm PHT / 08:17 UTC run captures each ticker's FINAL close once the
+    # market has finalized). Hourly is the balance point: 15-min was near-
+    # live but GitHub silently drops high-frequency scheduled runs (this
+    # workflow, on a 15-min schedule, produced multi-day gaps with zero runs
+    # — confirmed live), while once-daily lost all intraday freshness. ~8
+    # runs/day is low enough that GitHub honors it reliably yet still
+    # refreshes the board through the trading day. Fires at :17, not the
+    # exact :15 quarter-hour, because GitHub's docs warn scheduled runs queue
+    # behind everyone else's at :00/:15/:30/:45 and get delayed/dropped —
+    # a couple minutes off costs nothing and improves reliability.
+    - cron: "17 1-8 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-quotes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-quotes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

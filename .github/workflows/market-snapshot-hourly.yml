@@ -1,0 +1,26 @@
+name: Fetch market snapshot (hourly during trading)
+
+on:
+  schedule:
+    # Hourly at :16 past, 01:16-08:16 UTC (9:16am-4:16pm PHT) on weekdays —
+    # same cadence and reasoning as quotes-hourly.yml (see its comment):
+    # hourly balances intraday freshness against GitHub dropping high-
+    # frequency runs, and :16 stays off the exact :15 quarter-hour. A minute
+    # ahead of the quotes run so the PSEi lands just before the board.
+    - cron: "16 1-8 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-market-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-market-snapshot
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

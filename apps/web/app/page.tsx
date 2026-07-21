@@ -6,7 +6,7 @@ import { getLatestForeignFlow } from "@/lib/latestForeignFlow";
 import { getRealSparklines } from "@/lib/sparklines";
 import { MarketMap } from "@/components/MarketMap";
 
-export const revalidate = 3600; // 1h; quotes/market-snapshot now refresh once daily post-close (quotes-daily.yml/market-snapshot-daily.yml), so a tighter window would only add DB reads without fresher data
+export const revalidate = 3600; // 1h; matches quotes/market-snapshot's hourly ETL cadence (quotes-hourly.yml/market-snapshot-hourly.yml) — a tighter window would only add DB reads without fresher data
 
 export const metadata: Metadata = {
   title: "PSE Market Map — Live PSEi Heatmap",
