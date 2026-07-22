@@ -33,6 +33,7 @@ const DROPDOWNS: { label: string; links: { href: string; label: string }[] }[] =
     links: [
       { href: "/screener", label: "Screener" },
       { href: "/rankings", label: "Rankings" },
+      { href: "/portfolio", label: "Portfolio" },
       { href: "/charts", label: "Charts" },
       { href: "/compare", label: "Compare" },
       { href: "/dca", label: "DCA Calculator" },
