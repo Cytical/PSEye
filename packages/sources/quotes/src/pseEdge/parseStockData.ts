@@ -5,6 +5,17 @@ export interface ParsedStockData {
   price: number | null;
   pctChange: number | null;
   marketCap: number | null;
+  /**
+   * "Free Float Level(%)" — the share of Outstanding Shares actually available
+   * to trade (0-100). null when PSE Edge doesn't list the field for this
+   * security. Needed because "Market Capitalization" is Last Traded Price ×
+   * total Outstanding Shares — for a normal PH company that's ~= its PSE
+   * float, but for a foreign dual-listing like MFC (Manulife, 0.20% free
+   * float) it conflates the company's entire global market cap with a sliver
+   * actually listed here, producing a wildly misleading "size" for anything
+   * that sizes boxes by market cap (the treemap market map).
+   */
+  freeFloatPct: number | null;
 }
 
 const NBSP = " ";
@@ -33,6 +44,7 @@ export function parseStockDataHtml(html: string): ParsedStockData {
 
   const price = parseNumber(fields.get("Last Traded Price") ?? "");
   const marketCap = parseNumber(fields.get("Market Capitalization") ?? "");
+  const freeFloatPct = parseNumber((fields.get("Free Float Level(%)") ?? "").replace(/%/g, ""));
   const previousClose = parseNumber((fields.get("Previous Close and Date") ?? "").split("(")[0] ?? "");
 
   // No trade today (or suspended) means there's nothing to report a change
@@ -50,7 +62,7 @@ export function parseStockDataHtml(html: string): ParsedStockData {
     pctChange = Math.round(((price - previousClose) / previousClose) * 100 * 100) / 100;
   }
 
-  return { price, pctChange, marketCap };
+  return { price, pctChange, marketCap, freeFloatPct };
 }
 
 function normalizeWhitespace(raw: string): string {

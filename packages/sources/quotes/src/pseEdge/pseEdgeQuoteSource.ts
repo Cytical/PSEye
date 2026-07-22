@@ -42,6 +42,7 @@ export class PseEdgeQuoteSource implements QuoteSource {
           price: outcome.parsed?.price ?? null,
           pctChange: outcome.parsed?.pctChange ?? null,
           marketCap: outcome.parsed?.marketCap ?? 0,
+          freeFloatPct: outcome.parsed?.freeFloatPct ?? null,
         },
         fetchFailed: outcome.failed,
       });

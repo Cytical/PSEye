@@ -1,0 +1,1 @@
+ALTER TABLE "daily_quotes" ADD COLUMN "free_float_pct" numeric(6, 3);

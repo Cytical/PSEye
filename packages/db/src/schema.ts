@@ -24,6 +24,10 @@ export const dailyQuotes = pgTable(
     pctChange: numeric("pct_change", { precision: 8, scale: 4 }),
     // numeric, not bigint: PSE Edge reports market cap to the cent (fractional), not as a whole share count.
     marketCap: numeric("market_cap", { precision: 20, scale: 2 }),
+    // PSE Edge's "Free Float Level(%)", 0-100. Nullable: not every scrape/source
+    // populates it (see @pseye/treemap-layout's floatAdjustedMarketCap, which
+    // falls back to raw marketCap when this is null).
+    freeFloatPct: numeric("free_float_pct", { precision: 6, scale: 3 }),
     sector: varchar("sector", { length: 64 }).notNull(),
   },
   (table) => [unique().on(table.ticker, table.tradeDate)]

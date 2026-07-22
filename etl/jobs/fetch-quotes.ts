@@ -68,6 +68,7 @@ async function main() {
       price: quote.price == null ? null : quote.price.toString(),
       pctChange: quote.pctChange == null ? null : quote.pctChange.toString(),
       marketCap: quote.marketCap.toString(),
+      freeFloatPct: quote.freeFloatPct == null ? null : quote.freeFloatPct.toString(),
       sector: quote.sector,
     }));
 
@@ -82,6 +83,7 @@ async function main() {
           price: sql`excluded.price`,
           pctChange: sql`excluded.pct_change`,
           marketCap: sql`excluded.market_cap`,
+          freeFloatPct: sql`excluded.free_float_pct`,
           sector: sql`excluded.sector`,
         },
       });

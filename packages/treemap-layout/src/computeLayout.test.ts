@@ -60,6 +60,38 @@ describe("computeTreemapLayout", () => {
     expect(zeroBox.y1 - zeroBox.y0).toBeGreaterThan(0);
   });
 
+  it("sizes a low-free-float stock by its float-adjusted market cap, not raw marketCap", () => {
+    // Mirrors MFC/Manulife: a ₱4.15T raw "Market Capitalization" (global
+    // shares) but only 0.20% actually free-floated on the PSE, vs. a normal
+    // high-float large cap with a much smaller raw number.
+    const stocks: TreemapInput[] = [
+      { ticker: "MFC", sector: "Financials", marketCap: 4_151_430_334_190, pctChange: -2.88, freeFloatPct: 0.2 },
+      { ticker: "SM", sector: "Holding Firms", marketCap: 714_665_748_720, pctChange: 0.5, freeFloatPct: 46.89 },
+    ];
+
+    const layout = computeTreemapLayout(stocks, WIDTH, HEIGHT);
+    const mfc = layout.stocks.find((b) => b.ticker === "MFC")!;
+    const sm = layout.stocks.find((b) => b.ticker === "SM")!;
+    const area = (b: typeof mfc) => (b.x1 - b.x0) * (b.y1 - b.y0);
+
+    // Float-adjusted: MFC ≈ ₱8.3B vs SM ≈ ₱335.1B — SM's box should be the
+    // far larger one. Raw marketCap would have put MFC ~5.8x larger than SM.
+    expect(area(sm)).toBeGreaterThan(area(mfc));
+  });
+
+  it("falls back to raw marketCap when freeFloatPct is unknown", () => {
+    const stocks: TreemapInput[] = [
+      { ticker: "AAA", sector: "Financials", marketCap: 1000, pctChange: 1 },
+      { ticker: "BBB", sector: "Financials", marketCap: 100, pctChange: -1 },
+    ];
+
+    const layout = computeTreemapLayout(stocks, WIDTH, HEIGHT);
+    const aaa = layout.stocks.find((b) => b.ticker === "AAA")!;
+    const bbb = layout.stocks.find((b) => b.ticker === "BBB")!;
+    const area = (b: typeof aaa) => (b.x1 - b.x0) * (b.y1 - b.y0);
+    expect(area(aaa)).toBeGreaterThan(area(bbb));
+  });
+
   it("reserves SECTOR_HEADER_HEIGHT at the top of each sector for its header bar", () => {
     const stocks: TreemapInput[] = [
       { ticker: "AAA", sector: "Financials", marketCap: 1000, pctChange: 1 },

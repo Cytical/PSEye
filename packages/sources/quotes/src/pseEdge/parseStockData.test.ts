@@ -16,6 +16,10 @@ const ACTIVE_STOCK_HTML = `
   <td style="text-align:right;padding-right:1.5em;">
     661,581,047,968.00</td>
 </tr>
+<tr>
+  <th>Free Float Level(%)</th>
+  <td>46.89%</td>
+</tr>
 </table>
 <table class="view">
 <tr>
@@ -176,6 +180,57 @@ down&nbsp;
 </table>
 `;
 
+// Verbatim shape of a foreign dual-listing with a tiny PSE free float —
+// Manulife Financial Corp (MFC, cmpy_id=120), confirmed live 2026-07-22.
+// "Market Capitalization" here is Last Traded Price × Manulife's *entire
+// global* Outstanding Shares (~1.66B), not just the 0.20% of that actually
+// listed on the PSE — this is the field the market map treemap must NOT size
+// boxes by directly, which is exactly why freeFloatPct exists.
+const LOW_FREE_FLOAT_HTML = `
+<table class="view">
+<tr>
+  <th>Status</th>
+  <td>Active</td>
+  <th>Market Capitalization</th>
+  <td style="text-align:right;padding-right:1.5em;">
+    4,151,430,334,190.00</td>
+</tr>
+<tr>
+  <th>Free Float Level(%)</th>
+  <td>0.20%</td>
+</tr>
+</table>
+<table class="view">
+<tr>
+  <th>Last Traded Price</th>
+  <td style="text-align:right;padding-right:1.2em;">
+2,426.00</td>
+  <th>Open</th>
+  <td style="text-align:right;padding-right:1.2em;">
+2,428.00</td>
+  <th>Previous Close and Date</th>
+  <td style="text-align:right;padding-right:1.2em;">
+2,498.00
+    (Jul 21, 2026)
+  </td>
+</tr>
+<tr>
+  <th>Change(% Change)</th>
+  <td style="text-align:right;padding-right:1.2em;">
+down&nbsp;
+  72.00
+  (2.88%)
+  </td>
+  <th>High</th>
+  <td style="text-align:right;padding-right:1.2em;">
+2,428.00</td>
+  <th>P/E Ratio</th>
+  <td style="text-align:right;padding-right:1.2em;">
+</td>
+</tr>
+</table>
+`;
+
 // Confirmed live 2026-07-17: on that day's after-close scrape, PSE Edge's
 // "Change(% Change)" cell rendered with no "up"/"down" word at all for every
 // down-moving ticker (~40 of 97 tracked tickers, none of them fetch
@@ -227,6 +282,7 @@ describe("parseStockDataHtml", () => {
       price: 126.4,
       pctChange: 1.94,
       marketCap: 661_581_047_968,
+      freeFloatPct: 46.89,
     });
   });
 
@@ -235,6 +291,7 @@ describe("parseStockDataHtml", () => {
       price: 13.44,
       pctChange: -1.75,
       marketCap: 19_641_424_982.4,
+      freeFloatPct: null,
     });
   });
 
@@ -243,6 +300,7 @@ describe("parseStockDataHtml", () => {
       price: 56.55,
       pctChange: -1.15,
       marketCap: 123_456_789,
+      freeFloatPct: null,
     });
   });
 
@@ -251,6 +309,7 @@ describe("parseStockDataHtml", () => {
       price: 50.6,
       pctChange: -0.39,
       marketCap: 73_961_324_772,
+      freeFloatPct: null,
     });
   });
 
@@ -259,6 +318,16 @@ describe("parseStockDataHtml", () => {
     expect(result.price).toBeNull();
     expect(result.pctChange).toBeNull();
     expect(result.marketCap).toBe(1_303_999_969.03);
+    expect(result.freeFloatPct).toBeNull();
+  });
+
+  it("parses a tiny Free Float Level(%) for a low-float foreign dual-listing (MFC)", () => {
+    expect(parseStockDataHtml(LOW_FREE_FLOAT_HTML)).toEqual({
+      price: 2426,
+      pctChange: -2.88,
+      marketCap: 4_151_430_334_190,
+      freeFloatPct: 0.2,
+    });
   });
 
   it("returns all-null fields for a page with none of the expected table structure", () => {
@@ -266,6 +335,7 @@ describe("parseStockDataHtml", () => {
       price: null,
       pctChange: null,
       marketCap: null,
+      freeFloatPct: null,
     });
   });
 });

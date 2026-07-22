@@ -22,6 +22,15 @@ export interface Quote {
   price: number | null;
   pctChange: number | null;
   marketCap: number;
+  /**
+   * PSE Edge's "Free Float Level(%)" (0-100) — the share of Outstanding Shares
+   * actually tradable on the PSE, when known. Optional/nullable rather than
+   * required: MockQuoteSource and other non-PSE-Edge sources don't populate
+   * it, and callers sizing boxes by market cap (the treemap market map) should
+   * fall back to raw marketCap when it's absent. See computeTreemapLayout's
+   * float-adjustment logic in @pseye/treemap-layout.
+   */
+  freeFloatPct?: number | null;
 }
 
 export interface QuoteSource {

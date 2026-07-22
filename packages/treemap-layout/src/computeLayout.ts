@@ -6,6 +6,32 @@ export interface TreemapInput {
   marketCap: number;
   /** null when the source has no current % change to report — render as "N/A", not 0. */
   pctChange: number | null;
+  /**
+   * PSE Edge's "Free Float Level(%)" (0-100), when known. A stock's box is
+   * sized by marketCap × (freeFloatPct / 100) when present, not raw marketCap
+   * — see floatAdjustedMarketCap below for why.
+   */
+  freeFloatPct?: number | null;
+}
+
+/**
+ * PSE Edge's "Market Capitalization" is Last Traded Price × total Outstanding
+ * Shares. For an ordinary PH-listed company Outstanding Shares ≈ its PSE
+ * float, so that number is a reasonable proxy for sizing. For a foreign
+ * dual-listing with only a sliver of its global shares actually trading here
+ * (e.g. MFC/Manulife, 0.20% free float — confirmed live 2026-07-22: reports a
+ * ₱4.15T "Market Capitalization" against real PH large caps in the
+ * ₱300-700B range), that raw number conflates the company's entire global
+ * cap with what's actually listed on the PSE, making its treemap box wildly
+ * oversized relative to its real weight on this market. Adjusting by free
+ * float (the same convention real float-adjusted indices use) fixes that
+ * without needing to special-case any specific ticker. Falls back to raw
+ * marketCap when freeFloatPct isn't known, so this is a no-op for the vast
+ * majority of normal, high-float PH stocks.
+ */
+function floatAdjustedMarketCap(stock: TreemapInput): number {
+  if (stock.freeFloatPct == null) return stock.marketCap;
+  return stock.marketCap * (stock.freeFloatPct / 100);
 }
 
 export interface StockRect {
@@ -68,7 +94,7 @@ export function computeTreemapLayout(
       name: sector,
       children: group.map((stock) => ({
         name: stock.ticker,
-        value: Math.max(stock.marketCap, 1),
+        value: Math.max(floatAdjustedMarketCap(stock), 1),
         raw: stock,
       })),
     })),
