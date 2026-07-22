@@ -15,6 +15,7 @@ import { WatchlistStarButton } from "@/components/WatchlistStarButton";
 import { RecordStockView } from "@/components/RecordStockView";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { ShareButton } from "@/components/ShareButton";
+import { sectorToSlug } from "@/lib/sectorSlug";
 
 export const revalidate = 3600; // hourly; matches the quotes ETL cadence
 
@@ -113,8 +114,21 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
   const rankedByMarketCap = [...quotes].sort((a, b) => b.marketCap - a.marketCap);
   const rank = rankedByMarketCap.findIndex((q) => q.ticker === ticker) + 1;
   const sectorRanked = rankedByMarketCap.filter((q) => q.sector === sector);
-  const sectorRank = sectorRanked.findIndex((q) => q.ticker === ticker) + 1;
+  const selfSectorIndex = sectorRanked.findIndex((q) => q.ticker === ticker);
+  const sectorRank = selfSectorIndex + 1;
   const summaryLine = `${sector} · #${rank} by market cap of ${quotes.length} tracked PSE stocks · #${sectorRank} of ${sectorRanked.length} in sector`;
+
+  // Peers nearest in market-cap rank within the same sector, not just the
+  // sector's biggest names — more genuinely "similar" for a small-cap stock
+  // than always pointing at the same handful of blue chips regardless of size.
+  const PEER_COUNT = 6;
+  let peerWindowStart = Math.max(0, selfSectorIndex - Math.floor(PEER_COUNT / 2));
+  const peerWindowEnd = Math.min(sectorRanked.length, peerWindowStart + PEER_COUNT + 1);
+  peerWindowStart = Math.max(0, peerWindowEnd - (PEER_COUNT + 1));
+  const sectorPeers = sectorRanked
+    .slice(peerWindowStart, peerWindowEnd)
+    .filter((q) => q.ticker !== ticker)
+    .slice(0, PEER_COUNT);
 
   // One year-deep query serves both the 52-week stats and (sliced) the chart.
   const history = quote
@@ -278,6 +292,49 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             ))}
           </div>
           <p className="mt-1.5 text-[11px] text-panel-fg/60">{profile.source}</p>
+        </div>
+      )}
+
+      {sectorPeers.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-sm font-medium text-panel-fg">Sector peers</h2>
+          <ul className="mt-2 flex flex-col divide-y divide-panel-border rounded-lg bg-panel ring-1 ring-panel-border">
+            {sectorPeers.map((peer) => (
+              <li key={peer.ticker}>
+                <Link
+                  href={`/stocks/${peer.ticker}`}
+                  className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-panel-raised"
+                >
+                  <span>
+                    <span className="font-mono text-xs font-semibold text-panel-fg">{peer.ticker}</span>
+                    <span className="ml-2 text-panel-fg/70">{peer.companyName}</span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-3 tabular-nums">
+                    <span className="text-panel-fg/80">{peer.price == null ? "N/A" : formatPeso(peer.price)}</span>
+                    <span
+                      className={
+                        peer.pctChange == null
+                          ? "text-panel-fg/40"
+                          : peer.pctChange >= 0
+                            ? "text-[#30cc5a]"
+                            : "text-[#f6362f]"
+                      }
+                    >
+                      {peer.pctChange == null
+                        ? "—"
+                        : `${peer.pctChange >= 0 ? "+" : ""}${peer.pctChange.toFixed(2)}%`}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href={`/sectors/${sectorToSlug(sector)}`}
+            className="mt-2 inline-block text-xs text-panel-fg/50 hover:underline"
+          >
+            See all {sectorRanked.length} in {sector} →
+          </Link>
         </div>
       )}
 

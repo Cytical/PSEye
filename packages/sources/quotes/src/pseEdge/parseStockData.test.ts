@@ -49,6 +49,19 @@ up&nbsp;
   <td style="text-align:right;padding-right:1.2em;">
 </td>
 </tr>
+<tr>
+  <th>Value</th>
+  <td style="text-align:right;padding-right:1.2em;">
+    320,272,049.00</td>
+  <th>Low</th>
+  <td style="text-align:right;padding-right:1.2em;">
+122.80</td>
+</tr>
+<tr>
+  <th>Volume</th>
+  <td style="text-align:right;padding-right:1.2em;">
+    2,599,650</td>
+</tr>
 </table>
 `;
 
@@ -283,6 +296,8 @@ describe("parseStockDataHtml", () => {
       pctChange: 1.94,
       marketCap: 661_581_047_968,
       freeFloatPct: 46.89,
+      volume: 2_599_650,
+      value: 320_272_049,
     });
   });
 
@@ -292,6 +307,8 @@ describe("parseStockDataHtml", () => {
       pctChange: -1.75,
       marketCap: 19_641_424_982.4,
       freeFloatPct: null,
+      volume: null,
+      value: null,
     });
   });
 
@@ -301,6 +318,8 @@ describe("parseStockDataHtml", () => {
       pctChange: -1.15,
       marketCap: 123_456_789,
       freeFloatPct: null,
+      volume: null,
+      value: null,
     });
   });
 
@@ -310,6 +329,8 @@ describe("parseStockDataHtml", () => {
       pctChange: -0.39,
       marketCap: 73_961_324_772,
       freeFloatPct: null,
+      volume: null,
+      value: null,
     });
   });
 
@@ -327,6 +348,8 @@ describe("parseStockDataHtml", () => {
       pctChange: -2.88,
       marketCap: 4_151_430_334_190,
       freeFloatPct: 0.2,
+      volume: null,
+      value: null,
     });
   });
 
@@ -336,6 +359,8 @@ describe("parseStockDataHtml", () => {
       pctChange: null,
       marketCap: null,
       freeFloatPct: null,
+      volume: null,
+      value: null,
     });
   });
 });

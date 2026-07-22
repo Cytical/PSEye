@@ -24,6 +24,8 @@ export async function getDailyQuotes(): Promise<Quote[]> {
       pctChange: r.pctChange == null ? null : Number(r.pctChange),
       marketCap: r.marketCap == null ? 0 : Number(r.marketCap),
       freeFloatPct: r.freeFloatPct == null ? null : Number(r.freeFloatPct),
+      volume: r.volume == null ? null : Number(r.volume),
+      value: r.value == null ? null : Number(r.value),
     }));
   } catch (err) {
     console.error("getDailyQuotes: DB read failed, falling back to mock data", err);

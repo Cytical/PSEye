@@ -35,11 +35,19 @@ export default async function DividendsPage() {
       <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">Dividend Screener</h1>
       <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
         Cash dividends declared on common shares over the trailing 12 months, summed per share and
-        divided by the latest price. Sort any column — or check the{" "}
+        divided by the latest price (see{" "}
+        <Link href="/glossary#dividend-yield" className="underline hover:text-panel-fg">
+          dividend yield
+        </Link>
+        ). Sort any column — or check the{" "}
         <Link href="/calendar" className="underline hover:text-panel-fg">
           calendar
         </Link>{" "}
-        for the full ex-date schedule. Yields are historical, not a promise of the next payout.
+        for the full{" "}
+        <Link href="/glossary#ex-dividend-date" className="underline hover:text-panel-fg">
+          ex-date
+        </Link>{" "}
+        schedule. Yields are historical, not a promise of the next payout.
       </p>
 
       {rows.length > 0 ? (

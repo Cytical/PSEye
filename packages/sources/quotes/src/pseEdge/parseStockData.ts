@@ -16,6 +16,13 @@ export interface ParsedStockData {
    * that sizes boxes by market cap (the treemap market map).
    */
   freeFloatPct: number | null;
+  /** Today's traded shares ("Volume"). null when PSE Edge doesn't report one
+   * (suspended ticker, no trade yet today) — same "N/A, not 0" contract as price. */
+  volume: number | null;
+  /** Today's traded ₱ turnover ("Value" — price × volume summed across trades,
+   * not price × outstanding shares like Market Capitalization). Same nullability
+   * contract as volume. */
+  value: number | null;
 }
 
 const NBSP = " ";
@@ -46,6 +53,8 @@ export function parseStockDataHtml(html: string): ParsedStockData {
   const marketCap = parseNumber(fields.get("Market Capitalization") ?? "");
   const freeFloatPct = parseNumber((fields.get("Free Float Level(%)") ?? "").replace(/%/g, ""));
   const previousClose = parseNumber((fields.get("Previous Close and Date") ?? "").split("(")[0] ?? "");
+  const volume = parseNumber(fields.get("Volume") ?? "");
+  const value = parseNumber(fields.get("Value") ?? "");
 
   // No trade today (or suspended) means there's nothing to report a change
   // against, regardless of whatever partial text PSE Edge left in that cell.
@@ -62,7 +71,7 @@ export function parseStockDataHtml(html: string): ParsedStockData {
     pctChange = Math.round(((price - previousClose) / previousClose) * 100 * 100) / 100;
   }
 
-  return { price, pctChange, marketCap, freeFloatPct };
+  return { price, pctChange, marketCap, freeFloatPct, volume, value };
 }
 
 function normalizeWhitespace(raw: string): string {

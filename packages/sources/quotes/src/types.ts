@@ -31,6 +31,12 @@ export interface Quote {
    * float-adjustment logic in @pseye/treemap-layout.
    */
   freeFloatPct?: number | null;
+  /** Today's traded shares. Optional/nullable — same "not every source
+   * populates it" contract as freeFloatPct (MockQuoteSource doesn't set it). */
+  volume?: number | null;
+  /** Today's traded ₱ turnover (price × volume summed across trades, not
+   * price × outstanding shares like marketCap). Same nullability contract as volume. */
+  value?: number | null;
 }
 
 export interface QuoteSource {

@@ -77,9 +77,16 @@ export default async function RankingsPage() {
 
       <h1 className="mt-2 text-2xl font-semibold tracking-tight text-panel-fg">Company Rankings</h1>
       <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
-        Every tracked PSE-listed company ranked by market capitalization — the top 100 across the
-        whole exchange, and a full ranking within each of its {bySector.length} sectors. Prices are
-        end-of-day / delayed quotes from PSE Edge.
+        Every tracked PSE-listed company ranked by{" "}
+        <Link href="/glossary#market-capitalization" className="underline hover:text-panel-fg">
+          market capitalization
+        </Link>{" "}
+        — the top 100 across the whole exchange, and a full ranking within each of its{" "}
+        {bySector.length}{" "}
+        <Link href="/sectors" className="underline hover:text-panel-fg">
+          sectors
+        </Link>
+        . Prices are end-of-day / delayed quotes from PSE Edge.
         {excludedCount > 0
           ? ` ${excludedCount} tracked ${excludedCount === 1 ? "ticker has" : "tickers have"} no market cap on file and ${excludedCount === 1 ? "is" : "are"} excluded rather than ranked.`
           : ""}

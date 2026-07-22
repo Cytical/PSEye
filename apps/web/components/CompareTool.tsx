@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { HistoricalClose, Quote } from "@pseye/source-quotes";
 import { CompareChart, type CompareSeries } from "./CompareChart";
+import { ShareButton } from "./ShareButton";
 
 const MAX_TICKERS = 4;
 
@@ -10,6 +11,56 @@ function defaultStartDate(): string {
   const d = new Date();
   d.setFullYear(d.getFullYear() - 1);
   return d.toISOString().slice(0, 10);
+}
+
+/** Fired after history.replaceState so useSyncExternalStore knows to re-read the URL
+ * (replaceState doesn't dispatch popstate on its own) — same pattern as MarketMap.tsx's
+ * FILTER_CHANGE_EVENT, kept local here since these params (?tickers=&from=) are specific
+ * to this tool. Makes a specific comparison bookmarkable/shareable via ShareButton,
+ * the way ?ticker=/?filter= already do for the market map. */
+const COMPARE_CHANGE_EVENT = "pseye:comparechange";
+
+function subscribeToCompareUrl(callback: () => void) {
+  window.addEventListener(COMPARE_CHANGE_EVENT, callback);
+  window.addEventListener("popstate", callback);
+  return () => {
+    window.removeEventListener(COMPARE_CHANGE_EVENT, callback);
+    window.removeEventListener("popstate", callback);
+  };
+}
+
+const EMPTY_URL_TICKERS: string[] = [];
+
+// useSyncExternalStore compares snapshots by reference (Object.is) — parsing
+// the URL fresh on every call would return a new array each time even when
+// `?tickers=` hasn't changed, same reasoning as lib/watchlist.ts's readTickers.
+let cachedTickersParam: string | null = null;
+let cachedUrlTickers: string[] = EMPTY_URL_TICKERS;
+
+function getTickersFromUrl(): string[] {
+  const param = new URLSearchParams(window.location.search).get("tickers");
+  if (param === cachedTickersParam) return cachedUrlTickers;
+  cachedTickersParam = param;
+  if (!param) {
+    cachedUrlTickers = EMPTY_URL_TICKERS;
+    return cachedUrlTickers;
+  }
+  const tickers = param.split(",").map((t) => t.trim().toUpperCase()).filter(Boolean);
+  cachedUrlTickers = tickers.length > 0 ? tickers : EMPTY_URL_TICKERS;
+  return cachedUrlTickers;
+}
+
+function getStartDateFromUrl(): string | null {
+  return new URLSearchParams(window.location.search).get("from");
+}
+
+function updateCompareUrl(tickers: string[], startDate: string): void {
+  const url = new URL(window.location.href);
+  if (tickers.length > 0) url.searchParams.set("tickers", tickers.join(","));
+  else url.searchParams.delete("tickers");
+  url.searchParams.set("from", startDate);
+  window.history.replaceState(null, "", url);
+  window.dispatchEvent(new Event(COMPARE_CHANGE_EVENT));
 }
 
 async function fetchHistories(
@@ -30,10 +81,21 @@ async function fetchHistories(
  */
 export function CompareTool({ quotes }: { quotes: Quote[] }) {
   const byMarketCapDesc = useMemo(() => [...quotes].sort((a, b) => b.marketCap - a.marketCap), [quotes]);
+  const validTickers = useMemo(() => new Set(quotes.map((q) => q.ticker)), [quotes]);
 
-  const [selected, setSelected] = useState<string[]>(byMarketCapDesc.slice(0, 2).map((q) => q.ticker));
+  const urlTickers = useSyncExternalStore(subscribeToCompareUrl, getTickersFromUrl, (): string[] => EMPTY_URL_TICKERS);
+  const urlStartDate = useSyncExternalStore(subscribeToCompareUrl, getStartDateFromUrl, (): string | null => null);
+
+  // Server/hydration snapshot is always empty/null, so the first render never
+  // depends on a deep-linked URL — the actual comparison (default top-2, or
+  // whatever the URL specifies) only kicks in client-side, same reasoning as
+  // MarketMap's filter default.
+  const defaultSelected = useMemo(() => byMarketCapDesc.slice(0, 2).map((q) => q.ticker), [byMarketCapDesc]);
+  const selected =
+    urlTickers.length > 0 ? urlTickers.filter((t) => validTickers.has(t)).slice(0, MAX_TICKERS) : defaultSelected;
+  const startDate = urlStartDate ?? defaultStartDate();
+
   const [pending, setPending] = useState("");
-  const [startDate, setStartDate] = useState(defaultStartDate());
   const [series, setSeries] = useState<CompareSeries[]>([]);
   const [loading, setLoading] = useState(false);
   const [isSampleData, setIsSampleData] = useState(false);
@@ -67,12 +129,15 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
 
   function addTicker() {
     if (!pending || selected.length >= MAX_TICKERS) return;
-    setSelected((prev) => [...prev, pending]);
+    updateCompareUrl([...selected, pending], startDate);
     setPending("");
   }
 
   function removeTicker(ticker: string) {
-    setSelected((prev) => prev.filter((t) => t !== ticker));
+    updateCompareUrl(
+      selected.filter((t) => t !== ticker),
+      startDate
+    );
   }
 
   return (
@@ -85,9 +150,16 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
             className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
             value={startDate}
             max={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => e.target.value && setStartDate(e.target.value)}
+            onChange={(e) => e.target.value && updateCompareUrl(selected, e.target.value)}
           />
         </label>
+
+        {selected.length > 0 && (
+          <ShareButton
+            shareTitle="PSE stock comparison"
+            shareText={`Comparing ${selected.join(", ")} on PSEye`}
+          />
+        )}
 
         {selected.length < MAX_TICKERS && availableToAdd.length > 0 && (
           <div className="flex items-end gap-2">

@@ -28,6 +28,11 @@ export const dailyQuotes = pgTable(
     // populates it (see @pseye/treemap-layout's floatAdjustedMarketCap, which
     // falls back to raw marketCap when this is null).
     freeFloatPct: numeric("free_float_pct", { precision: 6, scale: 3 }),
+    // Today's traded shares and ₱ turnover. Nullable for the same reason as
+    // price/pctChange (suspended ticker, no trade yet today) — see
+    // apps/web/lib/volumeLeaders.ts for how these back the "most active" ranking.
+    volume: bigint("volume", { mode: "number" }),
+    value: numeric("value", { precision: 20, scale: 2 }),
     sector: varchar("sector", { length: 64 }).notNull(),
   },
   (table) => [unique().on(table.ticker, table.tradeDate)]

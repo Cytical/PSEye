@@ -71,6 +71,13 @@
       "when": 1784686486184,
       "tag": "0009_useful_gwen_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784731276170,
+      "tag": "0010_flat_garia",
+      "breakpoints": true
     }
   ]
 }
