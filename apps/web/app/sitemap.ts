@@ -10,6 +10,7 @@ const ROUTES: { path: string; changeFrequency: MetadataRoute.Sitemap[number]["ch
   { path: "/", changeFrequency: "daily", priority: 1 },
   { path: "/charts", changeFrequency: "daily", priority: 0.7 },
   { path: "/screener", changeFrequency: "daily", priority: 0.7 },
+  { path: "/rankings", changeFrequency: "daily", priority: 0.7 },
   { path: "/compare", changeFrequency: "daily", priority: 0.6 },
   { path: "/news", changeFrequency: "hourly", priority: 0.8 },
   { path: "/calendar", changeFrequency: "daily", priority: 0.6 },
