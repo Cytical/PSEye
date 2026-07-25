@@ -18,15 +18,28 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="border-b border-foreground/10">
+    <header className="sticky top-0 z-30 border-b border-foreground/10 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/75">
+      {/* Masthead strip — a small editorial-desk gesture (FT/NYT run a similar
+          thin bar above the primary nav) that also doubles as crawlable
+          keyword text on every page. Hidden on mobile, where header height is
+          precious. */}
+      <div className="hidden h-7 border-b border-foreground/10 sm:block">
+        <div className="mx-auto flex h-7 max-w-[1600px] items-center justify-between px-4">
+          <span className="kicker text-foreground/45">Philippine Stock Exchange, Visualized</span>
+          <span className="kicker text-foreground/45">Free · No Login · Delayed / EOD Data</span>
+        </div>
+      </div>
+
       {/* max-w matches page.tsx's widest content container (the market map) so the
-          header never reads as narrower than the page below it. */}
-      <div className="mx-auto flex max-w-[1600px] items-center gap-x-5 gap-y-1.5 px-4 py-3 text-sm">
+          header never reads as narrower than the page below it. Fixed h-16 (rather
+          than py-N) so other pages can reliably offset sticky elements below the
+          header's total height — see MarketMap.tsx's filter sidebar `sm:top-24`. */}
+      <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-x-5 gap-y-1.5 px-4 text-sm">
         <Link href="/" className="mr-1 shrink-0">
           <Logo />
         </Link>
 
-        <nav className="hidden flex-1 flex-wrap items-center gap-x-5 gap-y-1.5 sm:flex" aria-label="Main">
+        <nav className="hidden flex-1 flex-wrap items-center gap-x-6 gap-y-1.5 sm:flex" aria-label="Main">
           <NavLinks />
         </nav>
 
@@ -43,7 +56,7 @@ export function SiteHeader() {
             aria-expanded={open}
             aria-controls="mobile-nav-panel"
             aria-label={open ? "Close menu" : "Open menu"}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-foreground/15"
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-foreground/15 transition-colors hover:bg-panel-raised"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               {open ? (

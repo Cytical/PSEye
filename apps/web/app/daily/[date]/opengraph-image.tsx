@@ -8,8 +8,8 @@ export const alt = "PSEye — PSE daily market recap";
 
 const CANVAS_BG = "#0d0f14";
 const PANEL_BG = "#151922";
-const UP = "#30cc5a";
-const DOWN = "#f6362f";
+const UP = "#3ddc84";
+const DOWN = "#ff6b5e";
 const MUTED = "#8b93a1";
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 

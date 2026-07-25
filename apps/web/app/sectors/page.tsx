@@ -40,7 +40,7 @@ export default async function SectorsPage() {
         <span>Sectors</span>
       </nav>
 
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-panel-fg">Sectors</h1>
+      <h1 className="mt-2 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Sectors</h1>
       <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
         Every tracked PSE-listed company grouped by sector. Pick one to see its full ranking by
         market capitalization, or see all sectors together on the{" "}
@@ -55,7 +55,7 @@ export default async function SectorsPage() {
           <Link
             key={sector}
             href={`/sectors/${slug}`}
-            className="rounded-lg bg-panel p-4 ring-1 ring-panel-border transition-colors hover:bg-panel-raised"
+            className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border transition-colors hover:bg-panel-raised"
           >
             <div className="text-base font-semibold text-panel-fg">{sector}</div>
             <div className="mt-1 text-xs text-panel-fg/60">

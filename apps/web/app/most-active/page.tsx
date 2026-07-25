@@ -28,7 +28,8 @@ export default async function MostActivePage() {
         <span>Most Active</span>
       </nav>
 
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-panel-fg">Most Active Stocks</h1>
+      <p className="kicker mt-2 text-accent">Market Data</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Most Active Stocks</h1>
       <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
         Ranked by today&apos;s traded ₱{" "}
         <Link href="/glossary#trading-value-volume" className="underline hover:text-panel-fg">

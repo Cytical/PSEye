@@ -56,15 +56,20 @@ export default async function MarketMapPage() {
   const sparklineByTicker = await getRealSparklines(quotes.map((q) => q.ticker));
 
   return (
-    <div className="mx-auto max-w-[1600px] px-4 py-8">
+    <div className="mx-auto max-w-[1600px] px-4 py-8 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
-      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">The Philippine Stock Market, Visualized</h1>
-      <p className="mt-2 max-w-3xl text-sm text-foreground/70">
-        A live map of the Philippine Stock Exchange (PSE): every listed company sized by market
-        capitalization and colored by today&apos;s price change. Explore PSEi stock prices, dividend
-        yields, and sector performance at a glance.
-      </p>
-      <div className="mt-6">
+      <div className="max-w-3xl">
+        <p className="kicker text-accent">Market Map</p>
+        <h1 className="mt-1.5 font-serif text-[2.15rem] font-semibold leading-[1.08] tracking-tight sm:text-[2.75rem]">
+          The Philippine Stock Market, Visualized
+        </h1>
+        <p className="mt-3 text-[15px] leading-relaxed text-foreground/65 sm:text-base">
+          A live map of the Philippine Stock Exchange: every listed company sized by market
+          capitalization and colored by today&apos;s price change. Explore PSE stock prices, dividend
+          yields, and sector performance at a glance.
+        </p>
+      </div>
+      <div className="mt-7">
         <MarketMap
           stocks={quotes}
           profileByTicker={profileByTicker}
@@ -74,13 +79,14 @@ export default async function MarketMapPage() {
         />
       </div>
 
-      <section className="mt-12 border-t border-black/10 pt-8 dark:border-white/10">
-        <h2 className="text-lg font-semibold">Frequently asked questions</h2>
-        <dl className="mt-4 max-w-3xl space-y-5">
+      <section className="mt-14 max-w-3xl border-t border-foreground/10 pt-8">
+        <p className="kicker text-foreground/45">Good to know</p>
+        <h2 className="mt-1.5 font-serif text-xl font-semibold tracking-tight">Frequently asked questions</h2>
+        <dl className="mt-5 divide-y divide-foreground/10">
           {FAQ.map((item) => (
-            <div key={item.q}>
+            <div key={item.q} className="py-4 first:pt-0">
               <dt className="font-medium">{item.q}</dt>
-              <dd className="mt-1 text-sm text-foreground/70">{item.a}</dd>
+              <dd className="mt-1.5 text-sm leading-relaxed text-foreground/65">{item.a}</dd>
             </div>
           ))}
         </dl>

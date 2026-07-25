@@ -83,9 +83,9 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
         onSubmit={(e) => e.preventDefault()}
       >
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-panel-fg/60">Invest in</span>
+          <span className="kicker text-panel-fg/70">Invest in</span>
           <select
-            className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
+            className="rounded-lg border border-panel-border bg-panel px-2.5 py-1.5 text-panel-fg shadow-sm shadow-black/5"
             value={ticker}
             onChange={(e) => setTicker(e.target.value)}
           >
@@ -99,10 +99,10 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-panel-fg/60">Start date</span>
+          <span className="kicker text-panel-fg/70">Start date</span>
           <input
             type="date"
-            className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
+            className="rounded-lg border border-panel-border bg-panel px-2.5 py-1.5 text-panel-fg shadow-sm shadow-black/5"
             value={startDate}
             max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => e.target.value && setStartDate(e.target.value)}
@@ -110,21 +110,21 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-panel-fg/60">Contribution (₱)</span>
+          <span className="kicker text-panel-fg/70">Contribution (₱)</span>
           <input
             type="number"
             min={100}
             step={100}
-            className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
+            className="rounded-lg border border-panel-border bg-panel px-2.5 py-1.5 text-panel-fg shadow-sm shadow-black/5"
             value={contribution}
             onChange={(e) => setContribution(Math.max(0, Number(e.target.value) || 0))}
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-panel-fg/60">Frequency</span>
+          <span className="kicker text-panel-fg/70">Frequency</span>
           <select
-            className="rounded border border-panel-fg/15 bg-[var(--background)] px-2 py-1.5 text-[var(--panel-fg)]"
+            className="rounded-lg border border-panel-border bg-panel px-2.5 py-1.5 text-panel-fg shadow-sm shadow-black/5"
             value={frequency}
             onChange={(e) => setFrequency(e.target.value as DcaFrequency)}
           >
@@ -134,7 +134,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
         </label>
       </form>
 
-      {loading && <p className="text-sm text-panel-fg/50">Simulating…</p>}
+      {loading && <p className="text-sm text-panel-fg/65">Simulating…</p>}
 
       {!loading && result && (
         <div className="flex flex-col gap-4">
@@ -148,9 +148,11 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
             />
             <Stat label="Shares/units accumulated" value={result.totalShares.toFixed(2)} />
           </div>
-          <DcaChart timeline={result.timeline} />
+          <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+            <DcaChart timeline={result.timeline} />
+          </div>
           {isSampleData && (
-            <p className="text-xs text-panel-fg/60">
+            <p className="text-xs text-panel-fg/65">
               Price history is sample data for this selection — a real EOD price history feed
               hasn&apos;t been backfilled for it yet. Results are illustrative, not historical fact.
             </p>
@@ -159,7 +161,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
       )}
 
       {!loading && !result && (
-        <p className="text-sm text-panel-fg/50">
+        <p className="text-sm text-panel-fg/65">
           Pick a start date at least one period in the past to see results.
         </p>
       )}
@@ -168,15 +170,10 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
 }
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "up" | "down" }) {
-  const toneClass =
-    tone === "up"
-      ? "text-[#006300] dark:text-[#0ca30c]"
-      : tone === "down"
-        ? "text-[#d03b3b]"
-        : "";
+  const toneClass = tone === "up" ? "text-up" : tone === "down" ? "text-down" : "";
   return (
-    <div className="rounded-md border border-panel-fg/10 p-3">
-      <div className="text-[11px] text-panel-fg/50">{label}</div>
+    <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+      <div className="kicker text-panel-fg/60">{label}</div>
       <div className={`mt-0.5 text-lg font-semibold tabular-nums ${toneClass}`}>{value}</div>
     </div>
   );

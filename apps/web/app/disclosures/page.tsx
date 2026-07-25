@@ -44,15 +44,16 @@ export default async function DisclosuresPage() {
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Insider Disclosure Digest</h1>
-      <p className="mt-1.5 text-sm text-panel-fg/60">
+      <p className="kicker text-accent">Market Data</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">Insider Disclosure Digest</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
         PSE Edge filings, grouped by company — who&apos;s filing what, without the raw
         real-time stream.
       </p>
 
       <div className="mt-8 flex flex-col gap-4">
         {groups.map((group) => (
-          <div key={group.ticker} className="overflow-hidden rounded-lg bg-panel ring-1 ring-panel-border">
+          <div key={group.ticker} className="overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
             <div className="flex items-center justify-between gap-2 border-b border-panel-border px-4 py-3">
               <Link href={`/stocks/${group.ticker}`} className="flex items-center gap-2 hover:underline">
                 <span className="rounded bg-panel-raised px-1.5 py-0.5 font-mono text-[10px] text-panel-fg/80">
@@ -79,7 +80,7 @@ export default async function DisclosuresPage() {
                       </span>
                       {recent && (
                         <span className="flex items-center gap-1 text-[10px] font-medium text-panel-fg/50">
-                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#2f8f4e]" />
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-up" />
                           New
                         </span>
                       )}
@@ -106,7 +107,7 @@ export default async function DisclosuresPage() {
       </div>
 
       {groups.length === 0 && (
-        <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/50 ring-1 ring-panel-border">
+        <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/60 shadow-sm shadow-black/5 ring-1 ring-panel-border">
           No disclosures on record yet for the last lookback window.
         </p>
       )}

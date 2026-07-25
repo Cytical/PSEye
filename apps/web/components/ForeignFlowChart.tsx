@@ -5,10 +5,10 @@ import type { IndexForeignFlow } from "@pseye/source-foreign-flow";
 
 // Same finance-convention green/red diverging pair as TreemapChart's color.ts
 // (green=net buying, red=net selling) — this is a polarity metric too.
-const POLE_UP = "#0ca30c";
-const POLE_UP_DARK = "#0ca30c";
-const POLE_DOWN = "#d03b3b";
-const POLE_DOWN_DARK = "#e66767";
+// var(--up)/var(--down) already flip per theme (see globals.css), so this no
+// longer needs a separate light/dark rect pair to swap hardcoded hexes.
+const POLE_UP = "var(--up)";
+const POLE_DOWN = "var(--down)";
 
 const WIDTH = 720;
 const HEIGHT = 260;
@@ -60,8 +60,7 @@ export function ForeignFlowChart({ periods }: { periods: IndexForeignFlow[] }) {
           const y = isPositive ? zeroY - h : zeroY;
           return (
             <g key={p.periodEnd} onMouseEnter={() => setHoverIndex(i)} onMouseLeave={() => setHoverIndex(null)}>
-              <rect x={x} y={y} width={barWidth} height={Math.max(h, 1)} rx={2} className="dark:hidden" fill={isPositive ? POLE_UP : POLE_DOWN} opacity={hoverIndex === null || hoverIndex === i ? 1 : 0.4} />
-              <rect x={x} y={y} width={barWidth} height={Math.max(h, 1)} rx={2} className="hidden dark:block" fill={isPositive ? POLE_UP_DARK : POLE_DOWN_DARK} opacity={hoverIndex === null || hoverIndex === i ? 1 : 0.4} />
+              <rect x={x} y={y} width={barWidth} height={Math.max(h, 1)} rx={2} fill={isPositive ? POLE_UP : POLE_DOWN} opacity={hoverIndex === null || hoverIndex === i ? 1 : 0.4} />
               <rect x={x} y={PAD_TOP} width={barWidth} height={plotHeight} fill="transparent" />
             </g>
           );
@@ -86,7 +85,7 @@ export function ForeignFlowChart({ periods }: { periods: IndexForeignFlow[] }) {
           }}
         >
           <div className="font-medium">{formatWeek(periods[hoverIndex].periodEnd)}</div>
-          <div className={periods[hoverIndex].netValue >= 0 ? "text-[#006300] dark:text-[#0ca30c]" : "text-[#d03b3b]"}>
+          <div className={periods[hoverIndex].netValue >= 0 ? "text-up" : "text-down"}>
             Net {periods[hoverIndex].netValue >= 0 ? "buying" : "selling"}: {formatPeso(periods[hoverIndex].netValue)}
           </div>
         </div>

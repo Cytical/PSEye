@@ -29,7 +29,7 @@ export function SkeletonCardList({ count = 4 }: { count?: number }) {
   return (
     <div className="flex flex-col gap-4">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="overflow-hidden rounded-lg bg-panel ring-1 ring-panel-border p-4">
+        <div key={i} className="overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border p-4">
           <SkeletonBar className="h-4 w-1/3" />
           <div className="mt-3 flex flex-col gap-2">
             <SkeletonBar className="h-3 w-full" />

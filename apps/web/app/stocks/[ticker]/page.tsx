@@ -204,8 +204,9 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         <div className="flex items-baseline gap-2">
           <WatchlistStarButton ticker={company.ticker} size={22} className="translate-y-0.5" />
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">
-              {company.companyName} <span className="font-mono text-lg text-panel-fg/50">({company.ticker})</span>
+            <p className="kicker text-accent">{company.ticker}</p>
+            <h1 className="mt-0.5 font-serif text-2xl font-semibold leading-tight tracking-tight text-panel-fg">
+              {company.companyName}
             </h1>
             <p className="mt-1 text-sm text-panel-fg/60">{summaryLine}</p>
           </div>
@@ -274,8 +275,8 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {closes.length >= 2 && (
         <div className="mt-6">
-          <h2 className="text-sm font-medium text-panel-fg">Closing price, last {HISTORY_LOOKBACK_DAYS} days</h2>
-          <div className="mt-2 rounded-lg bg-panel p-3 ring-1 ring-panel-border">
+          <h2 className="kicker text-panel-fg/55">Closing price, last {HISTORY_LOOKBACK_DAYS} days</h2>
+          <div className="mt-2 rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
             <StockPriceChart closes={closes} />
           </div>
         </div>
@@ -283,7 +284,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {profile && (
         <div className="mt-6">
-          <h2 className="text-sm font-medium text-panel-fg">About</h2>
+          <h2 className="kicker text-panel-fg/55">About</h2>
           <div className="mt-2 flex flex-col gap-2.5">
             {profile.description.split("\n\n").map((paragraph, i) => (
               <p key={i} className="text-sm leading-snug text-panel-fg/80">
@@ -297,8 +298,8 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {sectorPeers.length > 0 && (
         <div className="mt-8">
-          <h2 className="text-sm font-medium text-panel-fg">Sector peers</h2>
-          <ul className="mt-2 flex flex-col divide-y divide-panel-border rounded-lg bg-panel ring-1 ring-panel-border">
+          <h2 className="kicker text-panel-fg/55">Sector peers</h2>
+          <ul className="mt-2 flex flex-col divide-y divide-panel-border rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
             {sectorPeers.map((peer) => (
               <li key={peer.ticker}>
                 <Link
@@ -316,8 +317,8 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                         peer.pctChange == null
                           ? "text-panel-fg/40"
                           : peer.pctChange >= 0
-                            ? "text-[#30cc5a]"
-                            : "text-[#f6362f]"
+                            ? "text-up"
+                            : "text-down"
                       }
                     >
                       {peer.pctChange == null
@@ -340,7 +341,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
         <div>
-          <h2 className="text-sm font-medium text-panel-fg">Recent disclosures</h2>
+          <h2 className="kicker text-panel-fg/55">Recent disclosures</h2>
           {companyDisclosures.length > 0 ? (
             <ul className="mt-2 flex flex-col gap-2">
               {companyDisclosures.map((d) => {
@@ -348,7 +349,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                 return (
                   <li
                     key={d.referenceNo}
-                    className="rounded-md bg-panel px-3 py-2.5 text-sm ring-1 ring-panel-border"
+                    className="rounded-lg bg-panel px-3 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border"
                     style={{ borderLeft: `3px solid ${accent}` }}
                   >
                     <div className="flex flex-wrap items-center gap-2">
@@ -385,7 +386,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         </div>
 
         <div>
-          <h2 className="text-sm font-medium text-panel-fg">Dividend &amp; corporate action history</h2>
+          <h2 className="kicker text-panel-fg/55">Dividend &amp; corporate action history</h2>
           {companyActions.length > 0 ? (
             <ul className="mt-2 flex flex-col gap-2">
               {companyActions.map((a) => {
@@ -393,7 +394,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                 return (
                   <li
                     key={`${a.type}-${a.exDate}`}
-                    className="rounded-md bg-panel px-3 py-2.5 text-sm ring-1 ring-panel-border"
+                    className="rounded-lg bg-panel px-3 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border"
                     style={{ borderLeft: `3px solid ${accent}` }}
                   >
                     <div className="flex flex-wrap items-center gap-2">
@@ -421,7 +422,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {news.length > 0 && (
         <div className="mt-8">
-          <h2 className="text-sm font-medium text-panel-fg">In the news</h2>
+          <h2 className="kicker text-panel-fg/55">In the news</h2>
           <ul className="mt-2 flex flex-col gap-2.5">
             {news.map((item) => (
               <li key={item.url} className="text-sm">
@@ -449,9 +450,9 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "up" | "down" }) {
   const toneClass =
-    tone === "up" ? "text-[#006300] dark:text-[#0ca30c]" : tone === "down" ? "text-[#d03b3b]" : "text-panel-fg";
+    tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-panel-fg";
   return (
-    <div className="rounded-lg bg-panel p-3 ring-1 ring-panel-border">
+    <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
       <div className="text-[11px] text-panel-fg/50">{label}</div>
       <div className={`mt-0.5 text-lg font-semibold tabular-nums ${toneClass}`}>{value}</div>
     </div>

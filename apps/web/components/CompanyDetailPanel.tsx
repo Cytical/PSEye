@@ -69,7 +69,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
   const currency = stock.currency ?? "PHP";
   const symbol = currency === "USD" ? "$" : "₱";
   const changeColor =
-    stock.pctChange == null ? "text-panel-fg/50" : stock.pctChange >= 0 ? "text-[#30cc5a]" : "text-[#f6362f]";
+    stock.pctChange == null ? "text-panel-fg/50" : stock.pctChange >= 0 ? "text-up" : "text-down";
 
   return (
     <div
@@ -89,7 +89,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
         <div className="flex items-start justify-between gap-3 border-b border-panel-border p-5">
           <div>
             <div className="flex items-baseline gap-2">
-              <h2 id="company-detail-heading" className="text-lg font-bold tracking-tight">
+              <h2 id="company-detail-heading" className="font-serif text-xl font-semibold tracking-tight">
                 {stock.ticker}
               </h2>
               <span className="text-[10px] uppercase tracking-wide text-panel-fg/60">{stock.sector}</span>
@@ -115,7 +115,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
         <div className="flex flex-col gap-4 overflow-y-auto p-5">
           <div className="flex items-end justify-between">
             <div>
-              <div className="text-2xl font-bold">
+              <div className="font-serif text-2xl font-semibold tabular-nums">
                 {stock.price == null ? "N/A" : `${symbol}${stock.price.toFixed(2)}`}
               </div>
               <div className={`text-sm font-semibold ${changeColor}`}>
@@ -134,7 +134,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
           </div>
 
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-panel-fg/60">About</div>
+            <div className="kicker text-panel-fg/60">About</div>
             {profile == null ? (
               <p className="mt-2 text-sm text-panel-fg/50">No company description yet for {stock.ticker}.</p>
             ) : (

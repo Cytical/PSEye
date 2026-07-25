@@ -62,11 +62,11 @@ export function DividendScreenerTable({ rows }: { rows: DividendScreenerRow[] })
   }
 
   return (
-    <div className="overflow-hidden rounded-lg bg-panel ring-1 ring-panel-border">
+    <div className="overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
           <thead>
-            <tr className="border-b border-panel-border text-left text-[10px] uppercase tracking-wide text-panel-fg/50">
+            <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/50">
               {COLUMNS.map((col) => {
                 const isActive = sort.key === col.key;
                 return (
@@ -111,7 +111,7 @@ export function DividendScreenerTable({ rows }: { rows: DividendScreenerRow[] })
                   {row.yieldPct == null ? (
                     <span className="text-panel-fg/40">—</span>
                   ) : (
-                    <span className={row.yieldPct >= 4 ? "text-[#30cc5a]" : "text-panel-fg"}>{row.yieldPct.toFixed(2)}%</span>
+                    <span className={row.yieldPct >= 4 ? "text-up" : "text-panel-fg"}>{row.yieldPct.toFixed(2)}%</span>
                   )}
                 </td>
                 <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg/70">{row.payoutCount || "—"}</td>

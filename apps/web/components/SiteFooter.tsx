@@ -13,10 +13,10 @@ const FOOTER_LINKS = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-foreground/10">
-      <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-6 text-xs text-foreground/60 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-          <div className="shrink-0 opacity-70">
+    <footer className="border-t border-foreground/10 bg-panel-raised/40">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-3 px-4 py-7 text-xs text-foreground/60 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+          <div className="shrink-0 opacity-80">
             <Logo size={18} />
           </div>
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5">

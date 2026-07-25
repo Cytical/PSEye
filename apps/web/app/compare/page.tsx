@@ -15,8 +15,9 @@ export default async function ComparePage() {
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">Compare Stocks</h1>
-      <p className="mt-1.5 text-sm text-panel-fg/60">
+      <p className="kicker text-accent">Tools</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Compare Stocks</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
         Normalized % price change since a chosen start date — puts any PSE stocks on the same
         scale regardless of share price, so a ₱2 stock and a ₱1,000 stock are directly
         comparable.

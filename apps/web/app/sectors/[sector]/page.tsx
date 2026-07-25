@@ -89,7 +89,7 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
         <span>{sector}</span>
       </nav>
 
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-panel-fg">{sector}</h1>
+      <h1 className="mt-2 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">{sector}</h1>
       <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
         {sectorRows.length} PSE-listed {sectorRows.length === 1 ? "company" : "companies"} in{" "}
         {sector}, ranked by market capitalization. Combined market cap:{" "}

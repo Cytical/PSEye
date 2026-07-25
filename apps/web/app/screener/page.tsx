@@ -17,8 +17,9 @@ export default async function ScreenerPage() {
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">Stock Screener</h1>
-      <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
+      <p className="kicker text-accent">Tools</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Stock Screener</h1>
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/65">
         Every tracked PSE-listed company in one sortable table — price, today&apos;s change, market
         capitalization, and trailing-12-month dividend yield. Search, filter by sector, or star
         stocks to your watchlist. For the full ex-date schedule and payout history, see the{" "}

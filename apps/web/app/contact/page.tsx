@@ -44,8 +44,9 @@ const CONTACT_LINKS = [
 export default function ContactPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="text-xl font-semibold">Contact</h1>
-      <p className="mt-2 text-sm text-foreground/70">
+      <p className="kicker text-accent">Get in touch</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">Contact</h1>
+      <p className="mt-2.5 text-sm text-foreground/70">
         Spotted a data issue, have a question, or just want to say hi? PSEye is a solo, free,
         community-first project — reach out directly.
       </p>
@@ -57,13 +58,13 @@ export default function ContactPage() {
             href={link.href}
             target={link.href.startsWith("http") ? "_blank" : undefined}
             rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
-            className="flex items-center gap-3 rounded-lg border border-foreground/10 px-4 py-3 text-sm transition-colors hover:bg-foreground/5 dark:border-foreground/15 dark:hover:bg-foreground/10"
+            className="flex items-center gap-3 rounded-xl border border-foreground/10 px-4 py-3 text-sm shadow-sm shadow-black/5 transition-colors hover:bg-foreground/5 dark:border-foreground/15 dark:hover:bg-foreground/10"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-foreground/70 dark:bg-foreground/10">
               {link.icon}
             </span>
             <span>
-              <span className="block text-[11px] uppercase tracking-wide text-foreground/50">{link.sublabel}</span>
+              <span className="kicker block text-foreground/50">{link.sublabel}</span>
               <span className="font-medium text-foreground">{link.label}</span>
             </span>
           </a>

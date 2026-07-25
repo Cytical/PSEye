@@ -11,16 +11,16 @@ function formatMarketCap(value: number): string {
 }
 
 function changeColor(pctChange: number): string {
-  return pctChange >= 0 ? "text-[#30cc5a]" : "text-[#f6362f]";
+  return pctChange >= 0 ? "text-up" : "text-down";
 }
 
 export function RankingsTable({ rows, rankKey = "overallRank" }: { rows: RankingRow[]; rankKey?: "overallRank" | "sectorRank" }) {
   return (
-    <div className="overflow-hidden rounded-lg bg-panel ring-1 ring-panel-border">
+    <div className="overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
-            <tr className="border-b border-panel-border text-left text-[10px] uppercase tracking-wide text-panel-fg/50">
+            <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/50">
               <th className="w-10 py-1.5 pl-3 font-medium">#</th>
               <th className="w-9 py-1.5" aria-label="Watchlist" />
               <th className="py-1.5 pr-4 font-medium">Company</th>

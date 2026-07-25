@@ -14,7 +14,7 @@ function formatPeso(value: number): string {
 }
 
 function changeColor(value: number): string {
-  return value >= 0 ? "text-[#30cc5a]" : "text-[#f6362f]";
+  return value >= 0 ? "text-up" : "text-down";
 }
 
 /**
@@ -64,7 +64,7 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
 
   return (
     <div>
-      <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3 rounded-lg bg-panel p-4 ring-1 ring-panel-border">
+      <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3 rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
         <div className="flex flex-col gap-1">
           <label htmlFor="portfolio-ticker" className="text-xs text-panel-fg/60">
             Ticker
@@ -122,7 +122,7 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
           Add holding
         </button>
       </form>
-      {error && <p className="mt-2 text-xs text-[#f6362f]">{error}</p>}
+      {error && <p className="mt-2 text-xs text-down">{error}</p>}
 
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-panel-fg/60">
@@ -132,22 +132,22 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
       ) : (
         <>
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-lg bg-panel p-3 ring-1 ring-panel-border">
+            <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <div className="text-xs text-panel-fg/50">Cost basis</div>
               <div className="mt-1 text-lg font-semibold tabular-nums text-panel-fg">{formatPeso(totalCost)}</div>
             </div>
-            <div className="rounded-lg bg-panel p-3 ring-1 ring-panel-border">
+            <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <div className="text-xs text-panel-fg/50">Market value</div>
               <div className="mt-1 text-lg font-semibold tabular-nums text-panel-fg">{formatPeso(totalValue)}</div>
             </div>
-            <div className="rounded-lg bg-panel p-3 ring-1 ring-panel-border">
+            <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <div className="text-xs text-panel-fg/50">Gain / loss</div>
               <div className={`mt-1 text-lg font-semibold tabular-nums ${changeColor(totalGainLoss)}`}>
                 {totalGainLoss >= 0 ? "+" : ""}
                 {formatPeso(totalGainLoss)}
               </div>
             </div>
-            <div className="rounded-lg bg-panel p-3 ring-1 ring-panel-border">
+            <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <div className="text-xs text-panel-fg/50">Gain / loss %</div>
               <div className={`mt-1 text-lg font-semibold tabular-nums ${totalGainLossPct == null ? "text-panel-fg/40" : changeColor(totalGainLossPct)}`}>
                 {totalGainLossPct == null ? "N/A" : `${totalGainLossPct >= 0 ? "+" : ""}${totalGainLossPct.toFixed(2)}%`}
@@ -162,11 +162,11 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
             </p>
           )}
 
-          <div className="mt-6 overflow-hidden rounded-lg bg-panel ring-1 ring-panel-border">
+          <div className="mt-6 overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] text-sm">
                 <thead>
-                  <tr className="border-b border-panel-border text-left text-[10px] uppercase tracking-wide text-panel-fg/50">
+                  <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/50">
                     <th className="py-1.5 pl-3 font-medium">Company</th>
                     <th className="py-1.5 pr-4 text-right font-medium">Shares</th>
                     <th className="py-1.5 pr-4 text-right font-medium">Avg. cost</th>

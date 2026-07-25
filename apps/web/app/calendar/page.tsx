@@ -65,8 +65,9 @@ export default async function CalendarPage() {
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Dividend &amp; Corporate Actions Calendar</h1>
-      <p className="mt-1.5 text-sm text-panel-fg/60">
+      <p className="kicker text-accent">Market Data</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">Dividend &amp; Corporate Actions Calendar</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
         Ex-date, record date, and payment date for dividends, rights offers, and other
         corporate actions. Own the stock before the ex-date to be entitled.
       </p>
@@ -74,7 +75,7 @@ export default async function CalendarPage() {
       <div className="mt-8 flex flex-col gap-8">
         {months.map(({ monthKey, actions }) => (
           <div key={monthKey}>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-panel-fg/60">
+            <h2 className="kicker text-panel-fg/60">
               {formatMonthHeading(actions[0].exDate)}
             </h2>
             <ul className="mt-3 flex flex-col gap-3">
@@ -92,7 +93,7 @@ export default async function CalendarPage() {
       </div>
 
       {sorted.length === 0 && (
-        <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/50 ring-1 ring-panel-border">
+        <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/60 shadow-sm shadow-black/5 ring-1 ring-panel-border">
           No corporate actions on record for the current window.
         </p>
       )}
@@ -106,7 +107,7 @@ function ActionRow({ action, isPast, todayIso }: { action: CorporateAction; isPa
 
   return (
     <li
-      className={`overflow-hidden rounded-lg bg-panel ring-1 ring-panel-border ${isPast ? "opacity-50" : ""}`}
+      className={`overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border ${isPast ? "opacity-50" : ""}`}
       style={{ borderLeft: `3px solid ${accent}` }}
     >
       <div className="p-4">
@@ -136,15 +137,15 @@ function ActionRow({ action, isPast, todayIso }: { action: CorporateAction; isPa
 
         <div className="mt-2.5 grid grid-cols-3 gap-2 border-t border-panel-border pt-2.5 text-xs">
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-panel-fg/60">Ex-date</div>
+            <div className="kicker text-panel-fg/60">Ex-date</div>
             <div className="mt-0.5 text-panel-fg/80">{formatDate(action.exDate)}</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-panel-fg/60">Record date</div>
+            <div className="kicker text-panel-fg/60">Record date</div>
             <div className="mt-0.5 text-panel-fg/80">{formatDate(action.recordDate)}</div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-panel-fg/60">Payment date</div>
+            <div className="kicker text-panel-fg/60">Payment date</div>
             <div className="mt-0.5 text-panel-fg/80">{action.paymentDate ? formatDate(action.paymentDate) : "—"}</div>
           </div>
         </div>

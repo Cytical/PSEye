@@ -16,8 +16,9 @@ export default async function PortfolioPage() {
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">Portfolio Tracker</h1>
-      <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
+      <p className="kicker text-accent">Tools</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Portfolio Tracker</h1>
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/65">
         Add the PSE stocks you hold — shares and average cost per share — and see live cost basis,
         market value, and gain/loss against real end-of-day / delayed quotes. Nothing you enter is
         sent anywhere: holdings are stored only in this browser (localStorage), the same way the

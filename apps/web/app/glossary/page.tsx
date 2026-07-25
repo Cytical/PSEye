@@ -49,8 +49,9 @@ export default function GlossaryPage() {
         <span>Glossary</span>
       </nav>
 
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-panel-fg">PSE Investing Glossary</h1>
-      <p className="mt-1.5 max-w-2xl text-sm text-panel-fg/60">
+      <p className="kicker mt-2 text-accent">Reference</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">PSE Investing Glossary</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
         Plain-English definitions for the terms used across PSEye — every entry here is something
         this site actually computes or displays, not a generic finance dictionary.
       </p>
@@ -66,7 +67,7 @@ export default function GlossaryPage() {
       <dl className="mt-6 flex flex-col gap-6">
         {GLOSSARY_TERMS.map((t) => (
           <div key={t.id} id={t.id} className="scroll-mt-20 border-t border-panel-border pt-4 first:border-t-0 first:pt-0">
-            <dt className="text-base font-semibold text-panel-fg">{t.term}</dt>
+            <dt className="font-serif text-lg font-semibold text-panel-fg">{t.term}</dt>
             <dd className="mt-1.5 text-sm leading-relaxed text-panel-fg/80">{t.definition}</dd>
             {t.related && t.related.length > 0 && (
               <dd className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">

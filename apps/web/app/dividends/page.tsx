@@ -32,8 +32,9 @@ export default async function DividendsPage() {
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">Dividend Screener</h1>
-      <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
+      <p className="kicker text-accent">Market Data</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Dividend Screener</h1>
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/65">
         Cash dividends declared on common shares over the trailing 12 months, summed per share and
         divided by the latest price (see{" "}
         <Link href="/glossary#dividend-yield" className="underline hover:text-panel-fg">

@@ -51,7 +51,9 @@ function useIsActive() {
 }
 
 function navLinkClass(active: boolean) {
-  return active ? "font-medium opacity-100" : "opacity-70 hover:opacity-100";
+  return active
+    ? "border-b-2 border-accent pb-0.5 font-medium text-foreground"
+    : "border-b-2 border-transparent pb-0.5 text-foreground/65 transition-colors hover:border-foreground/20 hover:text-foreground";
 }
 
 /**
@@ -161,7 +163,7 @@ function NavDropdown({
       {open && (
         <div
           role="menu"
-          className="absolute left-0 top-full z-20 mt-2 flex min-w-40 flex-col rounded-lg border border-black/10 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-neutral-900"
+          className="absolute left-0 top-full z-20 mt-2 flex min-w-44 flex-col rounded-lg bg-panel py-1.5 ring-1 ring-panel-border shadow-lg shadow-black/5"
         >
           {links.map((link) => (
             <Link
@@ -170,10 +172,8 @@ function NavDropdown({
               role="menuitem"
               onClick={() => setOpen(false)}
               aria-current={isActive(link.href) ? "page" : undefined}
-              className={`px-3 py-1.5 ${
-                isActive(link.href)
-                  ? "font-medium opacity-100"
-                  : "opacity-80 hover:bg-black/5 hover:opacity-100 dark:hover:bg-white/5"
+              className={`px-3.5 py-1.5 text-panel-fg ${
+                isActive(link.href) ? "font-medium" : "text-panel-fg/75 hover:bg-panel-raised hover:text-panel-fg"
               }`}
             >
               {link.label}

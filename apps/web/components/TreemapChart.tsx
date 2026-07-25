@@ -168,7 +168,7 @@ export function TreemapChart({
           treat the contents as one flat picture, which would hide every
           per-stock button inside from screen readers entirely. */}
       <div
-        className="relative select-none overflow-hidden rounded-lg ring-1 ring-panel-border"
+        className="relative select-none overflow-hidden rounded-xl shadow-sm shadow-black/10 ring-1 ring-panel-border"
         style={{ width, height, background: CANVAS_BG }}
         role="group"
         aria-label="PSE market map: box size is market cap, color is today's percent change"
@@ -262,7 +262,7 @@ export function TreemapChart({
         })}
 
         {hovered && !selected && (
-          <div className="pointer-events-none absolute bottom-3 left-3 min-w-[190px] rounded-lg border border-panel-border bg-panel/95 px-3.5 py-3 text-xs text-panel-fg shadow-2xl backdrop-blur-sm">
+          <div className="pointer-events-none absolute bottom-3 left-3 min-w-[190px] rounded-xl border border-panel-border bg-panel/95 px-3.5 py-3 text-xs text-panel-fg shadow-xl shadow-black/20 backdrop-blur-sm">
             <div className="flex items-baseline justify-between gap-3">
               <span className="text-sm font-bold tracking-tight">{hovered.ticker}</span>
               <span
@@ -270,8 +270,8 @@ export function TreemapChart({
                   hovered.pctChange == null
                     ? "text-panel-fg/50"
                     : hovered.pctChange >= 0
-                      ? "text-[#30cc5a]"
-                      : "text-[#f6362f]"
+                      ? "text-up"
+                      : "text-down"
                 }`}
               >
                 {formatPctChange(hovered.pctChange)}
@@ -306,15 +306,13 @@ export function TreemapChart({
       )}
 
       <div className="flex w-full max-w-xs flex-col items-center gap-1.5">
-        <span className="text-[10px] font-medium uppercase tracking-wide text-black/60 dark:text-white/60">
-          Day change
-        </span>
+        <span className="kicker text-foreground/55">Day change</span>
         <div className="w-full">
           <div
-            className="h-2.5 w-full rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/10"
+            className="h-2.5 w-full rounded-full ring-1 ring-inset ring-foreground/10"
             style={{ background: LEGEND_GRADIENT_CSS }}
           />
-          <div className="flex w-full justify-between text-[10px] font-medium text-black/60 dark:text-white/60">
+          <div className="flex w-full justify-between text-[10px] font-medium text-foreground/55">
             {LEGEND_TICKS.map((tick) => (
               <span key={tick}>
                 {tick > 0 ? "+" : ""}
@@ -323,9 +321,9 @@ export function TreemapChart({
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] font-medium text-black/60 dark:text-white/60">
+        <div className="flex items-center gap-1.5 text-[10px] font-medium text-foreground/55">
           <span
-            className="h-2.5 w-2.5 rounded-sm ring-1 ring-inset ring-black/10 dark:ring-white/10"
+            className="h-2.5 w-2.5 rounded-sm ring-1 ring-inset ring-foreground/10"
             style={{ background: NO_DATA_COLOR }}
           />
           No trade today
@@ -343,7 +341,7 @@ function Sparkline({ closes }: { closes: number[] }) {
   const max = Math.max(...closes);
   const range = max - min || 1;
   const trendsUp = closes[closes.length - 1] >= closes[0];
-  const stroke = trendsUp ? "#30cc5a" : "#f6362f";
+  const stroke = trendsUp ? "var(--up)" : "var(--down)";
 
   const points = closes
     .map((close, i) => {

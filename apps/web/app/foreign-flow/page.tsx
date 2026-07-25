@@ -24,23 +24,24 @@ export default async function ForeignFlowPage() {
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">Foreign Fund Flow</h1>
-      <p className="mt-1.5 text-sm text-panel-fg/60">
+      <p className="kicker text-accent">Market Data</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Foreign Fund Flow</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
         Index-level foreign buying vs. selling by week, from PSE&apos;s Market Watch report, plus
         daily per-stock net foreign buying/selling from PSE&apos;s Daily Quotation Report.
       </p>
 
-      <div className="mt-8 rounded-lg bg-panel p-4 ring-1 ring-panel-border">
+      <div className="mt-8 rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
         {indexFlow.length > 0 ? (
           <>
             <ForeignFlowChart periods={indexFlow} />
             <div className="mt-1 flex items-center gap-4 text-[11px] text-panel-fg/60">
               <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2 w-2 rounded-full bg-[#0ca30c]" />
+                <span className="inline-block h-2 w-2 rounded-full bg-up" />
                 Net buying
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2 w-2 rounded-full bg-[#d03b3b]" />
+                <span className="inline-block h-2 w-2 rounded-full bg-down" />
                 Net selling
               </span>
             </div>
@@ -95,7 +96,7 @@ function IndexFlowTable({ periods }: { periods: IndexForeignFlow[] }) {
             <td className="py-1.5 pr-4 text-right tabular-nums text-panel-fg">{formatPeso(p.foreignBuyValue)}</td>
             <td className="py-1.5 pr-4 text-right tabular-nums text-panel-fg">{formatPeso(p.foreignSellValue)}</td>
             <td
-              className={`py-1.5 text-right font-medium tabular-nums ${p.netValue >= 0 ? "text-[#006300] dark:text-[#0ca30c]" : "text-[#d03b3b]"}`}
+              className={`py-1.5 text-right font-medium tabular-nums ${p.netValue >= 0 ? "text-up" : "text-down"}`}
             >
               {formatPeso(p.netValue)}
             </td>
@@ -117,10 +118,10 @@ function FlowTable({
   tone: "up" | "down";
   periodEnd: string;
 }) {
-  const toneClass = tone === "up" ? "text-[#006300] dark:text-[#0ca30c]" : "text-[#d03b3b]";
+  const toneClass = tone === "up" ? "text-up" : "text-down";
   return (
-    <div className="rounded-lg bg-panel p-4 ring-1 ring-panel-border">
-      <h2 className="text-sm font-medium text-panel-fg">{title}</h2>
+    <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+      <h2 className="kicker text-panel-fg/70">{title}</h2>
       <p className="text-[11px] text-panel-fg/60">
         As of {new Date(periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "UTC" })}
       </p>

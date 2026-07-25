@@ -27,19 +27,20 @@ export default async function BlockSalesPage() {
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">Block Sales</h1>
-      <p className="mt-1.5 text-sm text-panel-fg/60">
+      <p className="kicker text-accent">Market Data</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Block Sales</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
         Large negotiated trades (&quot;crosses&quot;) arranged directly between parties and
         executed outside the normal continuous order book, from PSE&apos;s Daily Quotation
         Report. Sorted by trade value, largest first, over the last 30 days.
       </p>
 
       {trades.length > 0 ? (
-        <div className="mt-8 overflow-hidden rounded-lg bg-panel ring-1 ring-panel-border">
+        <div className="mt-8 overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
-                <tr className="border-b border-panel-border text-left text-[10px] uppercase tracking-wide text-panel-fg/50">
+                <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/55">
                   <th className="py-3 pl-4 pr-4 font-medium">Date</th>
                   <th className="py-3 pr-4 font-medium">Ticker</th>
                   <th className="py-3 pr-4 font-medium">Company</th>
@@ -79,7 +80,7 @@ export default async function BlockSalesPage() {
           </div>
         </div>
       ) : (
-        <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/50 ring-1 ring-panel-border">
+        <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/60 shadow-sm shadow-black/5 ring-1 ring-panel-border">
           No block sales on record yet.
         </p>
       )}

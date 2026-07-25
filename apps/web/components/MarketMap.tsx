@@ -222,11 +222,11 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
       <div className="flex flex-wrap items-center justify-between gap-3">
         {availableDates.length > 0 ? (
           <label className="flex items-center gap-2 text-xs font-medium text-panel-fg/60">
-            <span className="uppercase tracking-wide">Time machine</span>
+            <span className="kicker">Time machine</span>
             <select
               value={viewDate ?? ""}
               onChange={(e) => selectDateInUrl(e.target.value || null)}
-              className="rounded-md bg-panel px-2 py-1.5 text-sm text-panel-fg ring-1 ring-panel-border"
+              className="rounded-md bg-panel px-2 py-1.5 text-sm text-panel-fg shadow-sm shadow-black/5 ring-1 ring-panel-border"
             >
               <option value="">Today</option>
               {availableDates.map((d) => (
@@ -243,7 +243,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
       </div>
 
       {isPastView && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-panel px-4 py-2.5 text-sm ring-1 ring-panel-border">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-panel px-4 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border">
           <span className="text-panel-fg/70">
             Viewing the market as recorded on <span className="font-medium text-panel-fg">{formatPickerDate(pastView.date)}</span>
           </span>
@@ -266,7 +266,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
       )}
 
       {pastViewFailed && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-panel px-4 py-2.5 text-sm ring-1 ring-panel-border">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-panel px-4 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border">
           <span className="text-panel-fg/70">No market data recorded for {viewDate} — showing today instead.</span>
           <button
             type="button"
@@ -279,10 +279,10 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
       )}
       <div className="flex flex-col gap-4 sm:flex-row">
         <nav
-          className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-lg bg-panel p-2 ring-1 ring-panel-border sm:sticky sm:top-4 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
+          className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:sticky sm:top-24 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
           aria-label="Market map filters"
         >
-          <span className="hidden border-b border-panel-border px-2 pb-2 text-[10px] font-semibold uppercase tracking-wide text-panel-fg/60 sm:block">
+          <span className="kicker hidden border-b border-panel-border px-2 pb-2 text-panel-fg/55 sm:block">
             Filters
           </span>
           <div className="flex gap-2 sm:flex-col sm:gap-0.5">
@@ -296,14 +296,14 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
                   aria-pressed={isActive}
                   className={`group relative flex items-center justify-between gap-3 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-panel-active text-panel-fg before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-[#30cc5a] before:content-['']"
-                      : "text-panel-fg/55 hover:bg-panel-raised hover:text-panel-fg"
+                      ? "bg-panel-active text-panel-fg before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-up before:content-['']"
+                      : "text-panel-fg/80 hover:bg-panel-raised hover:text-panel-fg"
                   }`}
                 >
                   <span>{option.label}</span>
                   <span
                     className={`text-[11px] tabular-nums transition-colors ${
-                      isActive ? "text-panel-fg/60" : "text-panel-fg/50 group-hover:text-panel-fg/65"
+                      isActive ? "text-panel-fg/60" : "text-panel-fg/55 group-hover:text-panel-fg/70"
                     }`}
                   >
                     {countByFilter[option.key]}
@@ -328,7 +328,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
 
         <div className="min-w-0 flex-1">
           {isSharedWatchlistView && (
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-panel px-4 py-2.5 text-sm ring-1 ring-panel-border">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-panel px-4 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <span className="text-panel-fg/70">
                 Viewing a shared watchlist — {sharedTickers.length} stock{sharedTickers.length === 1 ? "" : "s"}
               </span>
@@ -352,7 +352,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
           )}
 
           {filter === "watchlist" && !isSharedWatchlistView && filteredStocks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-panel py-24 text-center ring-1 ring-panel-border">
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl bg-panel py-24 text-center shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <button
                 type="button"
                 onClick={() => setAddModalOpen(true)}
@@ -370,7 +370,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
               </div>
             </div>
           ) : filter === "watchlist" && isSharedWatchlistView && filteredStocks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-panel py-24 text-center ring-1 ring-panel-border">
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl bg-panel py-24 text-center shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <p className="text-sm font-medium text-panel-fg/70">
                 This shared watchlist link didn&apos;t match any tracked stocks.
               </p>

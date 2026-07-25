@@ -53,13 +53,13 @@ export async function generateMetadata({ params }: { params: Promise<{ date: str
   };
 }
 
-const UP = "#30cc5a";
-const DOWN = "#f6362f";
+const UP = "var(--up)";
+const DOWN = "var(--down)";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg bg-panel p-4 ring-1 ring-panel-border">
-      <h2 className="text-[11px] font-semibold uppercase tracking-wide text-panel-fg/50">{title}</h2>
+    <section className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+      <h2 className="kicker text-panel-fg/55">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   );
@@ -118,8 +118,8 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
     <div className="mx-auto max-w-[1240px] px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-panel-fg/50">Daily Recap</p>
-          <h1 className="mt-0.5 text-2xl font-semibold tracking-tight text-panel-fg">
+          <p className="kicker text-accent">Daily Recap</p>
+          <h1 className="mt-0.5 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">
             {formatLongDate(recap.date)}
           </h1>
         </div>
@@ -127,7 +127,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
           {recap.prevDate && (
             <Link
               href={`/daily/${recap.prevDate}`}
-              className="rounded-md bg-panel px-3 py-1.5 text-sm text-panel-fg/70 ring-1 ring-panel-border transition-colors hover:bg-panel-raised hover:text-panel-fg"
+              className="rounded-lg bg-panel px-3 py-1.5 text-sm text-panel-fg/70 shadow-sm shadow-black/5 ring-1 ring-panel-border transition-colors hover:bg-panel-raised hover:text-panel-fg"
             >
               ← {formatShortDate(recap.prevDate)}
             </Link>
@@ -135,7 +135,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
           {recap.nextDate && (
             <Link
               href={`/daily/${recap.nextDate}`}
-              className="rounded-md bg-panel px-3 py-1.5 text-sm text-panel-fg/70 ring-1 ring-panel-border transition-colors hover:bg-panel-raised hover:text-panel-fg"
+              className="rounded-lg bg-panel px-3 py-1.5 text-sm text-panel-fg/70 shadow-sm shadow-black/5 ring-1 ring-panel-border transition-colors hover:bg-panel-raised hover:text-panel-fg"
             >
               {formatShortDate(recap.nextDate)} →
             </Link>
@@ -160,14 +160,14 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {snapshot && (
             <>
-              <div className="rounded-lg bg-panel p-4 ring-1 ring-panel-border">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-panel-fg/50">PSEi Close</p>
+              <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+                <p className="kicker text-panel-fg/55">PSEi Close</p>
                 <p className="mt-1 text-xl font-semibold tabular-nums text-panel-fg">
                   {snapshot.pseiValue.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
-              <div className="rounded-lg bg-panel p-4 ring-1 ring-panel-border">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-panel-fg/50">Day Change</p>
+              <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+                <p className="kicker text-panel-fg/55">Day Change</p>
                 <p
                   className="mt-1 text-xl font-semibold tabular-nums"
                   style={{ color: snapshot.pseiPctChange >= 0 ? UP : DOWN }}
@@ -183,8 +183,8 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
             </>
           )}
           {breadth && (
-            <div className="rounded-lg bg-panel p-4 ring-1 ring-panel-border">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-panel-fg/50">Breadth</p>
+            <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+              <p className="kicker text-panel-fg/55">Breadth</p>
               <p className="mt-1 text-xl font-semibold tabular-nums text-panel-fg">
                 <span style={{ color: UP }}>{breadth.advancers}▲</span>
                 <span className="mx-1.5 text-panel-fg/30">/</span>

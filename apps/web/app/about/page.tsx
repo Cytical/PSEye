@@ -10,9 +10,10 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="text-xl font-semibold">About PSEye</h1>
+      <p className="kicker text-accent">About</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">About PSEye</h1>
 
-      <div className="mt-4 flex flex-col gap-4 text-sm leading-relaxed text-foreground/80">
+      <div className="mt-5 flex flex-col gap-4 text-sm leading-relaxed text-foreground/80">
         <p>
           PSEye is a free tracker for the Philippine Stock Exchange — a market map, per-stock
           pages, dividend and disclosure history, foreign fund flow, block sales, and a

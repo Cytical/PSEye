@@ -66,7 +66,7 @@ export function InstallPrompt() {
       <button
         type="button"
         onClick={install}
-        className="shrink-0 rounded-md bg-[#30cc5a] px-3 py-1.5 text-xs font-semibold text-black transition-opacity hover:opacity-90"
+        className="shrink-0 rounded-md bg-[#3ddc84] px-3 py-1.5 text-xs font-semibold text-black transition-opacity hover:opacity-90"
       >
         Install
       </button>

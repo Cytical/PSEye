@@ -43,7 +43,7 @@ function formatMarketCap(value: number): string {
 }
 
 function changeColor(pctChange: number): string {
-  return pctChange >= 0 ? "text-[#30cc5a]" : "text-[#f6362f]";
+  return pctChange >= 0 ? "text-up" : "text-down";
 }
 
 /** Nulls always sort last regardless of direction — a missing value is never "the biggest". */
@@ -91,13 +91,13 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search ticker or company…"
           aria-label="Search by ticker or company name"
-          className="min-w-[200px] flex-1 rounded-lg bg-panel px-3 py-2 text-sm text-panel-fg ring-1 ring-panel-border placeholder:text-panel-fg/40 focus:outline-none focus:ring-2 focus:ring-panel-fg/30"
+          className="min-w-[200px] flex-1 rounded-lg bg-panel px-3 py-2 text-sm text-panel-fg shadow-sm shadow-black/5 ring-1 ring-panel-border placeholder:text-panel-fg/40 focus:outline-none focus:ring-2 focus:ring-panel-fg/30"
         />
         <select
           value={sector}
           onChange={(e) => setSector(e.target.value)}
           aria-label="Filter by sector"
-          className="rounded-lg bg-panel px-3 py-2 text-sm text-panel-fg ring-1 ring-panel-border focus:outline-none focus:ring-2 focus:ring-panel-fg/30"
+          className="rounded-lg bg-panel px-3 py-2 text-sm text-panel-fg shadow-sm shadow-black/5 ring-1 ring-panel-border focus:outline-none focus:ring-2 focus:ring-panel-fg/30"
         >
           <option value="all">All sectors</option>
           {PSE_SECTORS.map((s) => (
@@ -125,11 +125,11 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
         {sorted.length !== rows.length ? ` of ${rows.length}` : ""}
       </p>
 
-      <div className="mt-2 overflow-hidden rounded-lg bg-panel ring-1 ring-panel-border">
+      <div className="mt-2 overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
-              <tr className="border-b border-panel-border text-left text-[10px] uppercase tracking-wide text-panel-fg/50">
+              <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/50">
                 <th className="w-9 py-1.5 pl-3" aria-label="Watchlist" />
                 {COLUMNS.map((col) => {
                   const isActive = sort.key === col.key;
@@ -187,7 +187,7 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
                     {row.yieldPct == null ? (
                       <span className="text-panel-fg/40">—</span>
                     ) : (
-                      <span className={row.yieldPct >= 4 ? "text-[#30cc5a]" : "text-panel-fg"}>
+                      <span className={row.yieldPct >= 4 ? "text-up" : "text-panel-fg"}>
                         {row.yieldPct.toFixed(2)}%
                       </span>
                     )}

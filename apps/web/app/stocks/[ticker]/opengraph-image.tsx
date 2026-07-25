@@ -7,8 +7,8 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const CANVAS_BG = "#0d0f14";
-const UP = "#30cc5a";
-const DOWN = "#f6362f";
+const UP = "#3ddc84";
+const DOWN = "#ff6b5e";
 const MUTED = "#8b93a1";
 
 /**

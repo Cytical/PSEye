@@ -75,8 +75,11 @@ export default async function RankingsPage() {
         <span>Rankings</span>
       </nav>
 
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-panel-fg">Company Rankings</h1>
-      <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
+      <p className="kicker mt-3 text-accent">Rankings</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">
+        Company Rankings
+      </h1>
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/60">
         Every tracked PSE-listed company ranked by{" "}
         <Link href="/glossary#market-capitalization" className="underline hover:text-panel-fg">
           market capitalization
@@ -92,7 +95,7 @@ export default async function RankingsPage() {
           : ""}
       </p>
 
-      <details className="mt-4 max-w-3xl rounded-lg bg-panel px-4 py-3 text-sm ring-1 ring-panel-border">
+      <details className="mt-4 max-w-3xl rounded-xl bg-panel px-4 py-3 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border">
         <summary className="cursor-pointer font-medium text-panel-fg">
           Does this include private (non-listed) companies?
         </summary>
@@ -107,7 +110,7 @@ export default async function RankingsPage() {
       </details>
 
       <section className="mt-8">
-        <h2 className="text-lg font-semibold tracking-tight text-panel-fg">
+        <h2 className="font-serif text-lg font-semibold tracking-tight text-panel-fg">
           Top {Math.min(TOP_N, top100.length)} by Market Cap
         </h2>
         <div className="mt-3">
@@ -116,7 +119,7 @@ export default async function RankingsPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-lg font-semibold tracking-tight text-panel-fg">By Sector</h2>
+        <h2 className="font-serif text-lg font-semibold tracking-tight text-panel-fg">By Sector</h2>
         <nav aria-label="Jump to sector" className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
           {bySector.map(({ sector }) => (
             <a key={sector} href={`#sector-${sector}`} className="text-panel-fg/60 hover:text-panel-fg hover:underline">
@@ -128,7 +131,7 @@ export default async function RankingsPage() {
         <div className="mt-6 flex flex-col gap-8">
           {bySector.map(({ sector, rows: sectorRows }) => (
             <div key={sector} id={`sector-${sector}`} className="scroll-mt-20">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-panel-fg/60">
+              <h3 className="kicker text-panel-fg/60">
                 {sector} <span className="font-normal normal-case text-panel-fg/40">({sectorRows.length})</span>
               </h3>
               <div className="mt-2">

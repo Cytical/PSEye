@@ -15,8 +15,9 @@ export default async function DcaPage() {
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-panel-fg">DCA Calculator</h1>
-      <p className="mt-1.5 text-sm text-panel-fg/60">
+      <p className="kicker text-accent">Tools</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">DCA Calculator</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
         See what cost-averaging a fixed amount into a stock (or the market as a whole) would
         have grown to. Not financial advice — past patterns don&apos;t predict future returns.
       </p>

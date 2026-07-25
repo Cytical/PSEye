@@ -31,7 +31,7 @@ export function StockPriceChart({ closes }: { closes: HistoricalClose[] }) {
 
   const path = closes.map((c, i) => `${i === 0 ? "M" : "L"}${xFor(i)},${yFor(c.close)}`).join(" ");
   const trendsUp = values[values.length - 1] >= values[0];
-  const stroke = trendsUp ? "#0ca30c" : "#d03b3b";
+  const stroke = trendsUp ? "var(--up)" : "var(--down)";
 
   const yTicks = [min, (min + max) / 2, max];
 

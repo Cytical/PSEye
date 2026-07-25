@@ -65,7 +65,8 @@ export default async function StocksIndexPage() {
         <span>All Stocks</span>
       </nav>
 
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-panel-fg">
+      <p className="kicker mt-2 text-accent">Market Data</p>
+      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">
         All PSE-Listed Stocks
       </h1>
       <p className="mt-1.5 text-sm text-panel-fg/60">
@@ -76,7 +77,7 @@ export default async function StocksIndexPage() {
       <div className="mt-8 flex flex-col gap-8">
         {bySector.map(({ sector, companies }) => (
           <div key={sector}>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-panel-fg/60">
+            <h2 className="kicker text-panel-fg/60">
               {sector} <span className="font-normal normal-case text-panel-fg/40">({companies.length})</span>
             </h2>
             <ul className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
@@ -87,8 +88,8 @@ export default async function StocksIndexPage() {
                   pctChange == null
                     ? "text-panel-fg/40"
                     : pctChange >= 0
-                      ? "text-[#006300] dark:text-[#0ca30c]"
-                      : "text-[#d03b3b]";
+                      ? "text-up"
+                      : "text-down";
                 return (
                   <li key={c.ticker}>
                     <Link
