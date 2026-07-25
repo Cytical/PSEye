@@ -12,6 +12,8 @@ import { getNewsForTicker } from "@/lib/news";
 import { getHistoricalQuotes } from "@/lib/historicalQuotes";
 import { StockPriceChart } from "@/components/StockPriceChart";
 import { StockAnalytics } from "@/components/StockAnalytics";
+import { StockStatistics, type DividendSummary } from "@/components/StockStatistics";
+import { parseDividendAmount } from "@/lib/dividends";
 import { WatchlistStarButton } from "@/components/WatchlistStarButton";
 import { RecordStockView } from "@/components/RecordStockView";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
@@ -165,6 +167,33 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
     };
   }
 
+  // Trailing-12-month cash dividend → yield, reusing the corporate-actions the
+  // page already fetched and dividends.ts's amount parser. statsFromIso is
+  // exactly 365 days back, so it doubles as the TTM window start.
+  const todayIso = new Date().toISOString().slice(0, 10);
+  let ttmDividend = 0;
+  let dividendPayoutCount = 0;
+  for (const a of corporateActions) {
+    if (a.ticker !== ticker || a.type !== "cash_dividend") continue;
+    if (a.exDate > todayIso || a.exDate < statsFromIso) continue;
+    const amount = parseDividendAmount(a.details);
+    if (amount != null) {
+      ttmDividend += amount;
+      dividendPayoutCount += 1;
+    }
+  }
+  const dividendSummary: DividendSummary | null =
+    dividendPayoutCount > 0
+      ? {
+          yieldPct:
+            quote?.price != null && quote.price > 0 && ttmDividend > 0
+              ? (ttmDividend / quote.price) * 100
+              : null,
+          ttm: ttmDividend,
+          payoutCount: dividendPayoutCount,
+        }
+      : null;
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   // @graph bundles the company identity with a BreadcrumbList — Google renders the
   // latter as a breadcrumb trail under the search result (instead of the raw URL),
@@ -284,6 +313,8 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       )}
 
       {yearCloses.length >= 21 && <StockAnalytics closes={yearCloses} />}
+
+      {yearCloses.length >= 31 && <StockStatistics closes={yearCloses} dividend={dividendSummary} />}
 
       {profile && (
         <div className="mt-6">
