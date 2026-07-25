@@ -6,6 +6,8 @@ import { validateStocks } from "@/lib/dataValidation";
 import { comparePhQuotes } from "@/lib/phDataComparison";
 import { ValidationReportCard } from "@/components/ValidationReportCard";
 import { PhComparisonTable } from "@/components/PhComparisonTable";
+import { getWorkflowRuns } from "@/lib/workflowRuns";
+import { WorkflowRunsCard } from "@/components/WorkflowRunsCard";
 
 export const revalidate = 0;
 
@@ -30,7 +32,7 @@ export default async function TestPage({
   const { compare } = await searchParams;
   const runComparison = compare === "1";
 
-  const phQuotes = await getDailyQuotes();
+  const [phQuotes, workflowRuns] = await Promise.all([getDailyQuotes(), getWorkflowRuns()]);
   const phReport = validateStocks(phQuotes);
   const usReport = validateStocks(NASDAQ_100_STOCKS);
   const comparison = runComparison ? await comparePhQuotes() : null;
@@ -44,6 +46,7 @@ export default async function TestPage({
       </p>
 
       <div className="mt-6 space-y-6">
+        <WorkflowRunsCard data={workflowRuns} />
         <ValidationReportCard title="PH stocks (PSE, getDailyQuotes())" report={phReport} />
         <ValidationReportCard title="US stocks (Nasdaq 100 mock dataset)" report={usReport} />
 
