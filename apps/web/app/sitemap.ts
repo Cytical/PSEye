@@ -25,6 +25,7 @@ const ROUTES: {
   { path: "/analytics", changeFrequency: "daily", priority: 0.7, quoteDated: true },
   { path: "/market-stats", changeFrequency: "daily", priority: 0.7, quoteDated: true },
   { path: "/clusters", changeFrequency: "daily", priority: 0.7, quoteDated: true },
+  { path: "/regime", changeFrequency: "daily", priority: 0.7, quoteDated: true },
   { path: "/most-active", changeFrequency: "daily", priority: 0.7, quoteDated: true },
   { path: "/portfolio", changeFrequency: "monthly", priority: 0.5, quoteDated: true },
   { path: "/compare", changeFrequency: "daily", priority: 0.6, quoteDated: true },
