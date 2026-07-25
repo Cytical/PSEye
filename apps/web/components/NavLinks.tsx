@@ -32,6 +32,7 @@ const DROPDOWNS: { label: string; links: { href: string; label: string }[] }[] =
     label: "Tools",
     links: [
       { href: "/screener", label: "Screener" },
+      { href: "/analytics", label: "Analytics" },
       { href: "/rankings", label: "Rankings" },
       { href: "/most-active", label: "Most Active" },
       { href: "/sectors", label: "Sectors" },

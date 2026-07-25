@@ -11,6 +11,7 @@ import { getCorporateActions } from "@/lib/corporateActions";
 import { getNewsForTicker } from "@/lib/news";
 import { getHistoricalQuotes } from "@/lib/historicalQuotes";
 import { StockPriceChart } from "@/components/StockPriceChart";
+import { StockAnalytics } from "@/components/StockAnalytics";
 import { WatchlistStarButton } from "@/components/WatchlistStarButton";
 import { RecordStockView } from "@/components/RecordStockView";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
@@ -281,6 +282,8 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           </div>
         </div>
       )}
+
+      {yearCloses.length >= 21 && <StockAnalytics closes={yearCloses} />}
 
       {profile && (
         <div className="mt-6">

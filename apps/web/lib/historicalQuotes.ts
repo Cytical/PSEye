@@ -55,3 +55,38 @@ export async function getHistoricalQuotes(
   );
   return { source: "mock", history: Object.fromEntries(entries) };
 }
+
+/**
+ * Like getHistoricalQuotes, but for callers that compute each ticker
+ * INDEPENDENTLY (per-stock volatility, beta, pairwise correlation on
+ * /analytics) rather than blending series into one composite. Returns whatever
+ * real DB-backed series exist, silently dropping tickers with no history —
+ * there's no all-or-nothing mock gate here because a thin/missing ticker just
+ * gets excluded from the analysis rather than corrupting a shared average, and
+ * unlike the DCA calculator there's no meaningful synthetic fallback (random-
+ * walk betas/correlations would be noise dressed as insight), so a DB with no
+ * data at all yields `source: "mock"` with an empty history and the page shows
+ * an honest empty state instead of fabricated numbers.
+ */
+export async function getHistoricalQuotesLenient(
+  tickers: string[],
+  fromDate: string
+): Promise<HistoricalQuotesResult> {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (databaseUrl) {
+    try {
+      const db = createDb(databaseUrl);
+      const rows = await getHistoricalQuotesQuery(db, tickers, fromDate);
+      if (rows.length > 0) {
+        const byTicker: Record<string, HistoricalClose[]> = {};
+        for (const r of rows) {
+          (byTicker[r.ticker] ??= []).push({ date: r.tradeDate, close: Number(r.close) });
+        }
+        return { source: "real", history: byTicker };
+      }
+    } catch (err) {
+      console.error("getHistoricalQuotesLenient: DB read failed", err);
+    }
+  }
+  return { source: "mock", history: {} };
+}

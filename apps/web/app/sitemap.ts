@@ -22,6 +22,7 @@ const ROUTES: {
   { path: "/charts", changeFrequency: "daily", priority: 0.7 },
   { path: "/screener", changeFrequency: "daily", priority: 0.7, quoteDated: true },
   { path: "/rankings", changeFrequency: "daily", priority: 0.7, quoteDated: true },
+  { path: "/analytics", changeFrequency: "daily", priority: 0.7, quoteDated: true },
   { path: "/most-active", changeFrequency: "daily", priority: 0.7, quoteDated: true },
   { path: "/portfolio", changeFrequency: "monthly", priority: 0.5, quoteDated: true },
   { path: "/compare", changeFrequency: "daily", priority: 0.6, quoteDated: true },
