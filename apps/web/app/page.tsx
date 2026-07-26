@@ -5,6 +5,8 @@ import { getMarketSnapshot } from "@/lib/marketSnapshot";
 import { getLatestForeignFlow } from "@/lib/latestForeignFlow";
 import { getRealSparklines } from "@/lib/sparklines";
 import { MarketMap } from "@/components/MarketMap";
+import { MarketMapHero } from "@/components/MarketMapHero";
+import { MarketMapFaq } from "@/components/MarketMapFaq";
 
 export const revalidate = 3600; // 1h; matches quotes/market-snapshot's hourly ETL cadence (quotes-hourly.yml/market-snapshot-hourly.yml) — a tighter window would only add DB reads without fresher data
 
@@ -17,22 +19,33 @@ export const metadata: Metadata = {
 
 // Genuine, low-maintenance Q&A — gives the otherwise canvas-only homepage
 // crawlable keyword text and can win a "People also ask" result via FAQPage.
+// Leads with "how do I read this" — the one question an unfamiliar
+// first-time visitor actually has in front of a treemap, before any
+// trust/pricing/coverage questions.
 const FAQ = [
   {
-    q: "What is the PSE market map?",
-    a: "It is a live heatmap of the Philippine Stock Exchange. Each box is a listed company, sized by market capitalization and colored green or red by its price change today, grouped by PSE sector — so you can see the whole market at a glance.",
+    q: "How do I read the market map?",
+    a: "Each box is a listed company. Bigger box means bigger market capitalization; green means the price is up today, red means it's down — the deeper the shade, the bigger the move. Boxes are grouped into panels by PSE sector, so you can see which parts of the market are leading or lagging at a glance.",
+  },
+  {
+    q: "Is this live pricing?",
+    a: "Prices are delayed/end-of-day quotes sourced from PSE Edge, refreshed on a schedule through the trading day — not a tick-by-tick real-time feed.",
+  },
+  {
+    q: "Where does the data come from?",
+    a: "PSE Edge, the exchange's own public data platform, plus PSE's published Daily Quotation Report and Market Watch PDFs for block sales and foreign flow. Everything is pulled by scheduled jobs, never scraped live on your visit.",
   },
   {
     q: "Is PSEye free to use?",
     a: "Yes. PSEye is a free, community-first tracker for the Philippine Stock Exchange. There is no login, subscription, or paywall.",
   },
   {
-    q: "How often do the stock prices update?",
-    a: "Prices are end-of-day / delayed quotes sourced from PSE Edge and refreshed on a schedule through the trading day, not a live real-time feed.",
+    q: "How often do prices update?",
+    a: "Hourly during PSE trading hours (roughly 9am-4pm PHT, weekdays), with the last run of the day capturing the finalized close.",
   },
   {
-    q: "What can I track on PSEye?",
-    a: "PSE stock prices and market-cap rankings, dividend yields, ex-dividend dates, net foreign buying and selling, block sales, disclosures, and a per-day market recap.",
+    q: "What else can I track on PSEye?",
+    a: "Market-cap and dividend-yield rankings, ex-dividend dates, net foreign buying and selling, block sales, disclosures, and a per-day market recap — all linked from the menu above.",
   },
 ];
 
@@ -58,17 +71,7 @@ export default async function MarketMapPage() {
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-8 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
-      <div className="max-w-3xl">
-        <p className="kicker text-accent">Market Map</p>
-        <h1 className="mt-1.5 font-serif text-[2.15rem] font-semibold leading-[1.08] tracking-tight sm:text-[2.75rem]">
-          The Philippine Stock Market, Visualized
-        </h1>
-        <p className="mt-3 text-[15px] leading-relaxed text-foreground/65 sm:text-base">
-          A live map of the Philippine Stock Exchange: every listed company sized by market
-          capitalization and colored by today&apos;s price change. Explore PSE stock prices, dividend
-          yields, and sector performance at a glance.
-        </p>
-      </div>
+      <MarketMapHero quotes={quotes} snapshot={snapshot} />
       <div className="mt-7">
         <MarketMap
           stocks={quotes}
@@ -79,18 +82,7 @@ export default async function MarketMapPage() {
         />
       </div>
 
-      <section className="mt-14 max-w-3xl border-t border-foreground/10 pt-8">
-        <p className="kicker text-foreground/45">Good to know</p>
-        <h2 className="mt-1.5 font-serif text-xl font-semibold tracking-tight">Frequently asked questions</h2>
-        <dl className="mt-5 divide-y divide-foreground/10">
-          {FAQ.map((item) => (
-            <div key={item.q} className="py-4 first:pt-0">
-              <dt className="font-medium">{item.q}</dt>
-              <dd className="mt-1.5 text-sm leading-relaxed text-foreground/65">{item.a}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+      <MarketMapFaq items={FAQ} />
     </div>
   );
 }
