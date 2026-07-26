@@ -65,6 +65,10 @@ const MAX_ZOOM = 4;
 /** How much a wheel tick changes zoom — tuned so a normal scroll gesture feels
  * gradual rather than jumping several steps at once. */
 const ZOOM_WHEEL_SENSITIVITY = 0.0015;
+
+function clampZoom(z: number): number {
+  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
+}
 /** Below this pointer movement (px), a mousedown+mouseup is treated as a click
  * on the stock tile underneath rather than a pan drag. */
 const DRAG_THRESHOLD = 4;
@@ -179,19 +183,51 @@ export function TreemapChart({
 
   // ---- Zoom/pan: scroll-wheel zoom + drag-to-pan, applied as a CSS
   // transform to an inner layer so the canvas's own box (and the ResizeObserver
-  // measuring it above) never changes size — only what's painted inside it does. ----
+  // measuring it above) never changes size — only what's painted inside it does.
+  // Smoothing is a plain CSS transition on `transform`, not a JS animation loop —
+  // it runs on the compositor thread, so it stays smooth even when the page's
+  // own requestAnimationFrame is throttled (e.g. an unfocused/backgrounded tab),
+  // and it's far less code than hand-rolling an easing loop. ----
   const canvasBoxRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  // Disables the transition while actively dragging, so panning tracks the
+  // pointer 1:1 instead of visibly lagging behind it; only zoom changes (wheel,
+  // buttons, reset) should glide.
+  const [isPanning, setIsPanning] = useState(false);
   const isDraggingRef = useRef(false);
   const didDragRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
-  // Reset any zoom/pan when the underlying stock set changes (switching
-  // filters, jumping to a past date) — a stale zoom pointed at boxes that
-  // just moved or vanished would be more confusing than starting fresh.
-  // Done during render (React's documented "adjusting state when a prop
-  // changes" pattern), not in an effect, to avoid an extra render pass.
+  /** Keeps the pan offset from pushing the zoomed content entirely out of the
+   * canvas's own frame — at zoom `z`, the content is `z` times the canvas
+   * size, so it can shift by up to half the extra size in each direction
+   * before the far edge would show empty canvas instead of content. */
+  function clampPan(next: { x: number; y: number }, z: number): { x: number; y: number } {
+    const maxX = (width * (z - 1)) / 2;
+    const maxY = (height * (z - 1)) / 2;
+    return {
+      x: Math.min(maxX, Math.max(-maxX, next.x)),
+      y: Math.min(maxY, Math.max(-maxY, next.y)),
+    };
+  }
+
+  // Re-clamp any existing pan whenever zoom changes (zooming out can leave a
+  // pan offset that's no longer valid for the smaller content size). Done
+  // during render (same "adjusting state when a prop/other-state changes"
+  // pattern as the stocks-reset below), not in an effect, to avoid an extra
+  // render pass and the set-state-in-effect lint rule.
+  const [prevZoomForClamp, setPrevZoomForClamp] = useState(zoom);
+  if (zoom !== prevZoomForClamp) {
+    setPrevZoomForClamp(zoom);
+    setPan((p) => clampPan(p, zoom));
+  }
+
+  // Reset zoom/pan when the underlying stock set changes (switching filters,
+  // jumping to a past date) — a stale zoom pointed at boxes that just moved
+  // or vanished would be more confusing than starting fresh. Done during
+  // render (React's documented "adjusting state when a prop changes"
+  // pattern), not in an effect, to avoid an extra render pass.
   const [prevStocksForReset, setPrevStocksForReset] = useState(stocks);
   if (stocks !== prevStocksForReset) {
     setPrevStocksForReset(stocks);
@@ -215,23 +251,6 @@ export function TreemapChart({
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  function clampZoom(z: number): number {
-    return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
-  }
-
-  /** Keeps the pan offset from pushing the zoomed content entirely out of the
-   * canvas's own frame — at zoom `z`, the content is `z` times the canvas
-   * size, so it can shift by up to half the extra size in each direction
-   * before the far edge would show empty canvas instead of content. */
-  function clampPan(next: { x: number; y: number }, z: number): { x: number; y: number } {
-    const maxX = (width * (z - 1)) / 2;
-    const maxY = (height * (z - 1)) / 2;
-    return {
-      x: Math.min(maxX, Math.max(-maxX, next.x)),
-      y: Math.min(maxY, Math.max(-maxY, next.y)),
-    };
-  }
-
   function zoomBy(factor: number) {
     setZoom((z) => clampZoom(z * factor));
   }
@@ -245,6 +264,7 @@ export function TreemapChart({
     if (zoom <= 1) return;
     isDraggingRef.current = true;
     didDragRef.current = false;
+    setIsPanning(true);
     dragStartRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
     e.currentTarget.setPointerCapture(e.pointerId);
   }
@@ -259,6 +279,7 @@ export function TreemapChart({
 
   function onCanvasPointerUp() {
     isDraggingRef.current = false;
+    setIsPanning(false);
   }
 
   /** Stock tile onClick guard — a drag that ends on top of a tile shouldn't
@@ -289,6 +310,7 @@ export function TreemapChart({
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: "center center",
+            transition: isPanning ? "none" : "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)",
             cursor: zoom > 1 ? "grab" : undefined,
             touchAction: zoom > 1 ? "none" : undefined,
           }}
@@ -345,7 +367,11 @@ export function TreemapChart({
 
           const fill = pctChangeToColor(box.pctChange, colorTheme, colorblind);
           const ink = getContrastText(fill);
-          const showLabel = shouldShowLabel(w, h);
+          // Evaluated against the on-screen (zoomed) size, not the raw layout
+          // size — so a small-cap box too tiny to label at 1x reveals its
+          // ticker once zooming in has made it big enough to read, instead of
+          // staying permanently blank the way a fixed layout-time decision would.
+          const showLabel = shouldShowLabel(w * zoom, h * zoom);
           const stock = byTicker.get(box.ticker);
           const isHovered = hovered?.ticker === box.ticker;
           const fontSize = tickerFontSize(w, h);
