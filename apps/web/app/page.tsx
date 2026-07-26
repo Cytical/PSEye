@@ -32,7 +32,7 @@ function getMarketStatus(): { open: boolean; label: string } {
   return { open, label: open ? "Market open" : "Market closed" };
 }
 
-export const revalidate = 3600; // 1h; matches quotes/market-snapshot's hourly ETL cadence (quotes-hourly.yml/market-snapshot-hourly.yml) — a tighter window would only add DB reads without fresher data
+export const revalidate = 3600; // 1h; matches quotes/market-snapshot's hourly ETL cadence (market-data-hourly.yml) — a tighter window would only add DB reads without fresher data
 
 export const metadata: Metadata = {
   title: "PSE Market Map — Live PSEi Heatmap",

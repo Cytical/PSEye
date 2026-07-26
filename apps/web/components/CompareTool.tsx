@@ -91,8 +91,16 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
   // whatever the URL specifies) only kicks in client-side, same reasoning as
   // MarketMap's filter default.
   const defaultSelected = useMemo(() => byMarketCapDesc.slice(0, 2).map((q) => q.ticker), [byMarketCapDesc]);
-  const selected =
-    urlTickers.length > 0 ? urlTickers.filter((t) => validTickers.has(t)).slice(0, MAX_TICKERS) : defaultSelected;
+  // Memoized so this only produces a new array reference when the underlying
+  // inputs actually change — otherwise .filter().slice() built a fresh array
+  // every render, which made the fetch effect below (keyed on `selected`)
+  // re-fire on every render and never let a fetch complete (confirmed live:
+  // stuck "Loading…" + chart flicker once a 3rd ticker was added via the picker).
+  const selected = useMemo(
+    () =>
+      urlTickers.length > 0 ? urlTickers.filter((t) => validTickers.has(t)).slice(0, MAX_TICKERS) : defaultSelected,
+    [urlTickers, validTickers, defaultSelected]
+  );
   const startDate = urlStartDate ?? defaultStartDate();
 
   const [pending, setPending] = useState("");

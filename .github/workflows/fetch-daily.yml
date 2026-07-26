@@ -1,4 +1,4 @@
-name: Fetch daily (news, disclosures, corporate actions, historical quotes)
+name: Fetch daily (news, disclosures, corporate actions, historical quotes, foreign flow)
 
 # One consolidated job (shared checkout/install) for the sources that are all
 # available right after PSE's 3:30pm close: news (RSS, continuous),
@@ -6,6 +6,12 @@ name: Fetch daily (news, disclosures, corporate actions, historical quotes)
 # historical quotes (PSE Edge's per-company chart feed, which has today's EOD
 # close within its 15-min delay). Intended to land ~4:20pm PHT so the day's
 # /daily/[date] recap is populated right after close.
+#
+# 2026-07-26: foreign-flow-daily.yml folded in as a fifth step. Unlike block
+# sales (see below), its source isn't same-day time-sensitive — the Market
+# Watch PDF it reads is only published weekly and PSE's own disclaimer allows
+# up to t+2 days for revisions, so running it in this ~4:20pm PHT batch (vs.
+# its own separate daily cron) loses nothing and is one fewer scheduled fire.
 #
 # 2026-07-26: cron fires at 06:20 UTC, not 08:20 — GitHub was confirmed live
 # to delay this job's scheduled runs by ~1h40m-2h15m every single day (5
@@ -70,6 +76,11 @@ jobs:
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - id: foreignFlow
+        run: pnpm --filter @pseye/etl fetch-foreign-flow
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Fail job if any step failed
         if: always()
@@ -78,7 +89,8 @@ jobs:
             "${{ steps.news.outcome }}" \
             "${{ steps.disclosures.outcome }}" \
             "${{ steps.corporateActions.outcome }}" \
-            "${{ steps.historicalQuotes.outcome }}"; do
+            "${{ steps.historicalQuotes.outcome }}" \
+            "${{ steps.foreignFlow.outcome }}"; do
             if [ "$outcome" = "failure" ]; then
               echo "At least one fetch step failed — see step logs above."
               exit 1

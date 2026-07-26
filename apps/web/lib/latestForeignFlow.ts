@@ -8,11 +8,13 @@ export interface LatestForeignFlow {
 }
 
 /**
- * DB-backed when DATABASE_URL is configured and the weekly ETL job
- * (etl/jobs/fetch-foreign-flow.ts) has populated it, otherwise MockForeignFlowSource's
- * latest period. Falls back on any DB error too — same contract as getDailyQuotes.
+ * DB-backed when DATABASE_URL is configured and the ETL job
+ * (etl/jobs/fetch-foreign-flow.ts — polls daily as of 2026-07-26 to catch
+ * PSE's t+2-day revisions sooner, but still only writes one row per week)
+ * has populated it, otherwise MockForeignFlowSource's latest period. Falls
+ * back on any DB error too — same contract as getDailyQuotes.
  *
- * Deliberately weekly, not daily: PSE only publishes index-level foreign
+ * The period itself is deliberately weekly, not daily: PSE only publishes index-level foreign
  * buying/selling in its weekly Market Watch PDF (see docs/PLANNING.md Open
  * Question #1 and packages/sources/foreign-flow's doc comments) — true daily
  * foreign flow needs a licensed feed, so this reports the latest available

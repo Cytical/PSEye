@@ -12,7 +12,7 @@ import "./globals.css";
 
 // 1h; MarketTicker reads live quotes on every route via this layout, so this
 // sets the floor for the whole site — matches quotes' hourly ETL cadence
-// (quotes-hourly.yml), same reasoning as every page's own `revalidate = 3600`.
+// (market-data-hourly.yml), same reasoning as every page's own `revalidate = 3600`.
 export const revalidate = 3600;
 
 const geistSans = Geist({

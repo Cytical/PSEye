@@ -1,0 +1,59 @@
+name: Fetch market data (hourly during trading)
+
+# Merged 2026-07-26 from separate quotes-hourly.yml + market-snapshot-hourly.yml
+# workflows into one shared job (same shared-checkout-and-install pattern as
+# fetch-daily.yml) — halves the number of distinct cron fires during the
+# trading day for free. GitHub's scheduling reliability is keyed on fire
+# frequency, not total workflow count (confirmed live: a 15-min schedule got
+# >95% of its runs dropped, while ~8 fires/day is honored reliably), so fewer
+# total fires at the same ~8/day cadence is a pure win. The two steps run
+# sequentially in a fixed order instead of relying on a 1-minute cron offset
+# (:16 vs :17) to land the PSEi snapshot just before the quotes board —
+# sequential steps guarantee that ordering outright, no race possible.
+on:
+  schedule:
+    # :16 past, 01:16-08:16 UTC (9:16am-4:16pm PHT) on weekdays — covers PSE's
+    # 9:30-3:30 session plus a settle run after close (the 4:16pm PHT run
+    # captures each ticker's FINAL close once the market has finalized). Off
+    # the exact :15 quarter-hour, which GitHub's docs warn is congested/dropped.
+    - cron: "16 1-8 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  fetch-market-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # continue-on-error so one source failing doesn't skip the other — each
+      # step gets an id and the "Fail job if any step failed" step below
+      # re-surfaces failures to the job's own status (see fetch-daily.yml for
+      # the same pattern and why it's needed for GitHub's failure email).
+      - id: marketSnapshot
+        run: pnpm --filter @pseye/etl fetch-market-snapshot
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - id: quotes
+        run: pnpm --filter @pseye/etl fetch-quotes
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Fail job if any step failed
+        if: always()
+        run: |
+          for outcome in \
+            "${{ steps.marketSnapshot.outcome }}" \
+            "${{ steps.quotes.outcome }}"; do
+            if [ "$outcome" = "failure" ]; then
+              echo "At least one fetch step failed — see step logs above."
+              exit 1
+            fi
+          done

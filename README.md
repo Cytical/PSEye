@@ -82,7 +82,7 @@ pnpm --filter @pseye/etl fetch-quotes   # populate a table locally, e.g.
 ```
 
 In production, each `etl/jobs/*.ts` script runs on its own schedule via GitHub Actions
-(every 15 min for quotes/market-snapshot, daily or weekly for everything else) — see
+(hourly for quotes/market-snapshot on trading days, daily for everything else) — see
 `.github/workflows/`.
 
 Other useful commands:

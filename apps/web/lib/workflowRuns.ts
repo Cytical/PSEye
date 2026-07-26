@@ -16,11 +16,9 @@ const MAX_PAGES = 3; // up to 300 runs — comfortably covers a week at current 
 
 /** Workflow file basenames that fetch/ingest data (vs. CI, migrations, one-off backfills). */
 const ETL_WORKFLOWS = new Set([
-  "quotes-hourly.yml",
-  "market-snapshot-hourly.yml",
+  "market-data-hourly.yml",
   "fetch-daily.yml",
   "block-sales-daily.yml",
-  "foreign-flow-weekly.yml",
 ]);
 
 export interface WorkflowRun {

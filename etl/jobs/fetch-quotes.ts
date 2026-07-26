@@ -4,13 +4,14 @@ import { createDb, dailyQuotes } from "@pseye/db";
 import { PseEdgeQuoteSource } from "@pseye/source-quotes";
 
 /**
- * Runs hourly during PSE trading hours (see
- * .github/workflows/quotes-hourly.yml, :17 past 01-08 UTC / 9:17am-4:17pm
- * PHT weekdays) and scrapes PSE Edge's public per-company pages — see
- * PseEdgeQuoteSource's doc comment for the caching/rate-limit reasoning and
- * docs/PLANNING.md for the legal tradeoffs behind that choice (Open Question
- * #1). The board refreshes through the day; the post-close 4:17pm run
- * captures each ticker's FINAL close.
+ * Runs hourly during PSE trading hours as a step in
+ * .github/workflows/market-data-hourly.yml (:16 past 01-08 UTC / 9:16am-4:16pm
+ * PHT weekdays — merged 2026-07-26 with fetch-market-snapshot into one job,
+ * previously its own quotes-hourly.yml at :17) and scrapes PSE Edge's public
+ * per-company pages — see PseEdgeQuoteSource's doc comment for the
+ * caching/rate-limit reasoning and docs/PLANNING.md for the legal tradeoffs
+ * behind that choice (Open Question #1). The board refreshes through the day;
+ * the post-close 4:16pm run captures each ticker's FINAL close.
  *
  * Hourly is the balance point. This used to run every 15 min for near-live
  * prices, but GitHub silently drops high-frequency scheduled runs (this

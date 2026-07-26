@@ -4,8 +4,12 @@ import { createDb, indexForeignFlow } from "@pseye/db";
 import { PseMarketWatchForeignFlowSource } from "../lib/pseMarketWatch/pseMarketWatchForeignFlowSource";
 
 /**
- * Runs weekly (see .github/workflows/foreign-flow-weekly.yml), matching the
- * cadence of PSE's Market Watch PDF. Index-level flow only —
+ * Runs daily as a step in .github/workflows/fetch-daily.yml (folded in
+ * 2026-07-26, previously its own foreign-flow-daily.yml) even though the
+ * underlying Market Watch PDF is only published weekly — PSE's own disclaimer
+ * notes a week's figures can be amended up to t+2 days after it closes, so
+ * polling daily catches revisions sooner than waiting for the next Monday.
+ * Most days this just re-upserts the same periodEnd row. Index-level flow only —
  * PseMarketWatchForeignFlowSource, PDF-table extraction (see that package's
  * pseMarketWatch/ doc comments). Upserts via onConflictDoUpdate (not
  * DoNothing) since the PDF's own disclaimer notes foreign-transaction

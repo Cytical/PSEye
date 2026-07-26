@@ -11,9 +11,10 @@ export interface ForeignFlowPageData {
 
 /**
  * Index-level history is DB-backed when DATABASE_URL is configured and the
- * weekly ETL job (etl/jobs/fetch-foreign-flow.ts, PseMarketWatchForeignFlowSource)
- * has populated it, falling back to MockForeignFlowSource on any DB error or
- * empty table — same contract as getDailyQuotes.
+ * ETL job (etl/jobs/fetch-foreign-flow.ts, PseMarketWatchForeignFlowSource —
+ * runs daily as of 2026-07-26, though the source PDF and its periodEnd rows
+ * are still weekly) has populated it, falling back to MockForeignFlowSource
+ * on any DB error or empty table — same contract as getDailyQuotes.
  *
  * Per-stock top-buying/top-selling is DB-backed too as of 2026-07 —
  * fetch-block-sales.ts (daily) now extracts a real "Net Foreign
