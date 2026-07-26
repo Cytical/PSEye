@@ -4,10 +4,16 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { MarketTicker } from "@/components/MarketTicker";
 import { DevToolsLink } from "@/components/DevToolsLink";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
+
+// 1h; MarketTicker reads live quotes on every route via this layout, so this
+// sets the floor for the whole site — matches quotes' hourly ETL cadence
+// (quotes-hourly.yml), same reasoning as every page's own `revalidate = 3600`.
+export const revalidate = 3600;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -105,6 +111,7 @@ export default function RootLayout({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_JSON_LD) }} />
       </head>
       <body className="min-h-full flex flex-col">
+        <MarketTicker />
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />

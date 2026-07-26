@@ -279,7 +279,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
       )}
       <div className="flex flex-col gap-4 sm:flex-row">
         <nav
-          className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:sticky sm:top-24 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
+          className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:sticky sm:top-16 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
           aria-label="Market map filters"
         >
           <span className="kicker hidden border-b border-panel-border px-2 pb-2 text-panel-fg/55 sm:block">

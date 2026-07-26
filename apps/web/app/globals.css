@@ -132,6 +132,21 @@ label[for] {
   border-radius: 2px;
 }
 
+/* MarketTicker.tsx's marquee: the track renders its row of quotes twice back
+ * to back and animates exactly -50% (not -100%), so the moment the first
+ * copy has scrolled fully offscreen the second copy is sitting exactly where
+ * the first one started — a seamless loop with no jump-cut reset. Duration
+ * is set per-instance via inline style (scales with ticker count), so only
+ * the name/timing-function/iteration-count need to live here. */
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* Respects OS-level "reduce motion" — covers every animate-pulse loading
  * skeleton (NewsSkeleton, PageSkeleton) and hover/theme transition across
  * the site in one place rather than per-component. Pulse/transition here

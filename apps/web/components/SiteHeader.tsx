@@ -19,21 +19,11 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-foreground/10 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/75">
-      {/* Masthead strip — a small editorial-desk gesture (FT/NYT run a similar
-          thin bar above the primary nav) that also doubles as crawlable
-          keyword text on every page. Hidden on mobile, where header height is
-          precious. */}
-      <div className="hidden h-7 border-b border-foreground/10 sm:block">
-        <div className="mx-auto flex h-7 max-w-[1600px] items-center justify-between px-4">
-          <span className="kicker text-foreground/45">Philippine Stock Exchange, Visualized</span>
-          <span className="kicker text-foreground/45">Free · No Login · Delayed / EOD Data</span>
-        </div>
-      </div>
-
       {/* max-w matches page.tsx's widest content container (the market map) so the
           header never reads as narrower than the page below it. Fixed h-16 (rather
           than py-N) so other pages can reliably offset sticky elements below the
-          header's total height — see MarketMap.tsx's filter sidebar `sm:top-24`. */}
+          header's total height (64px, uniform across breakpoints now that the
+          masthead strip is gone) — see MarketMap.tsx's filter sidebar `sm:top-16`. */}
       <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-x-5 gap-y-1.5 px-4 text-sm">
         <Link href="/" className="mr-1 shrink-0">
           <Logo />
