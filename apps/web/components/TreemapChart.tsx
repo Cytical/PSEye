@@ -7,8 +7,7 @@ import {
   getContrastText,
   shouldShowLabel,
   SECTOR_HEADER_HEIGHT,
-  getLegendGradientCss,
-  LEGEND_TICKS,
+  LEGEND_BANDS,
   NO_DATA_COLOR,
   type TreemapInput,
 } from "@pseye/treemap-layout";
@@ -53,13 +52,22 @@ interface TreemapChartProps {
 const ADD_TILE_TICKER = "__pseye_add_watchlist_tile__";
 const ADD_TILE_SECTOR = "__pseye_add_watchlist_sector__";
 
-const DEFAULT_HEIGHT = 640;
+const DEFAULT_HEIGHT = 760;
 // CSS custom properties, not JS constants, so the canvas chrome re-themes
 // with the rest of the market map (see --panel-* in globals.css) — box fill
 // colors below stay data-driven (pctChangeToColor) regardless of theme.
 const CANVAS_BG = "var(--panel-canvas)";
 const HEADER_BG = "var(--panel-bg-raised)";
 const GRID_LINE = "var(--panel-grid)";
+
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 4;
+/** How much a wheel tick changes zoom — tuned so a normal scroll gesture feels
+ * gradual rather than jumping several steps at once. */
+const ZOOM_WHEEL_SENSITIVITY = 0.0015;
+/** Below this pointer movement (px), a mousedown+mouseup is treated as a click
+ * on the stock tile underneath rather than a pan drag. */
+const DRAG_THRESHOLD = 4;
 
 /**
  * finviz scales ticker text with box size rather than using one fixed size —
@@ -169,17 +177,126 @@ export function TreemapChart({
     return new Map(ranked.map((s, i) => [s.ticker, i + 1]));
   }, [stocks]);
 
+  // ---- Zoom/pan: scroll-wheel zoom + drag-to-pan, applied as a CSS
+  // transform to an inner layer so the canvas's own box (and the ResizeObserver
+  // measuring it above) never changes size — only what's painted inside it does. ----
+  const canvasBoxRef = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+  const didDragRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+
+  // Reset any zoom/pan when the underlying stock set changes (switching
+  // filters, jumping to a past date) — a stale zoom pointed at boxes that
+  // just moved or vanished would be more confusing than starting fresh.
+  // Done during render (React's documented "adjusting state when a prop
+  // changes" pattern), not in an effect, to avoid an extra render pass.
+  const [prevStocksForReset, setPrevStocksForReset] = useState(stocks);
+  if (stocks !== prevStocksForReset) {
+    setPrevStocksForReset(stocks);
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }
+
+  // Wheel needs to call preventDefault (so scrolling over the map zooms it
+  // instead of scrolling the page), which React's synthetic onWheel can't
+  // reliably do — it's attached passively. A plain addEventListener with
+  // {passive:false} is the standard workaround.
+  useEffect(() => {
+    const el = canvasBoxRef.current;
+    if (!el) return;
+    function onWheel(e: WheelEvent) {
+      e.preventDefault();
+      const factor = Math.exp(-e.deltaY * ZOOM_WHEEL_SENSITIVITY);
+      setZoom((z) => clampZoom(z * factor));
+    }
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  function clampZoom(z: number): number {
+    return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
+  }
+
+  /** Keeps the pan offset from pushing the zoomed content entirely out of the
+   * canvas's own frame — at zoom `z`, the content is `z` times the canvas
+   * size, so it can shift by up to half the extra size in each direction
+   * before the far edge would show empty canvas instead of content. */
+  function clampPan(next: { x: number; y: number }, z: number): { x: number; y: number } {
+    const maxX = (width * (z - 1)) / 2;
+    const maxY = (height * (z - 1)) / 2;
+    return {
+      x: Math.min(maxX, Math.max(-maxX, next.x)),
+      y: Math.min(maxY, Math.max(-maxY, next.y)),
+    };
+  }
+
+  function zoomBy(factor: number) {
+    setZoom((z) => clampZoom(z * factor));
+  }
+
+  function resetZoom() {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }
+
+  function onCanvasPointerDown(e: React.PointerEvent) {
+    if (zoom <= 1) return;
+    isDraggingRef.current = true;
+    didDragRef.current = false;
+    dragStartRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onCanvasPointerMove(e: React.PointerEvent) {
+    if (!isDraggingRef.current) return;
+    const dx = e.clientX - dragStartRef.current.x;
+    const dy = e.clientY - dragStartRef.current.y;
+    if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) didDragRef.current = true;
+    setPan(clampPan({ x: dragStartRef.current.panX + dx, y: dragStartRef.current.panY + dy }, zoom));
+  }
+
+  function onCanvasPointerUp() {
+    isDraggingRef.current = false;
+  }
+
+  /** Stock tile onClick guard — a drag that ends on top of a tile shouldn't
+   * also select it, since the pointerup after a pan is otherwise indistinguishable
+   * from a click. */
+  function selectTickerUnlessDragged(ticker: string) {
+    if (didDragRef.current) return;
+    selectTickerInUrl(ticker);
+  }
+
   return (
     <div ref={containerRef} className="flex w-full flex-col items-center gap-3">
       {/* role="group", NOT role="img" — an img role tells assistive tech to
           treat the contents as one flat picture, which would hide every
           per-stock button inside from screen readers entirely. */}
       <div
+        ref={canvasBoxRef}
         className="relative select-none overflow-hidden rounded-xl shadow-sm shadow-black/10 ring-1 ring-panel-border"
         style={{ width, height, background: CANVAS_BG }}
         role="group"
-        aria-label="PSE market map: box size is market cap, color is today's percent change"
+        aria-label="PSE market map: box size is market cap, color is today's percent change. Scroll to zoom, drag to pan."
       >
+        {/* Zoom/pan transform layer — scaling/translating this instead of the
+            canvas box above keeps the box's own footprint (and the width
+            ResizeObserver watches) fixed; only the painted content moves. */}
+        <div
+          className="absolute inset-0"
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transformOrigin: "center center",
+            cursor: zoom > 1 ? "grab" : undefined,
+            touchAction: zoom > 1 ? "none" : undefined,
+          }}
+          onPointerDown={onCanvasPointerDown}
+          onPointerMove={onCanvasPointerMove}
+          onPointerUp={onCanvasPointerUp}
+          onPointerCancel={onCanvasPointerUp}
+        >
         {layout.sectors
           .filter((sector) => sector.sector !== ADD_TILE_SECTOR)
           .map((sector) => (
@@ -209,7 +326,9 @@ export function TreemapChart({
               <button
                 key={box.ticker}
                 type="button"
-                onClick={onAddTileClick}
+                onClick={() => {
+                  if (!didDragRef.current) onAddTileClick?.();
+                }}
                 aria-label="Add a stock to your watchlist"
                 title="Add a stock to your watchlist"
                 className="absolute flex flex-col items-center justify-center gap-1 overflow-hidden rounded-sm border-2 border-dashed border-panel-border text-panel-fg/45 transition-colors hover:border-panel-fg/50 hover:bg-panel-raised hover:text-panel-fg/80"
@@ -250,7 +369,7 @@ export function TreemapChart({
               onMouseLeave={() => setHovered(null)}
               onFocus={() => stock && setHovered(stock)}
               onBlur={() => setHovered(null)}
-              onClick={() => stock && selectTickerInUrl(stock.ticker)}
+              onClick={() => stock && selectTickerUnlessDragged(stock.ticker)}
               title={`${box.ticker} ${formatPctChange(box.pctChange)} — click for details`}
               aria-label={`${box.ticker}${stock ? `, ${stock.companyName}` : ""}, ${formatPctChange(box.pctChange)} today`}
             >
@@ -267,6 +386,42 @@ export function TreemapChart({
             </button>
           );
         })}
+        </div>
+
+        {/* Zoom controls — siblings of the transform layer above, not children
+            of it, so they stay fixed-size and fixed-position regardless of
+            zoom/pan. */}
+        <div className="absolute bottom-3 right-3 flex flex-col overflow-hidden rounded-lg ring-1 ring-panel-border shadow-sm shadow-black/10">
+          <button
+            type="button"
+            onClick={() => zoomBy(1.4)}
+            disabled={zoom >= MAX_ZOOM}
+            aria-label="Zoom in"
+            className="flex h-7 w-7 items-center justify-center bg-panel text-sm font-semibold text-panel-fg/70 transition-colors hover:bg-panel-raised hover:text-panel-fg disabled:opacity-40"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={() => zoomBy(1 / 1.4)}
+            disabled={zoom <= MIN_ZOOM}
+            aria-label="Zoom out"
+            className="flex h-7 w-7 items-center justify-center border-t border-panel-border bg-panel text-sm font-semibold text-panel-fg/70 transition-colors hover:bg-panel-raised hover:text-panel-fg disabled:opacity-40"
+          >
+            −
+          </button>
+        </div>
+        {zoom > 1 && (
+          <button
+            type="button"
+            onClick={resetZoom}
+            // top-left, not bottom-left — the hover tooltip already lives at
+            // bottom-3 left-3 and the two would otherwise overlap.
+            className="absolute top-3 left-3 rounded-lg bg-panel px-2.5 py-1 text-[11px] font-medium text-panel-fg/70 ring-1 ring-panel-border transition-colors hover:bg-panel-raised hover:text-panel-fg"
+          >
+            Reset zoom
+          </button>
+        )}
 
         {hovered && !selected && (
           <div className="pointer-events-none absolute bottom-3 left-3 min-w-[190px] rounded-xl border border-panel-border bg-panel/95 px-3.5 py-3 text-xs text-panel-fg shadow-xl shadow-black/20 backdrop-blur-sm">
@@ -315,15 +470,23 @@ export function TreemapChart({
       <div className="flex w-full max-w-xs flex-col items-center gap-1.5">
         <span className="kicker text-foreground/55">Day change</span>
         <div className="w-full">
-          <div
-            className="h-2.5 w-full rounded-full ring-1 ring-inset ring-foreground/10"
-            style={{ background: getLegendGradientCss(colorTheme, colorblind) }}
-          />
+          {/* finviz-style discrete bands, not a gradient — matches what the
+              map's boxes actually render (see LEGEND_BANDS/bandFor in
+              @pseye/treemap-layout). */}
+          <div className="flex w-full overflow-hidden rounded-md ring-1 ring-inset ring-foreground/10">
+            {LEGEND_BANDS.map((band) => (
+              <div
+                key={band}
+                className="h-2.5 flex-1"
+                style={{ background: pctChangeToColor(band, colorTheme, colorblind) }}
+              />
+            ))}
+          </div>
           <div className="flex w-full justify-between text-[10px] font-medium text-foreground/55">
-            {LEGEND_TICKS.map((tick) => (
-              <span key={tick}>
-                {tick > 0 ? "+" : ""}
-                {tick}%
+            {LEGEND_BANDS.map((band) => (
+              <span key={band}>
+                {band > 0 ? "+" : ""}
+                {band}%
               </span>
             ))}
           </div>

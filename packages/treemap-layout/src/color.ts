@@ -4,10 +4,14 @@ import { interpolateRgb } from "d3-interpolate";
 export type ColorTheme = "light" | "dark";
 
 /**
- * Bright, continuous finviz-style gradient — finviz's map interpolates
- * smoothly from a near-black flat color out to saturated red/green at the
- * extremes, rather than a handful of discrete buckets. Clamped at +/-3% so a
- * handful of outliers don't wash out the color range for everything else.
+ * finviz's actual map (confirmed live) is not a smooth gradient — it's a
+ * handful of discrete color steps, one per whole percent, clamped at +/-3%
+ * so a few outliers don't wash out the range for everything else. Rather
+ * than hand-author 7 more hex values per palette, `pctChangeToColor` snaps
+ * the input to the nearest whole percent first (see `bandFor` below) and
+ * then evaluates this same continuous d3 scale — so the 7 discrete colors
+ * actually used are exactly what this scale already produces at
+ * -3/-2/-1/0/1/2/3, just no longer blended for anything in between.
  *
  * finviz's own map is always dark, so a near-black 0% center reads as "flat"
  * against its dark canvas. Once the site's own canvas started following the
@@ -21,6 +25,17 @@ export type ColorTheme = "light" | "dark";
  * tokens, so a big mover still reads as unmistakably red/green either way.
  */
 const COLOR_DOMAIN = [-3, -1, 0, 1, 3];
+
+/** The 7 discrete bands the map actually renders — see `bandFor`. Also used
+ * to draw the legend as discrete swatches instead of a gradient bar. */
+export const LEGEND_BANDS = [-3, -2, -1, 0, 1, 2, 3];
+
+/** Snaps a raw pctChange to the nearest whole-percent band, clamped to
+ * +/-3% — this is what turns the underlying continuous scale into finviz's
+ * discrete steps. */
+function bandFor(pctChange: number): number {
+  return Math.max(-3, Math.min(3, Math.round(pctChange)));
+}
 
 const DARK_COLOR_RANGE = [
   "#f6362f", // <= -3% (bright red)
@@ -62,16 +77,8 @@ const LIGHT_COLORBLIND_RANGE = [
   "#1c6ea4", // >= +3% (vivid blue)
 ];
 
-export const COLOR_DOMAIN_MIN = COLOR_DOMAIN[0];
-export const COLOR_DOMAIN_MAX = COLOR_DOMAIN[COLOR_DOMAIN.length - 1];
-
 function buildScale(range: string[]) {
   return scaleLinear<string>().domain(COLOR_DOMAIN).range(range).interpolate(interpolateRgb).clamp(true);
-}
-
-function rangeFor(theme: ColorTheme, colorblind: boolean): string[] {
-  if (theme === "light") return colorblind ? LIGHT_COLORBLIND_RANGE : LIGHT_COLOR_RANGE;
-  return colorblind ? DARK_COLORBLIND_RANGE : DARK_COLOR_RANGE;
 }
 
 const scales = {
@@ -94,26 +101,8 @@ export const NO_DATA_COLOR = "#5b5e66";
 export function pctChangeToColor(pctChange: number | null, theme: ColorTheme = "dark", colorblind = false): string {
   if (pctChange === null) return NO_DATA_COLOR;
   const key = colorblind ? (`${theme}-colorblind` as const) : theme;
-  return scales[key](pctChange);
+  return scales[key](bandFor(pctChange));
 }
-
-/**
- * CSS gradient reproducing the exact same scale (same domain/range/interpolation
- * as `scales[theme]` above), for rendering the legend as a smooth bar rather
- * than discrete swatches. Stop positions are the domain values re-projected
- * onto [0%, 100%].
- */
-export function getLegendGradientCss(theme: ColorTheme = "dark", colorblind = false): string {
-  const range = rangeFor(theme, colorblind);
-  return `linear-gradient(to right, ${range
-    .map((color, i) => {
-      const pct = ((COLOR_DOMAIN[i] - COLOR_DOMAIN_MIN) / (COLOR_DOMAIN_MAX - COLOR_DOMAIN_MIN)) * 100;
-      return `${color} ${pct}%`;
-    })
-    .join(", ")})`;
-}
-
-export const LEGEND_TICKS = [-3, -1.5, 0, 1.5, 3];
 
 function srgbToLinear(channel: number): number {
   const c = channel / 255;

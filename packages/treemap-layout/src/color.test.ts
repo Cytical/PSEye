@@ -47,6 +47,17 @@ describe("pctChangeToColor", () => {
   it("null still returns the shared N/A color regardless of theme/colorblind mode", () => {
     expect(pctChangeToColor(null, "light", true)).toBe(NO_DATA_COLOR);
   });
+
+  it("is discrete (finviz-style bands), not a continuous gradient: values that round to the same whole percent share a color", () => {
+    expect(pctChangeToColor(0.1)).toBe(pctChangeToColor(0.4));
+    expect(pctChangeToColor(1.1)).toBe(pctChangeToColor(1.4));
+    expect(pctChangeToColor(-1.1)).toBe(pctChangeToColor(-1.4));
+  });
+
+  it("values that round to different whole percents get different colors", () => {
+    expect(pctChangeToColor(0.4)).not.toBe(pctChangeToColor(0.6)); // rounds to 0 vs 1
+    expect(pctChangeToColor(1.4)).not.toBe(pctChangeToColor(1.6)); // rounds to 1 vs 2
+  });
 });
 
 describe("getContrastText", () => {

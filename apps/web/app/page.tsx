@@ -5,8 +5,32 @@ import { getMarketSnapshot } from "@/lib/marketSnapshot";
 import { getLatestForeignFlow } from "@/lib/latestForeignFlow";
 import { getRealSparklines } from "@/lib/sparklines";
 import { MarketMap } from "@/components/MarketMap";
-import { MarketMapHero } from "@/components/MarketMapHero";
 import { MarketMapFaq } from "@/components/MarketMapFaq";
+
+/**
+ * Approximate, computed at render time (this page revalidates hourly, so it
+ * can't tick live client-side anyway). PSE's core continuous trading session
+ * is Mon-Fri 9:30am-3:30pm PHT; pre-open/trading-at-last minutes at the edges
+ * are treated as closed since the badge is a rough "is it worth checking
+ * back right now" signal, not a precise exchange-status feed.
+ */
+function getMarketStatus(): { open: boolean; label: string } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    hour: "numeric",
+    minute: "numeric",
+    hourCycle: "h23",
+    weekday: "short",
+  }).formatToParts(new Date());
+  const weekday = parts.find((p) => p.type === "weekday")?.value ?? "";
+  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
+  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
+  const minutesOfDay = hour * 60 + minute;
+  const isWeekday = weekday !== "Sat" && weekday !== "Sun";
+  const isTradingHours = minutesOfDay >= 9 * 60 + 30 && minutesOfDay < 15 * 60 + 30;
+  const open = isWeekday && isTradingHours;
+  return { open, label: open ? "Market open" : "Market closed" };
+}
 
 export const revalidate = 3600; // 1h; matches quotes/market-snapshot's hourly ETL cadence (quotes-hourly.yml/market-snapshot-hourly.yml) — a tighter window would only add DB reads without fresher data
 
@@ -67,11 +91,21 @@ export default async function MarketMapPage() {
     getLatestForeignFlow(),
   ]);
   const sparklineByTicker = await getRealSparklines(quotes.map((q) => q.ticker));
+  const status = getMarketStatus();
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-8 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
-      <MarketMapHero quotes={quotes} snapshot={snapshot} />
+      <div className="flex flex-wrap items-center gap-2.5">
+        <p className="kicker text-accent">Market Map</p>
+        <span className="flex items-center gap-1.5 rounded-full border border-panel-border bg-panel px-2 py-0.5 text-[10px] font-medium text-panel-fg/70">
+          <span className={`h-1.5 w-1.5 rounded-full ${status.open ? "animate-pulse bg-up" : "bg-panel-fg/30"}`} />
+          {status.label}
+        </span>
+      </div>
+      <h1 className="mt-2 whitespace-nowrap font-serif text-[clamp(1.35rem,4.6vw,3.25rem)] font-semibold leading-[1.05] tracking-tight">
+        The Philippine Stock Market, <span className="italic text-accent">Visualized.</span>
+      </h1>
       <div className="mt-7">
         <MarketMap
           stocks={quotes}
