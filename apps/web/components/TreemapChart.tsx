@@ -187,40 +187,60 @@ export function TreemapChart({
   // Smoothing is a plain CSS transition on `transform`, not a JS animation loop —
   // it runs on the compositor thread, so it stays smooth even when the page's
   // own requestAnimationFrame is throttled (e.g. an unfocused/backgrounded tab),
-  // and it's far less code than hand-rolling an easing loop. ----
+  // and it's far less code than hand-rolling an easing loop.
+  //
+  // zoom and pan are one state object, not two, so a zoom-to-cursor update can
+  // compute the new pan from the *same* previous zoom/pan snapshot atomically —
+  // splitting them risked one setState reading a pan that was about to be
+  // reclamped for a zoom change the other setState hadn't applied yet. ----
   const canvasBoxRef = useRef<HTMLDivElement>(null);
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [view, setView] = useState({ zoom: 1, pan: { x: 0, y: 0 } });
+  const { zoom, pan } = view;
   // Disables the transition while actively dragging, so panning tracks the
   // pointer 1:1 instead of visibly lagging behind it; only zoom changes (wheel,
   // buttons, reset) should glide.
   const [isPanning, setIsPanning] = useState(false);
+  // Tracks a pointer that's down and might turn into a drag; only promoted to
+  // an actual captured drag once movement crosses DRAG_THRESHOLD (see
+  // onCanvasPointerMove) — capturing immediately on pointerdown made every
+  // click while zoomed retarget its `click` event to this layer instead of
+  // the stock tile button underneath, since Chromium retargets `click` (not
+  // just the pointer events) to whichever element holds pointer capture.
   const isDraggingRef = useRef(false);
   const didDragRef = useRef(false);
-  const dragStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+  const dragStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0, pointerId: 0 });
 
   /** Keeps the pan offset from pushing the zoomed content entirely out of the
-   * canvas's own frame — at zoom `z`, the content is `z` times the canvas
-   * size, so it can shift by up to half the extra size in each direction
-   * before the far edge would show empty canvas instead of content. */
+   * canvas's own frame. Transform-origin is the layer's own top-left (see the
+   * transform layer's style below), so at zoom `z` the content is `z` times
+   * the canvas size extending down-and-right from that corner — pan can
+   * range from 0 (content's top-left flush with the canvas's) to
+   * -(size*(z-1)) (content's bottom-right flush with the canvas's), and no
+   * further, or the far edge would show empty canvas instead of content. */
   function clampPan(next: { x: number; y: number }, z: number): { x: number; y: number } {
-    const maxX = (width * (z - 1)) / 2;
-    const maxY = (height * (z - 1)) / 2;
+    const minX = -(width * (z - 1));
+    const minY = -(height * (z - 1));
     return {
-      x: Math.min(maxX, Math.max(-maxX, next.x)),
-      y: Math.min(maxY, Math.max(-maxY, next.y)),
+      x: Math.min(0, Math.max(minX, next.x)),
+      y: Math.min(0, Math.max(minY, next.y)),
     };
   }
 
-  // Re-clamp any existing pan whenever zoom changes (zooming out can leave a
-  // pan offset that's no longer valid for the smaller content size). Done
-  // during render (same "adjusting state when a prop/other-state changes"
-  // pattern as the stocks-reset below), not in an effect, to avoid an extra
-  // render pass and the set-state-in-effect lint rule.
-  const [prevZoomForClamp, setPrevZoomForClamp] = useState(zoom);
-  if (zoom !== prevZoomForClamp) {
-    setPrevZoomForClamp(zoom);
-    setPan((p) => clampPan(p, zoom));
+  /** Zooms by `factor`, keeping the content point currently under (cx, cy)
+   * (canvas-relative coordinates) fixed on screen — the standard "zoom to
+   * cursor" behavior (map apps, Figma, etc.) instead of always zooming toward
+   * the canvas's center regardless of where the pointer is. */
+  function zoomAtPoint(factor: number, cx: number, cy: number) {
+    setView((prev) => {
+      const nextZoom = clampZoom(prev.zoom * factor);
+      if (nextZoom === prev.zoom) return prev;
+      const ratio = nextZoom / prev.zoom;
+      const rawPan = {
+        x: cx - (cx - prev.pan.x) * ratio,
+        y: cy - (cy - prev.pan.y) * ratio,
+      };
+      return { zoom: nextZoom, pan: clampPan(rawPan, nextZoom) };
+    });
   }
 
   // Reset zoom/pan when the underlying stock set changes (switching filters,
@@ -231,8 +251,7 @@ export function TreemapChart({
   const [prevStocksForReset, setPrevStocksForReset] = useState(stocks);
   if (stocks !== prevStocksForReset) {
     setPrevStocksForReset(stocks);
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
+    setView({ zoom: 1, pan: { x: 0, y: 0 } });
   }
 
   // Wheel needs to call preventDefault (so scrolling over the map zooms it
@@ -244,42 +263,56 @@ export function TreemapChart({
     if (!el) return;
     function onWheel(e: WheelEvent) {
       e.preventDefault();
+      const rect = el!.getBoundingClientRect();
       const factor = Math.exp(-e.deltaY * ZOOM_WHEEL_SENSITIVITY);
-      setZoom((z) => clampZoom(z * factor));
+      zoomAtPoint(factor, e.clientX - rect.left, e.clientY - rect.top);
     }
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- zoomAtPoint is a plain function redefined each render but only closes over stable setState/clampZoom/clampPan; re-subscribing every render would be wasteful.
   }, []);
 
   function zoomBy(factor: number) {
-    setZoom((z) => clampZoom(z * factor));
+    // No cursor position for a button click — zoom toward the canvas center.
+    zoomAtPoint(factor, width / 2, height / 2);
   }
 
   function resetZoom() {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
+    setView({ zoom: 1, pan: { x: 0, y: 0 } });
   }
 
   function onCanvasPointerDown(e: React.PointerEvent) {
     if (zoom <= 1) return;
     isDraggingRef.current = true;
     didDragRef.current = false;
-    setIsPanning(true);
-    dragStartRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
-    e.currentTarget.setPointerCapture(e.pointerId);
+    dragStartRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y, pointerId: e.pointerId };
+    // Deliberately NOT calling setPointerCapture here — see the isDraggingRef
+    // comment above. Capture is deferred to onCanvasPointerMove, once actual
+    // dragging (not just a click) is confirmed.
   }
 
   function onCanvasPointerMove(e: React.PointerEvent) {
     if (!isDraggingRef.current) return;
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
-    if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) didDragRef.current = true;
+    if (!didDragRef.current) {
+      if (Math.abs(dx) <= DRAG_THRESHOLD && Math.abs(dy) <= DRAG_THRESHOLD) return;
+      didDragRef.current = true;
+      setIsPanning(true);
+      e.currentTarget.setPointerCapture(dragStartRef.current.pointerId);
+    }
     setPan(clampPan({ x: dragStartRef.current.panX + dx, y: dragStartRef.current.panY + dy }, zoom));
   }
 
   function onCanvasPointerUp() {
     isDraggingRef.current = false;
     setIsPanning(false);
+  }
+
+  /** Applies a pan-only update (zoom unchanged) — used by drag, which never
+   * changes zoom, so it doesn't need `zoomAtPoint`'s atomic zoom+pan update. */
+  function setPan(nextPan: { x: number; y: number }) {
+    setView((prev) => ({ ...prev, pan: nextPan }));
   }
 
   /** Stock tile onClick guard — a drag that ends on top of a tile shouldn't
@@ -309,7 +342,7 @@ export function TreemapChart({
           className="absolute inset-0"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transformOrigin: "center center",
+            transformOrigin: "0 0",
             transition: isPanning ? "none" : "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)",
             cursor: zoom > 1 ? "grab" : undefined,
             touchAction: zoom > 1 ? "none" : undefined,
