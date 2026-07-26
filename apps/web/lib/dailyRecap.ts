@@ -8,6 +8,7 @@ import {
   getRecentSnapshotDates,
   getStockForeignFlowByDate,
 } from "@pseye/db";
+import { histogram, mean, percentile, stdev, type HistogramBin } from "./analytics";
 
 export interface RecapMover {
   ticker: string;
@@ -48,7 +49,18 @@ export interface DailyRecap {
   date: string;
   snapshot: { pseiValue: number; pseiChange: number; pseiPctChange: number } | null;
   /** Market breadth across every tracked stock that day. */
-  breadth: { advancers: number; decliners: number; unchanged: number; noTrade: number } | null;
+  breadth: {
+    advancers: number;
+    decliners: number;
+    unchanged: number;
+    noTrade: number;
+    /** Cross-sectional stats over that day's traded (non-null) % changes — same shape as /market-stats's "today" breadth, just for this specific date instead of the live snapshot. */
+    medianMove: number | null;
+    meanMove: number | null;
+    moveStdev: number | null;
+    positivePct: number | null;
+    histogram: HistogramBin[];
+  } | null;
   gainers: RecapMover[];
   losers: RecapMover[];
   foreignBuys: RecapFlowRow[];
@@ -109,6 +121,7 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
       }));
     const byPctDesc = [...traded].sort((a, b) => b.pctChange - a.pctChange);
 
+    const todayPct = traded.map((r) => r.pctChange);
     const breadth =
       quoteRows.length > 0
         ? {
@@ -116,6 +129,13 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
             decliners: traded.filter((r) => r.pctChange < 0).length,
             unchanged: traded.filter((r) => r.pctChange === 0).length,
             noTrade: quoteRows.length - traded.length,
+            medianMove: percentile(todayPct, 50),
+            meanMove: todayPct.length ? mean(todayPct) : null,
+            moveStdev: todayPct.length >= 2 ? stdev(todayPct) : null,
+            positivePct: todayPct.length
+              ? (traded.filter((r) => r.pctChange > 0).length / todayPct.length) * 100
+              : null,
+            histogram: histogram(todayPct, 31),
           }
         : null;
 

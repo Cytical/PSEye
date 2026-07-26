@@ -4,9 +4,17 @@ name: Fetch daily (news, disclosures, corporate actions, historical quotes)
 # available right after PSE's 3:30pm close: news (RSS, continuous),
 # disclosures + corporate actions (PSE Edge, filed through the day), and
 # historical quotes (PSE Edge's per-company chart feed, which has today's EOD
-# close within its 15-min delay). Runs at 08:20 UTC (~4:20pm PHT) so the
-# day's /daily/[date] recap is populated right after close — off the exact
-# :15 quarter-hour GitHub flags as congested.
+# close within its 15-min delay). Intended to land ~4:20pm PHT so the day's
+# /daily/[date] recap is populated right after close.
+#
+# 2026-07-26: cron fires at 06:20 UTC, not 08:20 — GitHub was confirmed live
+# to delay this job's scheduled runs by ~1h40m-2h15m every single day (5
+# consecutive runs landed 10:00-10:35 UTC instead of 08:20), so news/
+# disclosures/corp-actions/historical-quotes were only ever actually
+# refreshing once around 6-6:30pm PHT, ~2 hours later than intended. Firing
+# the cron 2 hours earlier compensates for that observed delay so the real
+# run lands close to the original 4:20pm PHT target. Still off the exact
+# :15/:00/:30/:45 marks GitHub flags as congested.
 #
 # Block sales is deliberately NOT here — it's extracted from PSE's Daily
 # Quotation Report PDF, which PSE only publishes ~9:30pm PHT, so it has its
@@ -21,7 +29,7 @@ name: Fetch daily (news, disclosures, corporate actions, historical quotes)
 # only because its source publishes hours later than the rest.
 on:
   schedule:
-    - cron: "20 8 * * *" # ~4:20pm PHT (UTC+8), daily
+    - cron: "20 6 * * *" # targets ~4:20pm PHT actual arrival, see comment above
   workflow_dispatch: {}
 
 jobs:

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDailyRecap, type DailyRecap } from "@/lib/dailyRecap";
 import { ShareButton } from "@/components/ShareButton";
+import { MarketHistogram } from "@/components/MarketHistogram";
 
 export const revalidate = 3600; // late disclosures/news can still land on "today's" page
 
@@ -55,6 +56,20 @@ export async function generateMetadata({ params }: { params: Promise<{ date: str
 
 const UP = "var(--up)";
 const DOWN = "var(--down)";
+
+function pct2OrDash(n: number | null): string {
+  if (n == null) return "—";
+  return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
+}
+
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+      <div className="text-[11px] text-panel-fg/50">{label}</div>
+      <div className="mt-0.5 text-lg font-semibold tabular-nums text-panel-fg">{value}</div>
+    </div>
+  );
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -196,6 +211,33 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {breadth && breadth.histogram.length > 1 && (
+        <div className="mt-3">
+          <Section title="Breadth Detail">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <StatTile label="Median move" value={pct2OrDash(breadth.medianMove)} />
+              <StatTile label="Average move" value={pct2OrDash(breadth.meanMove)} />
+              <StatTile
+                label="Dispersion (σ)"
+                value={breadth.moveStdev == null ? "—" : `${breadth.moveStdev.toFixed(2)}%`}
+              />
+              <StatTile
+                label="% advancing"
+                value={breadth.positivePct == null ? "—" : `${breadth.positivePct.toFixed(0)}%`}
+              />
+            </div>
+            <div className="mt-3">
+              <p className="mb-1 text-xs text-panel-fg/55">Distribution of that day&apos;s % change</p>
+              <MarketHistogram
+                bins={breadth.histogram}
+                colorSplit={0}
+                formatX={(x) => `${x >= 0 ? "+" : ""}${x.toFixed(1)}%`}
+              />
+            </div>
+          </Section>
         </div>
       )}
 

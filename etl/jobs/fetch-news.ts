@@ -3,7 +3,12 @@ import { sql } from "drizzle-orm";
 import { createDb, newsItems } from "@pseye/db";
 import { NEWS_SOURCES } from "@pseye/source-news";
 
-/** Runs hourly (see .github/workflows/news-hourly.yml). Duplicate URLs are skipped. */
+/**
+ * Runs once/day via .github/workflows/fetch-daily.yml (see that file's
+ * comment — cron fires 2 hours early to compensate for GitHub's observed
+ * scheduling delay). Used to have its own hourly workflow before the 2026-07
+ * consolidation; that workflow no longer exists. Duplicate URLs are skipped.
+ */
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
