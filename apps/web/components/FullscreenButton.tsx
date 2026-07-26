@@ -4,9 +4,11 @@ import { useEffect, useState, type RefObject } from "react";
 
 /**
  * Matches finviz's own map toolbar, which has a "Fullscreen" icon next to
- * "Share Map" (confirmed live) — lets a visitor expand the map (and its
- * filter sidebar) to the full browser viewport via the standard Fullscreen
- * API, rather than just the browser's own zoom. Tracks `fullscreenElement`
+ * "Share Map" (confirmed live) — lets a visitor expand the map to the full
+ * browser viewport via the standard Fullscreen API, rather than just the
+ * browser's own zoom. `targetRef` is deliberately just the canvas, not the
+ * filter sidebar (see MarketMap.tsx), so fullscreen gives the map the whole
+ * screen instead of spending width on the sidebar. Tracks `fullscreenElement`
  * via the `fullscreenchange` event (not local state alone) since fullscreen
  * can also be exited by the browser itself (Esc key), which wouldn't fire
  * this component's own click handler.
@@ -23,11 +25,17 @@ export function FullscreenButton({ targetRef }: { targetRef: RefObject<HTMLEleme
   }, [targetRef]);
 
   async function toggleFullscreen() {
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-      return;
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
+      await targetRef.current?.requestFullscreen();
+    } catch {
+      // Some browsers/embeds reject requestFullscreen (Permissions-Policy,
+      // user setting, etc.) — fullscreenchange simply never fires in that
+      // case, so isFullscreen stays false; nothing else to reconcile.
     }
-    await targetRef.current?.requestFullscreen();
   }
 
   return (

@@ -28,6 +28,11 @@ interface MarketMapProps {
 
 const FILTER_KEYS = new Set(MARKET_MAP_FILTERS.map((f) => f.key));
 
+/** Reserved pixels below the canvas in fullscreen — the "Day change" legend
+ * plus its gaps/padding — so the computed fill height doesn't push the
+ * legend off the bottom of the screen. */
+const FULLSCREEN_CHROME_RESERVE = 140;
+
 /** Fired after history.replaceState so useSyncExternalStore knows to re-read the URL
  * (replaceState doesn't dispatch popstate on its own). */
 const FILTER_CHANGE_EVENT = "pseye:filterchange";
@@ -124,6 +129,32 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
   const colorblind = useColorblindMode();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const mapAreaRef = useRef<HTMLDivElement>(null);
+
+  // The fullscreen target (see mapAreaRef below) is now just the canvas, not
+  // the filter sidebar — so unlike its width (which TreemapChart already
+  // measures itself via ResizeObserver), its height is otherwise a fixed
+  // constant that would never grow to fill the screen. Tracked here so a
+  // computed pixel height can be passed down only while fullscreen.
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(0);
+
+  useEffect(() => {
+    function sync() {
+      setIsFullscreen(document.fullscreenElement === mapAreaRef.current);
+      setViewportHeight(window.innerHeight);
+    }
+    sync();
+    document.addEventListener("fullscreenchange", sync);
+    window.addEventListener("resize", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, []);
+
+  const fullscreenTreemapHeight = isFullscreen
+    ? Math.max(400, viewportHeight - FULLSCREEN_CHROME_RESERVE)
+    : undefined;
 
   // ---- Time machine: view the market as recorded on a past trade date ----
   const viewDate = useSyncExternalStore(subscribeToFilterUrl, getDateFromUrl, (): string | null => null);
@@ -284,12 +315,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
           </button>
         </div>
       )}
-      {/* Fullscreen target for FullscreenButton above — bg-background matters
-          only in fullscreen (the Fullscreen API's default backdrop is black,
-          which would otherwise show through any gap between the sidebar and
-          canvas); it's a no-op in normal flow since that's already the page's
-          own background. */}
-      <div ref={mapAreaRef} className="flex flex-col gap-4 bg-background sm:flex-row">
+      <div className="flex flex-col gap-4 sm:flex-row">
         <nav
           className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:sticky sm:top-16 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
           aria-label="Market map filters"
@@ -353,7 +379,19 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
           </div>
         </nav>
 
-        <div className="min-w-0 flex-1">
+        {/* Fullscreen target for FullscreenButton above — deliberately just
+            the canvas, not the filter sidebar, so fullscreen gives the map
+            the whole screen instead of the sidebar's width back. bg-background
+            covers the Fullscreen API's default black backdrop around the
+            canvas; it's a no-op in normal flow since that's already the
+            page's own background. The modal lives inside this subtree too —
+            a sibling would be invisible while this element is fullscreened,
+            since the Fullscreen API only paints the fullscreened element and
+            its descendants. */}
+        <div
+          ref={mapAreaRef}
+          className={`min-w-0 flex-1 bg-background ${isFullscreen ? "flex flex-col items-center justify-center gap-3 overflow-auto p-4" : ""}`}
+        >
           {isSharedWatchlistView && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-panel px-4 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <span className="text-panel-fg/70">
@@ -409,11 +447,14 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
               // The sparkline is the *current* trailing month — misleading next to a past-date view, so it's withheld there.
               sparklineByTicker={isPastView ? undefined : sparklineByTicker}
               onAddTileClick={filter === "watchlist" && !isSharedWatchlistView ? () => setAddModalOpen(true) : undefined}
+              // Only overridden in fullscreen — the treemap's height is otherwise a
+              // fixed constant that wouldn't grow to use the extra screen space.
+              height={fullscreenTreemapHeight}
             />
           )}
-        </div>
 
-        {addModalOpen && <AddToWatchlistModal onClose={() => setAddModalOpen(false)} />}
+          {addModalOpen && <AddToWatchlistModal onClose={() => setAddModalOpen(false)} />}
+        </div>
       </div>
     </div>
   );

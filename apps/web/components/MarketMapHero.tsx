@@ -82,7 +82,12 @@ export function MarketMapHero({ quotes, snapshot }: MarketMapHeroProps) {
         }}
       />
 
-      <div className="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+      {/* max-w caps the row itself (not just the copy) so `justify-between`
+          keeps the PSEi card a reasonable gap from the headline instead of
+          stretching it out to the far edge of the page's full-bleed width —
+          on a wide viewport that read as an orphaned card floating in empty
+          space rather than part of the same masthead. */}
+      <div className="relative flex flex-col gap-7 lg:max-w-5xl lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl">
           <div className="flex flex-wrap items-center gap-2.5">
             <p className="kicker text-accent">Market Map</p>
@@ -103,15 +108,27 @@ export function MarketMapHero({ quotes, snapshot }: MarketMapHeroProps) {
           </p>
         </div>
 
-        <div className="shrink-0 rounded-2xl bg-panel px-6 py-4 text-right shadow-lg shadow-black/10 ring-1 ring-panel-border sm:min-w-[230px]">
-          <div className="kicker text-panel-fg/50">PSEi</div>
+        <div
+          className={`shrink-0 rounded-2xl bg-panel px-6 py-4 text-right shadow-lg shadow-black/10 ring-1 sm:min-w-[240px] ${
+            pseiUp ? "ring-up/25" : "ring-down/25"
+          }`}
+        >
+          <div className="flex items-baseline justify-end gap-1.5">
+            <span className="kicker text-panel-fg/50">PSEi</span>
+            <span className="text-[10px] text-panel-fg/35">PSE Composite Index</span>
+          </div>
           <div className="mt-1 font-serif text-4xl font-semibold tabular-nums tracking-tight text-panel-fg">
             {snapshot.pseiValue.toLocaleString("en-US", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
           </div>
-          <div className={`mt-0.5 text-sm font-semibold tabular-nums ${pseiUp ? "text-up" : "text-down"}`}>
+          <div
+            className={`mt-0.5 flex items-center justify-end gap-1 text-sm font-semibold tabular-nums ${pseiUp ? "text-up" : "text-down"}`}
+          >
+            <span aria-hidden className="text-[10px]">
+              {pseiUp ? "▲" : "▼"}
+            </span>
             {pseiUp ? "+" : ""}
             {snapshot.pseiChange.toFixed(2)} ({pseiUp ? "+" : ""}
             {snapshot.pseiPctChange.toFixed(2)}%)
