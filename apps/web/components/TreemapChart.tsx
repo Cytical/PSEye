@@ -258,6 +258,16 @@ export function TreemapChart({
   // instead of scrolling the page), which React's synthetic onWheel can't
   // reliably do — it's attached passively. A plain addEventListener with
   // {passive:false} is the standard workaround.
+  //
+  // Deps include width/height: clampPan's right/bottom bounds scale with
+  // them, and the canvas starts at a placeholder width (1000) before
+  // ResizeObserver reports the real measured width shortly after mount. With
+  // an empty dep array this effect (and the onWheel closure it creates) ran
+  // once at that placeholder width and never re-subscribed, so the clamp
+  // kept using the stale, usually-too-small bound forever — zooming toward
+  // the right/bottom edge got clamped early and never reached the true
+  // corner, while the left/top bound (always 0) was unaffected. That's why
+  // it only showed up on the right side.
   useEffect(() => {
     const el = canvasBoxRef.current;
     if (!el) return;
@@ -269,8 +279,8 @@ export function TreemapChart({
     }
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- zoomAtPoint is a plain function redefined each render but only closes over stable setState/clampZoom/clampPan; re-subscribing every render would be wasteful.
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- zoomAtPoint is a plain function redefined each render but only closes over stable setState/clampZoom/clampPan (which in turn close over width/height, already listed below).
+  }, [width, height]);
 
   function zoomBy(factor: number) {
     // No cursor position for a button click — zoom toward the canvas center.
@@ -407,7 +417,18 @@ export function TreemapChart({
           const showLabel = shouldShowLabel(w * zoom, h * zoom);
           const stock = byTicker.get(box.ticker);
           const isHovered = hovered?.ticker === box.ticker;
-          const fontSize = tickerFontSize(w, h);
+          // The whole transform layer (including this text) is scaled by
+          // `zoom` via CSS, so a font-size computed from the raw (unzoomed)
+          // box would get magnified right along with the box — fine for a
+          // box that was already big enough to show a label at 1x, but for a
+          // tiny small-cap box that only clears shouldShowLabel's threshold
+          // once zoomed in, tickerFontSize(w, h) floors at TICKER_FONT_MIN
+          // regardless of how small the raw box actually is, so the text
+          // already overflows the box before the CSS scale even applies —
+          // zooming in just magnifies that overflow. Computing against the
+          // on-screen size and dividing back out by zoom sizes the text to
+          // the box the user actually sees, at any zoom level.
+          const fontSize = tickerFontSize(w * zoom, h * zoom) / zoom;
 
           return (
             <button
@@ -437,7 +458,16 @@ export function TreemapChart({
                   <span className="font-bold leading-tight tracking-tight" style={{ fontSize }}>
                     {box.ticker}
                   </span>
-                  <span className="leading-tight opacity-90" style={{ fontSize: Math.max(10, fontSize * 0.52) }}>
+                  <span
+                    className="leading-tight opacity-90"
+                    // The 10px floor is an on-screen minimum, so it has to be
+                    // divided by zoom too, same as `fontSize` above — a bare
+                    // `Math.max(10, ...)` here is a fixed unscaled value that
+                    // the CSS zoom transform would then amplify (e.g. 40px on
+                    // screen at 4x zoom), overflowing the box exactly like
+                    // the primary ticker font did before that fix.
+                    style={{ fontSize: Math.max(10 / zoom, fontSize * 0.52) }}
+                  >
                     {formatPctChange(box.pctChange)}
                   </span>
                 </>
