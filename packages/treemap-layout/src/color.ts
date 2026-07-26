@@ -1,17 +1,28 @@
 import { scaleLinear } from "d3-scale";
 import { interpolateRgb } from "d3-interpolate";
 
+export type ColorTheme = "light" | "dark";
+
 /**
  * Bright, continuous finviz-style gradient — finviz's map interpolates
  * smoothly from a near-black flat color out to saturated red/green at the
  * extremes, rather than a handful of discrete buckets. Clamped at +/-3% so a
  * handful of outliers don't wash out the color range for everything else.
- * The market map's canvas is always dark (see TreemapChart.tsx) so this
- * doesn't need separate light/dark variants.
+ *
+ * finviz's own map is always dark, so a near-black 0% center reads as "flat"
+ * against its dark canvas. Once the site's own canvas started following the
+ * light/dark theme (see TreemapChart.tsx's CANVAS_BG), that same near-black
+ * scale ended up sitting inside a light, warm-paper page for most of the
+ * board — day changes cluster near 0%, so most tiles rendered as this
+ * near-black/deep-maroon "dark mode" scale regardless of theme, which read
+ * as heavy and muddy against a light background. LIGHT_COLOR_RANGE is the
+ * same idea with the center inverted (pale near-panel rather than
+ * near-black) — extremes stay vivid, and match the site's --up/--down light
+ * tokens, so a big mover still reads as unmistakably red/green either way.
  */
 const COLOR_DOMAIN = [-3, -1, 0, 1, 3];
 
-const COLOR_RANGE = [
+const DARK_COLOR_RANGE = [
   "#f6362f", // <= -3% (bright red)
   "#7a1f27", // -1%
   "#33363d", // 0% (flat, near-black/gray)
@@ -19,29 +30,55 @@ const COLOR_RANGE = [
   "#30cc5a", // >= +3% (bright green)
 ];
 
+const LIGHT_COLOR_RANGE = [
+  "#c23a2e", // <= -3% (matches --down's light-theme value)
+  "#e6a89f", // -1% (soft red, dark ink stays legible)
+  "#ece7d8", // 0% (flat, warm-paper neutral — near --panel-bg-raised)
+  "#a8d6b6", // +1% (soft green, dark ink stays legible)
+  "#1c8a4b", // >= +3% (matches --up's light-theme value)
+];
+
 export const COLOR_DOMAIN_MIN = COLOR_DOMAIN[0];
 export const COLOR_DOMAIN_MAX = COLOR_DOMAIN[COLOR_DOMAIN.length - 1];
 
-const scale = scaleLinear<string>().domain(COLOR_DOMAIN).range(COLOR_RANGE).interpolate(interpolateRgb).clamp(true);
+function buildScale(range: string[]) {
+  return scaleLinear<string>().domain(COLOR_DOMAIN).range(range).interpolate(interpolateRgb).clamp(true);
+}
 
-/** Distinct from the near-black "flat" (0%) color so an N/A tile doesn't read as "unchanged." */
+const scales: Record<ColorTheme, ReturnType<typeof buildScale>> = {
+  dark: buildScale(DARK_COLOR_RANGE),
+  light: buildScale(LIGHT_COLOR_RANGE),
+};
+
+/** Distinct from the flat (0%) color so an N/A tile doesn't read as "unchanged" in either theme. */
 export const NO_DATA_COLOR = "#5b5e66";
 
-export function pctChangeToColor(pctChange: number | null): string {
+/**
+ * `theme` defaults to "dark" so callers that render one fixed look
+ * regardless of the visitor's site theme (opengraph-image.tsx's static
+ * share-image card) don't need to pass anything; TreemapChart.tsx passes
+ * the visitor's live theme explicitly.
+ */
+export function pctChangeToColor(pctChange: number | null, theme: ColorTheme = "dark"): string {
   if (pctChange === null) return NO_DATA_COLOR;
-  return scale(pctChange);
+  return scales[theme](pctChange);
 }
 
 /**
  * CSS gradient reproducing the exact same scale (same domain/range/interpolation
- * as `scale` above), for rendering the legend as a smooth bar rather than
- * discrete swatches. Stop positions are the domain values re-projected onto
- * [0%, 100%].
+ * as `scales[theme]` above), for rendering the legend as a smooth bar rather
+ * than discrete swatches. Stop positions are the domain values re-projected
+ * onto [0%, 100%].
  */
-export const LEGEND_GRADIENT_CSS = `linear-gradient(to right, ${COLOR_RANGE.map((color, i) => {
-  const pct = ((COLOR_DOMAIN[i] - COLOR_DOMAIN_MIN) / (COLOR_DOMAIN_MAX - COLOR_DOMAIN_MIN)) * 100;
-  return `${color} ${pct}%`;
-}).join(", ")})`;
+export function getLegendGradientCss(theme: ColorTheme = "dark"): string {
+  const range = theme === "light" ? LIGHT_COLOR_RANGE : DARK_COLOR_RANGE;
+  return `linear-gradient(to right, ${range
+    .map((color, i) => {
+      const pct = ((COLOR_DOMAIN[i] - COLOR_DOMAIN_MIN) / (COLOR_DOMAIN_MAX - COLOR_DOMAIN_MIN)) * 100;
+      return `${color} ${pct}%`;
+    })
+    .join(", ")})`;
+}
 
 export const LEGEND_TICKS = [-3, -1.5, 0, 1.5, 3];
 

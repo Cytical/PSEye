@@ -7,12 +7,13 @@ import {
   getContrastText,
   shouldShowLabel,
   SECTOR_HEADER_HEIGHT,
-  LEGEND_GRADIENT_CSS,
+  getLegendGradientCss,
   LEGEND_TICKS,
   NO_DATA_COLOR,
   type TreemapInput,
 } from "@pseye/treemap-layout";
 import type { CompanyProfile } from "@/lib/companyProfiles";
+import { useColorTheme } from "@/lib/useColorTheme";
 import { CompanyDetailPanel } from "./CompanyDetailPanel";
 
 export interface TreemapStock extends TreemapInput {
@@ -99,9 +100,12 @@ function selectTickerInUrl(next: string | null) {
 
 /**
  * The canvas chrome (background, sector header bar, grid lines) follows the
- * active site theme via the --panel-* CSS vars; box fill colors stay a
- * finviz-style poster of bright, saturated, data-driven colors regardless
- * of theme, since those encode real information (percent change).
+ * active site theme via the --panel-* CSS vars for free. Box fill colors are
+ * computed in JS (a continuous d3 interpolation, not a fixed swatch), so they
+ * need `useColorTheme()` to pick the matching light/dark palette explicitly —
+ * still a finviz-style poster of bright, saturated, data-driven colors, just
+ * tuned per theme so the many tiles near 0% read as "flat neutral" against
+ * *this* canvas rather than always the dark-mode near-black.
  */
 export function TreemapChart({
   stocks,
@@ -111,6 +115,7 @@ export function TreemapChart({
   sparklineByTicker,
   onAddTileClick,
 }: TreemapChartProps) {
+  const colorTheme = useColorTheme();
   const [hovered, setHovered] = useState<TreemapStock | null>(null);
   // Synced to the `?ticker=` URL param (server snapshot null so hydration never mismatches
   // a client that might land on a deep-linked ticker) — makes "look at this stock" shareable.
@@ -217,7 +222,7 @@ export function TreemapChart({
             );
           }
 
-          const fill = pctChangeToColor(box.pctChange);
+          const fill = pctChangeToColor(box.pctChange, colorTheme);
           const ink = getContrastText(fill);
           const showLabel = shouldShowLabel(w, h);
           const stock = byTicker.get(box.ticker);
@@ -310,7 +315,7 @@ export function TreemapChart({
         <div className="w-full">
           <div
             className="h-2.5 w-full rounded-full ring-1 ring-inset ring-foreground/10"
-            style={{ background: LEGEND_GRADIENT_CSS }}
+            style={{ background: getLegendGradientCss(colorTheme) }}
           />
           <div className="flex w-full justify-between text-[10px] font-medium text-foreground/55">
             {LEGEND_TICKS.map((tick) => (

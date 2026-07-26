@@ -16,8 +16,19 @@ describe("pctChangeToColor", () => {
   it("is monotonic: a bigger gain never produces a darker/less-green color than a smaller one", () => {
     // Sampled at the color scale's actual domain stops, where the underlying
     // d3 interpolation is guaranteed continuous.
-    const samples = [-3, -1, 0, 1, 3].map(pctChangeToColor);
+    const samples = [-3, -1, 0, 1, 3].map((p) => pctChangeToColor(p));
     expect(new Set(samples).size).toBe(samples.length); // all distinct
+  });
+
+  it("defaults to the dark palette when no theme is passed (opengraph-image.tsx's fixed-look callers)", () => {
+    expect(pctChangeToColor(0)).toBe(pctChangeToColor(0, "dark"));
+  });
+
+  it("light and dark themes produce different colors for the same pctChange, each internally distinct/monotonic", () => {
+    const darkSamples = [-3, -1, 0, 1, 3].map((p) => pctChangeToColor(p, "dark"));
+    const lightSamples = [-3, -1, 0, 1, 3].map((p) => pctChangeToColor(p, "light"));
+    expect(new Set(lightSamples).size).toBe(lightSamples.length);
+    darkSamples.forEach((color, i) => expect(color).not.toBe(lightSamples[i]));
   });
 });
 

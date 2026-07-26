@@ -51,7 +51,9 @@ export async function MarketTicker() {
   // Scroll speed (px/s) stays roughly constant as the roster grows rather
   // than the whole loop just taking longer to notice — duration scales with
   // item count instead of being a fixed value tuned for today's ~282 tickers.
-  const duration = Math.max(60, Math.round(withPrice.length * 1.1));
+  // ~3.5s/item settled at a comfortably readable pace (the original 1.1s/item
+  // read as a blur of numbers rather than a ticker you could actually track).
+  const duration = Math.max(120, Math.round(withPrice.length * 3.5));
 
   return (
     <div

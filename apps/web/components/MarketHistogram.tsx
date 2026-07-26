@@ -84,7 +84,17 @@ export function MarketHistogram({
       )}
 
       {ticks.map((t, i) => (
-        <text key={i} x={xFor(t)} y={HEIGHT - 8} textAnchor="middle" fontSize={10} className="fill-panel-fg/45">
+        <text
+          key={i}
+          x={xFor(t)}
+          y={HEIGHT - 8}
+          // The first/last tick sit at the plot's very edge — center-anchoring
+          // them (like the interior ticks) would run half the label off the
+          // edge of the viewBox and get clipped by the container's overflow.
+          textAnchor={i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle"}
+          fontSize={10}
+          className="fill-panel-fg/45"
+        >
           {formatX(t)}
         </text>
       ))}

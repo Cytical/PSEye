@@ -63,12 +63,15 @@ export function ReturnHistogram({ returns }: { returns: number[] }) {
           />
         );
       })}
-      {ticks.map((t) => (
+      {ticks.map((t, i) => (
         <text
           key={t}
           x={xFor(t)}
           y={HEIGHT - 8}
-          textAnchor="middle"
+          // First/last tick sit at the plot's edge — center-anchoring them
+          // (like the interior ticks) would run half the label past the
+          // viewBox edge and get clipped by the container's overflow.
+          textAnchor={i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle"}
           fontSize={10}
           className="fill-panel-fg/45"
         >
