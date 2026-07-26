@@ -14,6 +14,7 @@ import {
 } from "@pseye/treemap-layout";
 import type { CompanyProfile } from "@/lib/companyProfiles";
 import { useColorTheme } from "@/lib/useColorTheme";
+import { useColorblindMode } from "@/lib/colorblindMode";
 import { CompanyDetailPanel } from "./CompanyDetailPanel";
 
 export interface TreemapStock extends TreemapInput {
@@ -116,6 +117,7 @@ export function TreemapChart({
   onAddTileClick,
 }: TreemapChartProps) {
   const colorTheme = useColorTheme();
+  const colorblind = useColorblindMode();
   const [hovered, setHovered] = useState<TreemapStock | null>(null);
   // Synced to the `?ticker=` URL param (server snapshot null so hydration never mismatches
   // a client that might land on a deep-linked ticker) — makes "look at this stock" shareable.
@@ -222,7 +224,7 @@ export function TreemapChart({
             );
           }
 
-          const fill = pctChangeToColor(box.pctChange, colorTheme);
+          const fill = pctChangeToColor(box.pctChange, colorTheme, colorblind);
           const ink = getContrastText(fill);
           const showLabel = shouldShowLabel(w, h);
           const stock = byTicker.get(box.ticker);
@@ -315,7 +317,7 @@ export function TreemapChart({
         <div className="w-full">
           <div
             className="h-2.5 w-full rounded-full ring-1 ring-inset ring-foreground/10"
-            style={{ background: getLegendGradientCss(colorTheme) }}
+            style={{ background: getLegendGradientCss(colorTheme, colorblind) }}
           />
           <div className="flex w-full justify-between text-[10px] font-medium text-foreground/55">
             {LEGEND_TICKS.map((tick) => (

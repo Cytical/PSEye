@@ -30,6 +30,23 @@ describe("pctChangeToColor", () => {
     expect(new Set(lightSamples).size).toBe(lightSamples.length);
     darkSamples.forEach((color, i) => expect(color).not.toBe(lightSamples[i]));
   });
+
+  it("colorblind mode is internally distinct/monotonic and swaps hue at the non-flat stops, per theme", () => {
+    for (const theme of ["dark", "light"] as const) {
+      const normalSamples = [-3, -1, 0, 1, 3].map((p) => pctChangeToColor(p, theme, false));
+      const colorblindSamples = [-3, -1, 0, 1, 3].map((p) => pctChangeToColor(p, theme, true));
+      expect(new Set(colorblindSamples).size).toBe(colorblindSamples.length);
+      // The flat 0% neutral (index 2) is deliberately shared with the normal
+      // palette — it's already hue-neutral gray/tan, not a red-or-green color
+      // needing a colorblind-safe swap. Only the non-zero stops should differ.
+      [0, 1, 3, 4].forEach((idx) => expect(normalSamples[idx]).not.toBe(colorblindSamples[idx]));
+      expect(normalSamples[2]).toBe(colorblindSamples[2]);
+    }
+  });
+
+  it("null still returns the shared N/A color regardless of theme/colorblind mode", () => {
+    expect(pctChangeToColor(null, "light", true)).toBe(NO_DATA_COLOR);
+  });
 });
 
 describe("getContrastText", () => {

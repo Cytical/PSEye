@@ -11,43 +11,67 @@ const PRIMARY = [
   { href: "/news", label: "News" },
 ];
 
+interface NavLink {
+  href: string;
+  label: string;
+  /** Shown under the label in the dropdown/mobile panel — the whole reason
+   * a page like "Regime" or "Clusters" is discoverable at all. A bare list
+   * of tool names told a visitor nothing about what they did or why they'd
+   * click; one line of plain English does. */
+  description: string;
+}
+
 /**
- * Each becomes its own inline dropdown on desktop, shown flat (ungrouped) on
- * mobile, where vertical stacking has no scanability problem. Two separate
- * dropdowns (rather than one "More" dropdown with two labeled sections)
- * keeps each menu short and its topic obvious from the trigger label alone.
+ * Four topic dropdowns instead of the original two ("Market Data" covering 5
+ * pages, "Tools" covering all 12 others) — that second group had grown into
+ * a single undifferentiated wall of 12 similar-sounding names (Screener,
+ * Analytics, Market Stats, Clusters, Regime, Rankings, Most Active,
+ * Sectors...), which was itself the discoverability problem: even a visitor
+ * who *did* open the dropdown had no easy way to scan it or tell what most
+ * of those pages actually did. Splitting by what a page is *for* (raw PSE
+ * reports vs. browsing/ranking vs. computed quant metrics vs. interactive
+ * calculators) keeps every menu to 4-5 items, each with a one-line
+ * description instead of a bare name.
  */
-const DROPDOWNS: { label: string; links: { href: string; label: string }[] }[] = [
+const DROPDOWNS: { label: string; links: NavLink[] }[] = [
   {
     label: "Market Data",
     links: [
-      { href: "/dividends", label: "Dividends" },
-      { href: "/calendar", label: "Calendar" },
-      { href: "/foreign-flow", label: "Foreign Flow" },
-      { href: "/block-sales", label: "Block Sales" },
-      { href: "/disclosures", label: "Disclosures" },
+      { href: "/calendar", label: "Calendar", description: "Ex-dividend and corporate action dates" },
+      { href: "/foreign-flow", label: "Foreign Flow", description: "Weekly net foreign buying vs. selling" },
+      { href: "/block-sales", label: "Block Sales", description: "Large negotiated trades off the order book" },
+      { href: "/disclosures", label: "Disclosures", description: "PSE Edge filings, grouped by company" },
+    ],
+  },
+  {
+    label: "Screeners",
+    links: [
+      { href: "/screener", label: "Screener", description: "Filter and sort every tracked stock" },
+      { href: "/dividends", label: "Dividends", description: "Highest trailing-12-month dividend yields" },
+      { href: "/rankings", label: "Rankings", description: "Every stock ranked by market cap" },
+      { href: "/most-active", label: "Most Active", description: "Highest-turnover stocks today" },
+      { href: "/sectors", label: "Sectors", description: "Every company grouped by PSE sector" },
+    ],
+  },
+  {
+    label: "Analytics",
+    links: [
+      { href: "/analytics", label: "Analytics", description: "Volatility, beta, RSI, and correlation" },
+      { href: "/market-stats", label: "Market Stats", description: "Market-wide breadth and dispersion" },
+      { href: "/clusters", label: "Clusters", description: "Stocks grouped by how they actually trade" },
+      { href: "/regime", label: "Regime", description: "Risk-on / risk-off market detection" },
     ],
   },
   {
     label: "Tools",
     links: [
-      { href: "/screener", label: "Screener" },
-      { href: "/analytics", label: "Analytics" },
-      { href: "/market-stats", label: "Market Stats" },
-      { href: "/clusters", label: "Clusters" },
-      { href: "/regime", label: "Regime" },
-      { href: "/rankings", label: "Rankings" },
-      { href: "/most-active", label: "Most Active" },
-      { href: "/sectors", label: "Sectors" },
-      { href: "/portfolio", label: "Portfolio" },
-      { href: "/charts", label: "Charts" },
-      { href: "/compare", label: "Compare" },
-      { href: "/dca", label: "DCA Calculator" },
+      { href: "/portfolio", label: "Portfolio", description: "Track your holdings' live gain/loss" },
+      { href: "/compare", label: "Compare", description: "Normalize % change across stocks" },
+      { href: "/dca", label: "DCA Calculator", description: "Simulate cost-averaging into a stock" },
+      { href: "/charts", label: "Charts", description: "TradingView charts (NASDAQ tickers)" },
     ],
   },
 ];
-const ALL_DROPDOWN_LINKS = DROPDOWNS.flatMap((g) => g.links);
-
 function useIsActive() {
   const pathname = usePathname();
   return (href: string) =>
@@ -62,12 +86,14 @@ function navLinkClass(active: boolean) {
 
 /**
  * Nav is split so Market Map, Daily Recap, and News stay one click away (the
- * three highest-traffic/most-frequently-updated pages) while the other nine
- * collapse behind two topic dropdowns — "Market Data" and "Tools" — instead
- * of one flat "More" list, so each menu stays short and its trigger label
- * tells you what's inside before you open it. `variant="stacked"` (mobile
- * hamburger panel) skips the dropdowns and lists everything flat, since
- * vertical stacking has no clutter problem there.
+ * three highest-traffic/most-frequently-updated pages) while the other 17
+ * collapse behind four topic dropdowns instead of one flat "More" list, so
+ * each menu stays short and scannable and its trigger label tells you what's
+ * inside before you open it. `variant="stacked"` (mobile hamburger panel)
+ * keeps the same four groupings — each under its own section heading —
+ * rather than flattening everything into one 20-link list, which had the
+ * same "wall of names" problem as the old single "Tools" dropdown, just
+ * vertical instead of horizontal.
  */
 export function NavLinks({ variant = "inline" }: { variant?: "inline" | "stacked" }) {
   const isActive = useIsActive();
@@ -75,7 +101,7 @@ export function NavLinks({ variant = "inline" }: { variant?: "inline" | "stacked
   if (variant === "stacked") {
     return (
       <>
-        {[...PRIMARY, ...ALL_DROPDOWN_LINKS].map((link) => (
+        {PRIMARY.map((link) => (
           <Link
             key={link.href}
             href={link.href}
@@ -84,6 +110,22 @@ export function NavLinks({ variant = "inline" }: { variant?: "inline" | "stacked
           >
             {link.label}
           </Link>
+        ))}
+        {DROPDOWNS.map((group) => (
+          <div key={group.label} className="mt-1 flex flex-col gap-2 border-t border-foreground/10 pt-2.5">
+            <span className="kicker text-foreground/45">{group.label}</span>
+            {group.links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isActive(link.href) ? "page" : undefined}
+                className="flex flex-col gap-0.5"
+              >
+                <span className={navLinkClass(isActive(link.href))}>{link.label}</span>
+                <span className="text-xs text-foreground/50">{link.description}</span>
+              </Link>
+            ))}
+          </div>
         ))}
       </>
     );
@@ -101,8 +143,14 @@ export function NavLinks({ variant = "inline" }: { variant?: "inline" | "stacked
           {link.label}
         </Link>
       ))}
-      {DROPDOWNS.map((group) => (
-        <NavDropdown key={group.label} label={group.label} links={group.links} isActive={isActive} />
+      {DROPDOWNS.map((group, i) => (
+        <NavDropdown
+          key={group.label}
+          label={group.label}
+          links={group.links}
+          isActive={isActive}
+          align={i === DROPDOWNS.length - 1 ? "right" : "left"}
+        />
       ))}
     </>
   );
@@ -112,10 +160,16 @@ function NavDropdown({
   label,
   links,
   isActive,
+  align = "left",
 }: {
   label: string;
-  links: { href: string; label: string }[];
+  links: NavLink[];
   isActive: (href: string) => boolean;
+  /** "right" for the rightmost trigger — a left-anchored w-72 panel there
+   * risks running past the viewport's right edge (there's no scroll to
+   * recover it), same reasoning a browser's own overflow menu anchors from
+   * the side nearest the screen edge. */
+  align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -167,7 +221,9 @@ function NavDropdown({
       {open && (
         <div
           role="menu"
-          className="absolute left-0 top-full z-20 mt-2 flex min-w-44 flex-col rounded-lg bg-panel py-1.5 ring-1 ring-panel-border shadow-lg shadow-black/5"
+          className={`absolute top-full z-20 mt-2 flex w-72 flex-col rounded-lg bg-panel py-1.5 ring-1 ring-panel-border shadow-lg shadow-black/5 ${
+            align === "right" ? "right-0" : "left-0"
+          }`}
         >
           {links.map((link) => (
             <Link
@@ -176,11 +232,14 @@ function NavDropdown({
               role="menuitem"
               onClick={() => setOpen(false)}
               aria-current={isActive(link.href) ? "page" : undefined}
-              className={`px-3.5 py-1.5 text-panel-fg ${
-                isActive(link.href) ? "font-medium" : "text-panel-fg/75 hover:bg-panel-raised hover:text-panel-fg"
+              className={`flex flex-col gap-0.5 px-3.5 py-2 ${
+                isActive(link.href) ? "bg-panel-active" : "hover:bg-panel-raised"
               }`}
             >
-              {link.label}
+              <span className={isActive(link.href) ? "font-medium text-panel-fg" : "text-panel-fg"}>
+                {link.label}
+              </span>
+              <span className="text-xs text-panel-fg/55">{link.description}</span>
             </Link>
           ))}
         </div>

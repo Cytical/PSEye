@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import { THEME_CHANGE_EVENT, type Theme } from "./theme";
 
 function readTheme(): Theme {
-  return (document.documentElement.dataset.theme as Theme | undefined) ?? "light";
+  return (document.documentElement.dataset.theme as Theme | undefined) ?? "dark";
 }
 
 function subscribe(callback: () => void) {
@@ -17,14 +17,15 @@ function subscribe(callback: () => void) {
  * THEME_INIT_SCRIPT) since useSyncExternalStore can't appear anywhere in a
  * Server Component's module graph, even unused at the actual import site.
  *
- * Server snapshot is always "light" — matches <html data-theme="light"> in
+ * Server snapshot is always "dark" — matches <html data-theme="dark"> in
  * layout.tsx, so hydration never mismatches a client whose pre-hydration
- * script already flipped to dark (system preference / saved choice); the
- * real value is picked up in the client-only re-render right after mount,
- * same pattern as useWatchlist. Needed by any component whose colors are
- * computed in JS rather than following the --panel-* CSS variables for free
- * (e.g. TreemapChart's data-driven box fills).
+ * script already flipped to light (an explicit stored choice — dark is the
+ * unconditional default, see THEME_INIT_SCRIPT); the real value is picked up
+ * in the client-only re-render right after mount, same pattern as
+ * useWatchlist. Needed by any component whose colors are computed in JS
+ * rather than following the --panel-* CSS variables for free (e.g.
+ * TreemapChart's data-driven box fills).
  */
 export function useColorTheme(): Theme {
-  return useSyncExternalStore(subscribe, readTheme, (): Theme => "light");
+  return useSyncExternalStore(subscribe, readTheme, (): Theme => "dark");
 }

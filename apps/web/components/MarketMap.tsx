@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { TreemapChart, type TreemapStock } from "./TreemapChart";
 import { MarketSummaryBar } from "./MarketSummaryBar";
 import { TopMovers } from "./TopMovers";
 import { AddToWatchlistModal } from "./AddToWatchlistModal";
 import { ShareButton } from "./ShareButton";
+import { FullscreenButton } from "./FullscreenButton";
 import { MARKET_MAP_FILTERS, filterMarketMapStocks, type MarketMapFilter } from "@/lib/marketMapFilters";
 import { NASDAQ_100_STOCKS } from "@/lib/nasdaq100";
 import { useWatchlist } from "@/lib/watchlist";
+import { useColorblindMode, setColorblindMode } from "@/lib/colorblindMode";
 import type { CompanyProfile } from "@/lib/companyProfiles";
 import type { MarketSnapshot } from "@/lib/marketSnapshot";
 import type { LatestForeignFlow } from "@/lib/latestForeignFlow";
@@ -119,7 +121,9 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
     (): string[] => EMPTY_SHARED_TICKERS
   );
   const { tickers: watchedTickers, toggle } = useWatchlist();
+  const colorblind = useColorblindMode();
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const mapAreaRef = useRef<HTMLDivElement>(null);
 
   // ---- Time machine: view the market as recorded on a past trade date ----
   const viewDate = useSyncExternalStore(subscribeToFilterUrl, getDateFromUrl, (): string | null => null);
@@ -239,7 +243,10 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
         ) : (
           <span />
         )}
-        <ShareButton getShareUrl={getMarketMapShareUrl} />
+        <div className="flex items-center gap-2">
+          <FullscreenButton targetRef={mapAreaRef} />
+          <ShareButton getShareUrl={getMarketMapShareUrl} />
+        </div>
       </div>
 
       {isPastView && (
@@ -277,7 +284,12 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
           </button>
         </div>
       )}
-      <div className="flex flex-col gap-4 sm:flex-row">
+      {/* Fullscreen target for FullscreenButton above — bg-background matters
+          only in fullscreen (the Fullscreen API's default backdrop is black,
+          which would otherwise show through any gap between the sidebar and
+          canvas); it's a no-op in normal flow since that's already the page's
+          own background. */}
+      <div ref={mapAreaRef} className="flex flex-col gap-4 bg-background sm:flex-row">
         <nav
           className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:sticky sm:top-16 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
           aria-label="Market map filters"
@@ -312,6 +324,21 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
               );
             })}
           </div>
+
+          {/* Matches finviz's own "Colorblind Mode" checkbox (same sidebar
+              placement) — swaps the treemap's red/green scale for orange/blue
+              (see packages/treemap-layout/color.ts's *_COLORBLIND_RANGE).
+              Scoped to just the map's box colors, not a sitewide --up/--down
+              override, same as finviz's own toggle. */}
+          <label className="flex items-center gap-2 border-t border-panel-border px-2 pt-2 text-xs font-medium text-panel-fg/70">
+            <input
+              type="checkbox"
+              checked={colorblind}
+              onChange={(e) => setColorblindMode(e.target.checked)}
+              className="h-3.5 w-3.5 accent-accent"
+            />
+            Colorblind mode
+          </label>
 
           {/* The summary bar is today's PSEi/forex snapshot — hidden in a past-date
               view rather than shown next to a different day's map. */}

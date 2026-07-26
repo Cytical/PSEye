@@ -26,14 +26,17 @@ export function applyTheme(theme: Theme) {
 
 /** Source used by the pre-hydration inline script in layout.tsx — kept as a
  * plain string (not imported) since that script runs before any bundle
- * loads. Must be kept in sync with the logic above by hand. */
+ * loads. Must be kept in sync with the logic above by hand.
+ *
+ * Dark is the unconditional default for a first-time visitor — not gated on
+ * `prefers-color-scheme`, so a visitor on a light-themed OS still lands on
+ * dark rather than only the ones whose system already prefers it. An
+ * explicit stored choice (light or dark) always wins over this default. */
 export const THEME_INIT_SCRIPT = `
 (function () {
   try {
     var stored = localStorage.getItem("${THEME_STORAGE_KEY}");
-    var theme = stored === "light" || stored === "dark"
-      ? stored
-      : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    var theme = stored === "light" || stored === "dark" ? stored : "dark";
     document.documentElement.dataset.theme = theme;
     if (theme === "dark") document.documentElement.classList.add("dark");
   } catch (e) {}

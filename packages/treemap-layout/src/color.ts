@@ -38,6 +38,30 @@ const LIGHT_COLOR_RANGE = [
   "#1c8a4b", // >= +3% (matches --up's light-theme value)
 ];
 
+/**
+ * finviz's own "Colorblind Mode" checkbox swaps its red/green map for an
+ * orange/blue diverging scale (confirmed by toggling it live) — orange/blue
+ * is the standard red-green-colorblindness-safe substitute (deuteranopia/
+ * protanopia both collapse red and green toward each other; blue and orange
+ * stay distinguishable). Same domain/shape as the normal palettes, same flat
+ * neutral centers, just the hue swapped at the two ends.
+ */
+const DARK_COLORBLIND_RANGE = [
+  "#e0812a", // <= -3% (vivid orange)
+  "#7a4a20", // -1%
+  "#33363d", // 0% (flat, same neutral as DARK_COLOR_RANGE)
+  "#1c4a6b", // +1%
+  "#2f8fd6", // >= +3% (vivid blue)
+];
+
+const LIGHT_COLORBLIND_RANGE = [
+  "#c2661e", // <= -3% (vivid orange)
+  "#e8c19b", // -1% (soft orange/tan, dark ink stays legible)
+  "#ece7d8", // 0% (flat, same neutral as LIGHT_COLOR_RANGE)
+  "#a7c8e0", // +1% (soft blue, dark ink stays legible)
+  "#1c6ea4", // >= +3% (vivid blue)
+];
+
 export const COLOR_DOMAIN_MIN = COLOR_DOMAIN[0];
 export const COLOR_DOMAIN_MAX = COLOR_DOMAIN[COLOR_DOMAIN.length - 1];
 
@@ -45,23 +69,32 @@ function buildScale(range: string[]) {
   return scaleLinear<string>().domain(COLOR_DOMAIN).range(range).interpolate(interpolateRgb).clamp(true);
 }
 
-const scales: Record<ColorTheme, ReturnType<typeof buildScale>> = {
+function rangeFor(theme: ColorTheme, colorblind: boolean): string[] {
+  if (theme === "light") return colorblind ? LIGHT_COLORBLIND_RANGE : LIGHT_COLOR_RANGE;
+  return colorblind ? DARK_COLORBLIND_RANGE : DARK_COLOR_RANGE;
+}
+
+const scales = {
   dark: buildScale(DARK_COLOR_RANGE),
   light: buildScale(LIGHT_COLOR_RANGE),
+  "dark-colorblind": buildScale(DARK_COLORBLIND_RANGE),
+  "light-colorblind": buildScale(LIGHT_COLORBLIND_RANGE),
 };
 
 /** Distinct from the flat (0%) color so an N/A tile doesn't read as "unchanged" in either theme. */
 export const NO_DATA_COLOR = "#5b5e66";
 
 /**
- * `theme` defaults to "dark" so callers that render one fixed look
- * regardless of the visitor's site theme (opengraph-image.tsx's static
- * share-image card) don't need to pass anything; TreemapChart.tsx passes
- * the visitor's live theme explicitly.
+ * `theme` defaults to "dark" and `colorblind` to `false` so callers that
+ * render one fixed look regardless of the visitor's site preferences
+ * (opengraph-image.tsx's static share-image card) don't need to pass
+ * anything; TreemapChart.tsx passes the visitor's live theme/colorblind
+ * settings explicitly.
  */
-export function pctChangeToColor(pctChange: number | null, theme: ColorTheme = "dark"): string {
+export function pctChangeToColor(pctChange: number | null, theme: ColorTheme = "dark", colorblind = false): string {
   if (pctChange === null) return NO_DATA_COLOR;
-  return scales[theme](pctChange);
+  const key = colorblind ? (`${theme}-colorblind` as const) : theme;
+  return scales[key](pctChange);
 }
 
 /**
@@ -70,8 +103,8 @@ export function pctChangeToColor(pctChange: number | null, theme: ColorTheme = "
  * than discrete swatches. Stop positions are the domain values re-projected
  * onto [0%, 100%].
  */
-export function getLegendGradientCss(theme: ColorTheme = "dark"): string {
-  const range = theme === "light" ? LIGHT_COLOR_RANGE : DARK_COLOR_RANGE;
+export function getLegendGradientCss(theme: ColorTheme = "dark", colorblind = false): string {
+  const range = rangeFor(theme, colorblind);
   return `linear-gradient(to right, ${range
     .map((color, i) => {
       const pct = ((COLOR_DOMAIN[i] - COLOR_DOMAIN_MIN) / (COLOR_DOMAIN_MAX - COLOR_DOMAIN_MIN)) * 100;
