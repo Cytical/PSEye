@@ -6,31 +6,8 @@ import { getLatestForeignFlow } from "@/lib/latestForeignFlow";
 import { getRealSparklines } from "@/lib/sparklines";
 import { MarketMap } from "@/components/MarketMap";
 import { MarketMapFaq } from "@/components/MarketMapFaq";
-
-/**
- * Approximate, computed at render time (this page revalidates hourly, so it
- * can't tick live client-side anyway). PSE's core continuous trading session
- * is Mon-Fri 9:30am-3:30pm PHT; pre-open/trading-at-last minutes at the edges
- * are treated as closed since the badge is a rough "is it worth checking
- * back right now" signal, not a precise exchange-status feed.
- */
-function getMarketStatus(): { open: boolean; label: string } {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Manila",
-    hour: "numeric",
-    minute: "numeric",
-    hourCycle: "h23",
-    weekday: "short",
-  }).formatToParts(new Date());
-  const weekday = parts.find((p) => p.type === "weekday")?.value ?? "";
-  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
-  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
-  const minutesOfDay = hour * 60 + minute;
-  const isWeekday = weekday !== "Sat" && weekday !== "Sun";
-  const isTradingHours = minutesOfDay >= 9 * 60 + 30 && minutesOfDay < 15 * 60 + 30;
-  const open = isWeekday && isTradingHours;
-  return { open, label: open ? "Market open" : "Market closed" };
-}
+import { MarketStatusBadge } from "@/components/MarketStatusBadge";
+import { getMarketStatus } from "@/lib/marketStatus";
 
 export const revalidate = 3600; // 1h; matches quotes/market-snapshot's hourly ETL cadence (market-data-hourly.yml) — a tighter window would only add DB reads without fresher data
 
@@ -103,10 +80,10 @@ export default async function MarketMapPage() {
       <div id="market-map-capture">
         <div className="flex flex-wrap items-center gap-2.5">
           <p className="kicker text-accent">Market Map</p>
-          <span className="flex items-center gap-1.5 rounded-full border border-panel-border bg-panel px-2 py-0.5 text-[10px] font-medium text-panel-fg/70">
-            <span className={`h-1.5 w-1.5 rounded-full ${status.open ? "animate-pulse bg-up" : "bg-panel-fg/30"}`} />
-            {status.label}
-          </span>
+          {/* Seeded with the server's reading so SSR and the first client
+              render agree, then kept honest in the browser — this route is
+              cached for an hour, so a render-time value would go stale. */}
+          <MarketStatusBadge initial={status} />
         </div>
         {/* nowrap only from sm up. Below that the vw term bottoms out at the
             clamp minimum, so the line stops scaling with the viewport and
