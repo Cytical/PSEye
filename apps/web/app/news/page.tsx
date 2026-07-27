@@ -1,15 +1,9 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import type { Metadata } from "next";
 import type { NewsItem } from "@pseye/source-news";
-import { fetchNewsProgressive, getNewsInsights, type NewsMoodSummary, type TrendingTicker } from "@/lib/news";
+import { getNewsPageData, type NewsMoodSummary } from "@/lib/news";
 import { NewsCard } from "@/components/NewsCard";
-import {
-  NewsFrontSkeleton,
-  NewsMoreSkeleton,
-  NewsMoodSkeleton,
-  TrendingTickersSkeleton,
-} from "@/components/NewsSkeleton";
+import { NewsFrontSkeleton, NewsMoreSkeleton, NewsMoodSkeleton } from "@/components/NewsSkeleton";
 import { newsSerif, newsSans } from "./fonts";
 
 // Hourly ISR check — just an upper bound on how stale a cached render can be.
@@ -24,16 +18,10 @@ export const metadata: Metadata = {
 };
 
 export default function NewsPage() {
-  // Kicked off here (not awaited) so both tiers fetch in parallel; each
-  // Suspense boundary below awaits only the slice it needs.
-  const { top, rest } = fetchNewsProgressive();
-
-  // Same "kick off once, let each Suspense boundary await its own slice"
-  // shape — mood and trending share one underlying query (getNewsInsights)
-  // rather than each independently reading the DB.
-  const insights = getNewsInsights();
-  const mood = insights.then((i) => i.mood);
-  const trending = insights.then((i) => i.trending);
+  // Kicked off here (not awaited) so top/rest/mood all fetch in parallel off
+  // one shared DB read (see getNewsPageData); each Suspense boundary below
+  // awaits only the slice it needs.
+  const { top, rest, mood } = getNewsPageData();
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -82,21 +70,13 @@ export default function NewsPage() {
           </Suspense>
         </div>
 
-        <div className="mt-14 lg:grid lg:grid-cols-4 lg:gap-10">
-          <div className="lg:col-span-3">
-            <h2 className="font-news-sans border-b-2 border-[#990F3D] pb-2 text-sm font-bold uppercase tracking-[0.12em] dark:border-[#D75980]">
-              More Headlines
-            </h2>
-            <Suspense fallback={<NewsMoreSkeleton />}>
-              <MoreHeadlines itemsPromise={rest} />
-            </Suspense>
-          </div>
-
-          <div className="mt-10 lg:mt-0 lg:col-span-1 lg:border-l lg:border-[#1A1210]/15 lg:pl-8 lg:dark:border-[#F2E9E2]/15">
-            <Suspense fallback={<TrendingTickersSkeleton />}>
-              <TrendingTickersRail trendingPromise={trending} />
-            </Suspense>
-          </div>
+        <div className="mt-14">
+          <h2 className="font-news-sans border-b-2 border-[#990F3D] pb-2 text-sm font-bold uppercase tracking-[0.12em] dark:border-[#D75980]">
+            More Headlines
+          </h2>
+          <Suspense fallback={<NewsMoreSkeleton />}>
+            <MoreHeadlines itemsPromise={rest} />
+          </Suspense>
         </div>
       </div>
     </div>
@@ -138,46 +118,6 @@ async function MarketMood({ moodPromise }: { moodPromise: Promise<NewsMoodSummar
         {mood.positive > 0 && <div className="h-full bg-up" style={{ width: `${positivePct}%` }} />}
         {mood.negative > 0 && <div className="h-full bg-down" style={{ width: `${negativePct}%` }} />}
       </div>
-    </div>
-  );
-}
-
-/**
- * "Most mentioned today" — see computeTrendingTickers in lib/news.ts.
- * Cross-links to /stocks/[ticker], mirroring that page's own "In the news"
- * section which links the other direction.
- */
-async function TrendingTickersRail({ trendingPromise }: { trendingPromise: Promise<TrendingTicker[]> }) {
-  const trending = await trendingPromise;
-  if (trending.length === 0) return null;
-
-  return (
-    <div>
-      <h2 className="font-news-sans border-b-2 border-[#990F3D] pb-2 text-sm font-bold uppercase tracking-[0.12em] dark:border-[#D75980]">
-        Trending Tickers
-      </h2>
-      <ol className="mt-4 flex flex-col gap-3.5">
-        {trending.map((t, i) => (
-          <li key={t.ticker}>
-            <Link
-              href={`/stocks/${t.ticker}`}
-              className="group flex items-center justify-between gap-3 font-news-sans"
-            >
-              <span className="flex min-w-0 items-center gap-2.5">
-                <span className="w-4 shrink-0 text-right font-mono text-[11px] text-[#1A1210]/35 dark:text-[#F2E9E2]/35">
-                  {i + 1}
-                </span>
-                <span className="truncate text-sm font-bold tracking-tight text-[#1A1210] group-hover:underline dark:text-[#F2E9E2]">
-                  {t.ticker}
-                </span>
-              </span>
-              <span className="shrink-0 text-[11px] text-[#1A1210]/45 dark:text-[#F2E9E2]/45">
-                {t.count} mention{t.count === 1 ? "" : "s"}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ol>
     </div>
   );
 }
@@ -246,7 +186,7 @@ async function MoreHeadlines({ itemsPromise }: { itemsPromise: Promise<NewsItem[
   if (items.length === 0) return null;
 
   return (
-    <ul className="mt-5 grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2">
+    <ul className="mt-5 grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
         <li key={item.url} className="border-b border-[#1A1210]/10 pb-5 dark:border-[#F2E9E2]/10">
           <NewsCard item={item} variant="compact" />

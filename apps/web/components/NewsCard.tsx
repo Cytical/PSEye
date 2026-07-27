@@ -50,13 +50,20 @@ function Kicker({ text, className = "" }: { text: string; className?: string }) 
  * direction, so a badge on literally every card would be more noise than
  * signal — same reasoning the daily recap's breadth strip uses "48 flat" as
  * plain, unstyled text rather than giving "unchanged" its own color chip.
+ *
+ * Hidden until the card is hovered (`opacity-0 group-hover:opacity-100` —
+ * the `group` class lives on the enclosing `<article>` in each card variant
+ * below, not just the `<a>`, so hovering anywhere on the card counts, not
+ * only the thumbnail/headline link). Pure CSS, no client component needed.
+ * `title` stays set unconditionally so the sentiment is still discoverable
+ * without a mouse (keyboard focus / assistive tech reading the attribute).
  */
 function SentimentBadge({ sentiment }: { sentiment: NewsItem["sentiment"] }) {
   if (sentiment !== "positive" && sentiment !== "negative") return null;
   const isPositive = sentiment === "positive";
   return (
     <span
-      className={`inline-flex items-center gap-0.5 font-mono text-[10px] font-semibold tracking-normal ${
+      className={`inline-flex items-center gap-0.5 font-mono text-[10px] font-semibold tracking-normal opacity-0 transition-opacity duration-150 group-hover:opacity-100 ${
         isPositive ? "text-up" : "text-down"
       }`}
       title={isPositive ? "Positive sentiment" : "Negative sentiment"}
@@ -115,8 +122,8 @@ function Byline({
 
 function HeroCard({ item }: { item: NewsItem }) {
   return (
-    <article>
-      <a href={item.url} target="_blank" rel="noopener noreferrer" className="group block">
+    <article className="group">
+      <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">
         <NewsThumbnail item={item} className="aspect-video w-full" />
         <Kicker text={kickerFor(item)} className="mt-4" />
         <h3 className="font-news-serif mt-1.5 text-3xl font-bold leading-[1.08] tracking-tight group-hover:underline sm:text-4xl">
@@ -135,8 +142,8 @@ function HeroCard({ item }: { item: NewsItem }) {
 
 function SecondaryCard({ item }: { item: NewsItem }) {
   return (
-    <article>
-      <a href={item.url} target="_blank" rel="noopener noreferrer" className="group flex gap-4">
+    <article className="group">
+      <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex gap-4">
         <NewsThumbnail item={item} className="h-20 w-20 sm:h-24 sm:w-24" />
         <div className="min-w-0 flex-1">
           <Kicker text={kickerFor(item)} />
@@ -152,8 +159,8 @@ function SecondaryCard({ item }: { item: NewsItem }) {
 
 function CompactCard({ item }: { item: NewsItem }) {
   return (
-    <article>
-      <a href={item.url} target="_blank" rel="noopener noreferrer" className="group block">
+    <article className="group">
+      <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">
         <h3 className="font-news-serif text-[15px] font-semibold leading-snug group-hover:underline">
           {item.title}
         </h3>

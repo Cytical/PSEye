@@ -78,63 +78,48 @@ export function computeMoodSummary(items: NewsItem[]): NewsMoodSummary {
   return { positive, negative, neutral, total: items.length };
 }
 
-export interface TrendingTicker {
-  ticker: string;
-  count: number;
-}
-
-const TRENDING_TICKER_COUNT = 8;
-
-/**
- * "Most mentioned today" — counts how often each ticker appears across
- * `items`' tickers arrays, no new storage (derived at render time over the
- * same recent-news window every other function here already reads). Ties
- * break alphabetically for a stable order rather than insertion order,
- * which would otherwise silently depend on Map iteration/article order.
- */
-export function computeTrendingTickers(items: NewsItem[]): TrendingTicker[] {
-  const counts = new Map<string, number>();
-  for (const item of items) {
-    for (const ticker of item.tickers) {
-      counts.set(ticker, (counts.get(ticker) ?? 0) + 1);
-    }
-  }
-
-  return Array.from(counts.entries())
-    .map(([ticker, count]) => ({ ticker, count }))
-    .sort((a, b) => b.count - a.count || a.ticker.localeCompare(b.ticker))
-    .slice(0, TRENDING_TICKER_COUNT);
-}
-
 async function fetchFrom(sources: NewsSource[]): Promise<NewsItem[]> {
   const results = await Promise.allSettled(sources.map((source) => source.fetchLatest()));
   return results.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
+}
+
+export interface NewsPageData {
+  top: Promise<NewsItem[]>;
+  rest: Promise<NewsItem[]>;
+  mood: Promise<NewsMoodSummary>;
 }
 
 /**
  * Splits news fetching by outlet reliability tier (see outlets.ts) instead of
  * awaiting every outlet before rendering anything. `top` resolves as soon as
  * the confirmed-reachable outlets respond, so the page's first Suspense
- * boundary can paint quickly; `rest` additionally waits on the unverified
- * outlets and streams in afterward.
+ * boundary can paint quickly; `rest`/`mood` additionally wait on the
+ * unverified outlets and stream in afterward. `reliable`/`unverified` are
+ * each fetched exactly once and shared by all three derived values — same
+ * "one read, several slices" shape as the DB path in getNewsPageData below.
  *
  * Only ever called as a fallback (DATABASE_URL unset, the DB read failed, or
- * the news_items table is still empty) — see fetchNewsProgressive below.
+ * the news_items table is still empty) — see getNewsPageData below.
  */
-function fetchLiveProgressive(): { top: Promise<NewsItem[]>; rest: Promise<NewsItem[]> } {
+function fetchLiveProgressive(): NewsPageData {
   const reliable = fetchFrom(RELIABLE_NEWS_SOURCES).then(rankByRelevance);
+  const unverified = fetchFrom(UNVERIFIED_NEWS_SOURCES);
 
   const top = reliable.then((items) => items.slice(0, FEATURED_COUNT));
 
-  const rest = Promise.all([reliable, fetchFrom(UNVERIFIED_NEWS_SOURCES)]).then(
-    ([reliableItems, unverifiedItems]) =>
-      rankByRelevance([...reliableItems.slice(FEATURED_COUNT), ...unverifiedItems]).slice(
-        0,
-        MORE_COUNT
-      )
+  const rest = Promise.all([reliable, unverified]).then(([reliableItems, unverifiedItems]) =>
+    rankByRelevance([...reliableItems.slice(FEATURED_COUNT), ...unverifiedItems]).slice(0, MORE_COUNT)
   );
 
-  return { top, rest };
+  // Mood doesn't need `rest`'s "exclude what's already in top" precision (a
+  // duplicate count in an aggregate is harmless, unlike a duplicate card on
+  // the page) — reuses the same `reliable`/`unverified` promises rather than
+  // triggering a third live fetch.
+  const mood = Promise.all([reliable, unverified]).then(([reliableItems, unverifiedItems]) =>
+    computeMoodSummary(rankByRelevance([...reliableItems, ...unverifiedItems]))
+  );
+
+  return { top, rest, mood };
 }
 
 /**
@@ -172,34 +157,32 @@ async function fetchRankedFromDb(databaseUrl: string): Promise<NewsItem[] | null
       }))
     );
   } catch (err) {
-    console.error("fetchNewsProgressive: DB read failed, falling back to live RSS fetch", err);
+    console.error("getNewsPageData: DB read failed, falling back to live RSS fetch", err);
     return null;
   }
 }
 
 /**
- * Reads pre-fetched headlines from our own DB (one query) instead of
- * live-fetching every outlet's RSS feed on every page load/ISR revalidation
- * — the hourly fetch-news ETL job already did that work. Falls back to the
- * original live progressive fetch when DATABASE_URL is unset, the table is
- * still empty, or the DB read errors, so the page never breaks — same
- * fallback contract as every other DB-backed lib function here.
- *
- * `top`/`rest` share a single fallback attempt (memoized in getLiveFallback)
- * rather than each independently triggering its own live-fetch waterfall if
- * the DB path comes back empty.
+ * Single entry point for /news: one shared "ranked full list" read (DB when
+ * available and populated, live fetch otherwise), with `top`/`rest`/`mood`
+ * all `.then()`-derived slices/aggregates over that *one* promise — replaces
+ * a previous version of this file where the front-page list and the "Market
+ * Mood" aggregate were two independent functions that each read the DB on
+ * their own, for what was ultimately the same ranked list. `dbRanked` is
+ * still only ever invoked once here no matter how many of `top`/`rest`/
+ * `mood` a caller actually awaits (feed.xml's getRecentNewsFeed below only
+ * uses `top`/`rest` and never awaits `mood` at all — that's fine, an
+ * unawaited `.then()` derivation still runs, it's just not free-standing
+ * expensive work, unlike a second DB round-trip would be).
  */
-export function fetchNewsProgressive(): {
-  top: Promise<NewsItem[]>;
-  rest: Promise<NewsItem[]>;
-} {
+export function getNewsPageData(): NewsPageData {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) return fetchLiveProgressive();
 
   const dbRanked = fetchRankedFromDb(databaseUrl);
 
-  let liveFallback: { top: Promise<NewsItem[]>; rest: Promise<NewsItem[]> } | null = null;
-  function getLiveFallback() {
+  let liveFallback: NewsPageData | null = null;
+  function getLiveFallback(): NewsPageData {
     if (!liveFallback) liveFallback = fetchLiveProgressive();
     return liveFallback;
   }
@@ -208,15 +191,18 @@ export function fetchNewsProgressive(): {
   const rest = dbRanked.then((items) =>
     items ? items.slice(FEATURED_COUNT, FEATURED_COUNT + MORE_COUNT) : getLiveFallback().rest
   );
+  const mood = dbRanked.then((items) => (items ? computeMoodSummary(items) : getLiveFallback().mood));
 
-  return { top, rest };
+  return { top, rest, mood };
 }
 
 /**
  * Recent headlines mentioning a specific ticker, for /stocks/[ticker]'s "In
- * the news" section — same DB-first-else-live contract as
- * fetchNewsProgressive, just without the progressive Suspense split, since a
- * single small section doesn't need it.
+ * the news" section — a different page/request than /news, so there's no
+ * shared-fetch opportunity with getNewsPageData above (Next.js doesn't
+ * dedupe our own createDb()/Drizzle calls across unrelated route renders the
+ * way it does fetch()). Same DB-first-else-live contract as getNewsPageData,
+ * just a single `fetchRankedFromDb` call, not two.
  */
 export async function getNewsForTicker(ticker: string, limit = 5): Promise<NewsItem[]> {
   const databaseUrl = process.env.DATABASE_URL;
@@ -228,31 +214,13 @@ export async function getNewsForTicker(ticker: string, limit = 5): Promise<NewsI
 }
 
 /**
- * "Market Mood" + "Trending Tickers" data for /news — both derived from the
- * same recent/relevant news window fetchNewsProgressive ranks from (DB when
- * available and populated, live fetch otherwise, same fallback contract as
- * getNewsForTicker above), computed fresh per request rather than persisted:
- * cheap over <=80-200 rows, and unlike sentiment itself (which needs to be
- * *stable* historically, hence persisted on the row — see NewsItem.sentiment)
- * these are just today's snapshot, recomputed every time by design.
- */
-export async function getNewsInsights(): Promise<{ mood: NewsMoodSummary; trending: TrendingTicker[] }> {
-  const databaseUrl = process.env.DATABASE_URL;
-  const ranked = databaseUrl
-    ? ((await fetchRankedFromDb(databaseUrl)) ?? (await fetchLiveAll()))
-    : await fetchLiveAll();
-
-  return { mood: computeMoodSummary(ranked), trending: computeTrendingTickers(ranked) };
-}
-
-/**
  * Flat, true-reverse-chronological headline list for the RSS feed
- * (feed.xml/route.ts) — unlike fetchNewsProgressive's relevance-tiered
- * top/rest split (built for the front page's layout), a feed reader expects
- * plain newest-first order.
+ * (feed.xml/route.ts) — unlike getNewsPageData's relevance-tiered top/rest
+ * split (built for the front page's layout), a feed reader expects plain
+ * newest-first order.
  */
 export async function getRecentNewsFeed(limit = 30): Promise<NewsItem[]> {
-  const { top, rest } = fetchNewsProgressive();
+  const { top, rest } = getNewsPageData();
   const [topItems, restItems] = await Promise.all([top, rest]);
   return sortByDate([...topItems, ...restItems]).slice(0, limit);
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeMoodSummary, computeTrendingTickers } from "./news";
+import { computeMoodSummary } from "./news";
 import type { NewsItem } from "@pseye/source-news";
 
 function item(overrides: Partial<NewsItem> = {}): NewsItem {
@@ -46,32 +46,5 @@ describe("computeMoodSummary", () => {
     ];
     const summary = computeMoodSummary(items);
     expect(summary.positive + summary.negative + summary.neutral).toBe(summary.total);
-  });
-});
-
-describe("computeTrendingTickers", () => {
-  it("counts ticker mentions across items and sorts descending", () => {
-    const trending = computeTrendingTickers([
-      item({ tickers: ["BDO", "BPI"] }),
-      item({ tickers: ["BDO"] }),
-      item({ tickers: ["SM"] }),
-    ]);
-    expect(trending[0]).toEqual({ ticker: "BDO", count: 2 });
-    expect(trending.map((t) => t.ticker)).toContain("BPI");
-    expect(trending.map((t) => t.ticker)).toContain("SM");
-  });
-
-  it("breaks ties alphabetically for a stable order", () => {
-    const trending = computeTrendingTickers([item({ tickers: ["SM"] }), item({ tickers: ["BDO"] })]);
-    expect(trending.map((t) => t.ticker)).toEqual(["BDO", "SM"]);
-  });
-
-  it("caps the result at 8 tickers", () => {
-    const items = Array.from({ length: 12 }, (_, i) => item({ tickers: [`T${i}`] }));
-    expect(computeTrendingTickers(items)).toHaveLength(8);
-  });
-
-  it("returns [] when no article has a tagged ticker", () => {
-    expect(computeTrendingTickers([item({ tickers: [] }), item({ tickers: [] })])).toEqual([]);
   });
 });

@@ -31,7 +31,7 @@ export function NewsFrontSkeleton() {
 
 export function NewsMoreSkeleton() {
   return (
-    <ul className="mt-5 grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2">
+    <ul className="mt-5 grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 9 }).map((_, i) => (
         <li key={i} className="animate-pulse border-b border-[#1A1210]/10 pb-5 dark:border-[#F2E9E2]/10">
           <div className="h-4 w-3/4 bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
@@ -48,19 +48,6 @@ export function NewsMoodSkeleton() {
     <div className="animate-pulse border-y border-[#1A1210]/10 py-3 dark:border-[#F2E9E2]/10">
       <div className="h-3 w-24 bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
       <div className="mt-2 h-4 w-2/3 bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
-    </div>
-  );
-}
-
-export function TrendingTickersSkeleton() {
-  return (
-    <div className="animate-pulse">
-      <div className="h-3 w-28 bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
-      <div className="mt-4 flex flex-col gap-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-4 w-full bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
-        ))}
-      </div>
     </div>
   );
 }
