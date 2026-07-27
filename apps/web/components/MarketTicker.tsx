@@ -1,10 +1,42 @@
 import Link from "next/link";
+import { PSEI_TICKERS } from "@pseye/source-quotes";
 import { getDailyQuotes } from "@/lib/quotes";
 
 interface TickerQuote {
   ticker: string;
   price: number;
   pctChange: number;
+}
+
+const PSEI_TICKER_SET = new Set(PSEI_TICKERS);
+
+/** Fallback size when PSEi membership can't be resolved — see pickTapeQuotes. */
+const FALLBACK_COUNT = 30;
+
+/**
+ * The tape shows the PSEi constituents, biggest first — not every tracked
+ * company.
+ *
+ * Running the whole roster through it was self-defeating. Measured live: 202
+ * tickers had a price, which at the deliberately-readable ~3.5s per item made
+ * one full loop 707 seconds — 11.8 minutes — and because the list was sorted
+ * alphabetically the tape always opened on AB, ABA, ABG, ABS and only reached
+ * the last name after 11.1 minutes. So the strip a visitor actually saw was a
+ * fixed handful of micro caps, and SM, BDO, TEL and ALI were effectively never
+ * on screen. A ticker tape exists to give the market's pulse at a glance;
+ * eleven minutes to cycle is the opposite of that.
+ *
+ * The PSEi is the headline index and the conventional thing for a tape to
+ * carry, and market-cap order puts the names people recognise first. The full
+ * roster is still one click away on the market map, /stocks and /screener.
+ */
+function pickTapeQuotes<T extends { ticker: string; marketCap: number }>(quotes: T[]): T[] {
+  const constituents = quotes.filter((q) => PSEI_TICKER_SET.has(q.ticker));
+  // If the roster and the index list ever drift apart far enough that almost
+  // nothing matches, fall back to the largest companies by market cap rather
+  // than rendering an empty or near-empty strip.
+  const chosen = constituents.length >= 10 ? constituents : quotes.slice(0, FALLBACK_COUNT);
+  return [...chosen].sort((a, b) => b.marketCap - a.marketCap);
 }
 
 function changeColor(n: number): string {
@@ -42,23 +74,28 @@ function TickerItem({ q, hidden }: { q: TickerQuote; hidden?: boolean }) {
  */
 export async function MarketTicker() {
   const quotes = await getDailyQuotes();
-  const withPrice = quotes
-    .filter((q): q is typeof q & { price: number; pctChange: number } => q.price != null && q.pctChange != null)
-    .sort((a, b) => a.ticker.localeCompare(b.ticker));
+  const withPrice = quotes.filter(
+    (q): q is typeof q & { price: number; pctChange: number } => q.price != null && q.pctChange != null,
+  );
+  // Ordered by market cap inside pickTapeQuotes, so the tape opens on the
+  // names a visitor recognises rather than whatever sorts first alphabetically.
+  const tape = pickTapeQuotes(withPrice);
 
-  if (withPrice.length === 0) return null;
+  if (tape.length === 0) return null;
 
-  // Scroll speed (px/s) stays roughly constant as the roster grows rather
-  // than the whole loop just taking longer to notice — duration scales with
-  // item count instead of being a fixed value tuned for today's ~282 tickers.
-  // ~3.5s/item settled at a comfortably readable pace (the original 1.1s/item
-  // read as a blur of numbers rather than a ticker you could actually track).
-  const duration = Math.max(120, Math.round(withPrice.length * 3.5));
+  // Scroll speed (px/s) stays roughly constant as the constituent list changes
+  // rather than the whole loop just taking longer to notice — duration scales
+  // with item count instead of being a fixed value. ~3.5s/item settled at a
+  // comfortably readable pace (the original 1.1s/item read as a blur of
+  // numbers rather than a ticker you could actually track). With the PSEi's
+  // ~30 names that puts a full cycle at the 120s floor, so everything on the
+  // tape comes round about every two minutes instead of every twelve.
+  const duration = Math.max(120, Math.round(tape.length * 3.5));
 
   return (
     <div
       role="region"
-      aria-label="Live stock ticker"
+      aria-label="PSEi constituent price ticker"
       className="group overflow-hidden border-b border-foreground/10 bg-panel-raised"
     >
       <div
@@ -68,10 +105,10 @@ export async function MarketTicker() {
         className="flex w-max animate-[ticker-scroll_120s_linear_infinite] group-hover:[animation-play-state:paused] focus-within:[animation-play-state:paused]"
         style={{ animationDuration: `${duration}s` }}
       >
-        {withPrice.map((q) => (
+        {tape.map((q) => (
           <TickerItem key={`${q.ticker}-a`} q={q} />
         ))}
-        {withPrice.map((q) => (
+        {tape.map((q) => (
           <TickerItem key={`${q.ticker}-b`} q={q} hidden />
         ))}
       </div>
