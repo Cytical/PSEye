@@ -74,11 +74,23 @@ function shortSector(sector: string): string {
   return map[sector] ?? sector;
 }
 
-/** Correlation → theme-aware background. Positive shades toward --accent, negative toward muted ink. */
+/**
+ * Correlation → theme-aware background. Positive shades toward --accent,
+ * negative toward muted ink.
+ *
+ * The positive ramp tops out at 52%, not the 63% it originally used, because
+ * the cell label is always --panel-fg: in dark mode --accent is a bright green
+ * (#3ddc84), so a 63% tint put near-white text on a near-mint background at
+ * 3.59:1 — the strongest correlations, including the whole diagonal, were the
+ * least readable cells in the grid. 52% is the densest tint whose label still
+ * clears AA in the harder theme (4.71:1 dark, 7.73:1 light). Capping the ramp
+ * rather than flipping the ink at a threshold keeps one text color across the
+ * matrix, so a row doesn't visibly change ink partway along.
+ */
 function cellColor(c: number | null): string {
   if (c == null) return "transparent";
   if (c >= 0) {
-    const pct = Math.round((0.08 + c * 0.55) * 100); // ~8%..63% accent tint
+    const pct = Math.round((0.08 + c * 0.44) * 100); // 8%..52% accent tint
     return `color-mix(in srgb, var(--accent) ${pct}%, transparent)`;
   }
   const pct = Math.round(Math.min(0.35, Math.abs(c) * 0.5) * 100);

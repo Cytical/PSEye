@@ -89,10 +89,13 @@ function PseiSparkline({ history, color }: { history: PseiHistoryPoint[]; color:
         {formatIndexValue(min)}
       </text>
 
-      <text x={PAD_X} y={SVG_HEIGHT - 3} textAnchor="start" fontSize={9} fill="#ffffff" fillOpacity={0.35}>
+      {/* 0.55, not the 0.35 these started at: white at 35% over this card's
+          fixed #0d0f14 measures 3.19:1, and at 9px these are the smallest type
+          on the card. 0.55 matches the high/low callouts above at 6.22:1. */}
+      <text x={PAD_X} y={SVG_HEIGHT - 3} textAnchor="start" fontSize={9} fill="#ffffff" fillOpacity={0.55}>
         {formatShortDate(history[0].date)}
       </text>
-      <text x={SVG_WIDTH - PAD_X} y={SVG_HEIGHT - 3} textAnchor="end" fontSize={9} fill="#ffffff" fillOpacity={0.35}>
+      <text x={SVG_WIDTH - PAD_X} y={SVG_HEIGHT - 3} textAnchor="end" fontSize={9} fill="#ffffff" fillOpacity={0.55}>
         {formatShortDate(history[history.length - 1].date)}
       </text>
     </svg>
@@ -142,7 +145,11 @@ export function DailyRecapShareCard({
               {snapshot.pseiPctChange >= 0 ? "+" : ""}
               {snapshot.pseiPctChange.toFixed(2)}%
             </span>
-            <span className="text-sm text-white/40">
+            {/* The /30 and /40 whites this card used measured 2.63:1 and
+                3.77:1 against its fixed #0d0f14 — under AA, and this card is
+                the first thing on the page and the one people screenshot.
+                /55 (6.22:1) is the lightest tier that clears it. */}
+            <span className="text-sm text-white/55">
               {snapshot.pseiChange >= 0 ? "+" : ""}
               {snapshot.pseiChange.toFixed(2)} pts
             </span>
@@ -158,15 +165,15 @@ export function DailyRecapShareCard({
           <span className="font-semibold tabular-nums" style={{ color: UP }}>
             {breadth.advancers}▲
           </span>
-          <span className="mx-1.5 text-white/30">/</span>
+          <span className="mx-1.5 text-white/55">/</span>
           <span className="font-semibold tabular-nums" style={{ color: DOWN }}>
             {breadth.decliners}▼
           </span>
-          <span className="ml-2 text-white/40">{breadth.unchanged} flat</span>
+          <span className="ml-2 text-white/55">{breadth.unchanged} flat</span>
         </div>
       )}
 
-      <p className="mt-5 text-[11px] text-white/30">pseye.vercel.app</p>
+      <p className="mt-5 text-[11px] text-white/55">pseye.vercel.app</p>
     </div>
   );
 }
