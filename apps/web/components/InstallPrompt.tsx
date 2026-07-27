@@ -10,6 +10,10 @@ import { useEffect, useState } from "react";
  * no-account return lever we have. Android Chrome/Edge fire this event (iOS
  * Safari doesn't, so nothing shows there — acceptable, Android dominates PH).
  * Dismissal is remembered so the nudge never nags a second time.
+ *
+ * "Moment of interest" is doing real work in that sentence: the banner waits
+ * for engagement (see ENGAGE_MS) and steps aside over the footer, rather than
+ * appearing on first paint and sitting on top of the legal disclaimer.
  */
 
 interface BeforeInstallPromptEvent extends Event {
@@ -19,8 +23,23 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISS_KEY = "pseye:install-dismissed";
 
+/**
+ * How long a visitor has to stick around before we ask. `beforeinstallprompt`
+ * fires as soon as Chrome's own heuristics are satisfied, which in practice is
+ * within a second of first paint — so the banner used to greet people who had
+ * not yet seen a single price. Asking someone to install an app they haven't
+ * evaluated is the weakest possible moment to ask, and a dismissal is
+ * remembered forever, so a badly-timed prompt doesn't just fail, it burns the
+ * only chance. Scrolling past the fold counts as engagement too, whichever
+ * comes first.
+ */
+const ENGAGE_MS = 25_000;
+
 export function InstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
+  const [engaged, setEngaged] = useState(false);
+  /** Suppressed while the footer is on screen — see the IntersectionObserver below. */
+  const [footerVisible, setFooterVisible] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -43,7 +62,32 @@ export function InstallPrompt() {
     };
   }, []);
 
-  if (!deferred) return null;
+  useEffect(() => {
+    const timer = window.setTimeout(() => setEngaged(true), ENGAGE_MS);
+    function onScroll() {
+      if (window.scrollY > window.innerHeight * 0.5) setEngaged(true);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  // The banner is fixed to the bottom of the viewport, which parks it directly
+  // on top of the footer's "not a brokerage / nothing here is financial advice"
+  // disclaimer once you reach the end of a page. Obscuring that specific text
+  // is the one thing this nudge must not do, so it steps aside whenever the
+  // footer is in view and comes back when you scroll away.
+  useEffect(() => {
+    const footer = document.querySelector("footer");
+    if (!footer) return;
+    const observer = new IntersectionObserver(([entry]) => setFooterVisible(entry.isIntersecting));
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
+
+  if (!deferred || !engaged || footerVisible) return null;
 
   async function install() {
     if (!deferred) return;
