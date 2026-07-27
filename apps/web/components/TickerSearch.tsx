@@ -61,7 +61,10 @@ export function TickerSearch() {
         type="text"
         role="combobox"
         aria-expanded={open && results.length > 0}
-        aria-controls={listboxId}
+        // Only while the listbox is actually in the DOM: aria-controls pointing
+        // at an id that doesn't exist is invalid ARIA, and the listbox below is
+        // conditionally rendered rather than hidden.
+        aria-controls={open && results.length > 0 ? listboxId : undefined}
         aria-autocomplete="list"
         aria-activedescendant={open && results.length > 0 ? activeOptionId(activeIndex) : undefined}
         aria-label="Search PSE stocks by ticker or company name"

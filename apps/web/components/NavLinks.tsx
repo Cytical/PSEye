@@ -224,7 +224,10 @@ function NavDropdown({
           }
         }}
         aria-expanded={open}
-        aria-controls={panelId}
+        // Only while the panel exists — it's conditionally rendered below, and
+        // aria-controls referencing a missing id is invalid ARIA. aria-expanded
+        // is what carries the state either way.
+        aria-controls={open ? panelId : undefined}
         className={`flex items-center gap-1 ${navLinkClass(hasActiveChild)}`}
       >
         {label}

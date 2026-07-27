@@ -44,7 +44,9 @@ export function SiteHeader() {
             type="button"
             onClick={() => setOpen((o) => !o)}
             aria-expanded={open}
-            aria-controls="mobile-nav-panel"
+            // The panel is conditionally rendered, so referencing its id while
+            // closed points at nothing — invalid ARIA.
+            aria-controls={open ? "mobile-nav-panel" : undefined}
             aria-label={open ? "Close menu" : "Open menu"}
             className="flex h-8 w-8 items-center justify-center rounded-md border border-foreground/15 transition-colors hover:bg-panel-raised"
           >
