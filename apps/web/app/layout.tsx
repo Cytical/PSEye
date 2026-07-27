@@ -111,9 +111,21 @@ export default function RootLayout({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_JSON_LD) }} />
       </head>
       <body className="min-h-full flex flex-col">
+        {/* WCAG 2.4.1 (Bypass Blocks). The ticker tape alone puts ~200+ links
+            ahead of the page content on every route, so without this a keyboard
+            or switch user tabs ~216 times before reaching <main>. Visually
+            hidden until focused, then pinned over the sticky header. */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-panel focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-panel-fg focus:ring-1 focus:ring-panel-border focus:shadow-lg"
+        >
+          Skip to main content
+        </a>
         <MarketTicker />
         <SiteHeader />
-        <main className="flex-1">{children}</main>
+        <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
+          {children}
+        </main>
         <SiteFooter />
         <DevToolsLink />
         <InstallPrompt />

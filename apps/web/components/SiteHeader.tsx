@@ -71,7 +71,10 @@ export function SiteHeader() {
           <div className="mb-3">
             <TickerSearch />
           </div>
-          <nav className="flex flex-col gap-2.5 text-sm" aria-label="Main" onClick={() => setOpen(false)}>
+          {/* Distinct label from the desktop nav above: that one stays in the DOM
+              (hidden sm:flex), so while this panel is open a screen reader would
+              otherwise list two identically-named "Main" landmarks. */}
+          <nav className="flex flex-col gap-2.5 text-sm" aria-label="Mobile" onClick={() => setOpen(false)}>
             <NavLinks variant="stacked" />
           </nav>
         </div>

@@ -62,7 +62,10 @@ export async function MarketTicker() {
       className="group overflow-hidden border-b border-foreground/10 bg-panel-raised"
     >
       <div
-        className="flex w-max animate-[ticker-scroll_120s_linear_infinite] group-hover:[animation-play-state:paused]"
+        // focus-within pauses for the same reason group-hover does: a keyboard
+        // user tabbing into a ticker link can't "hover" to stop the scroll, so
+        // without this the link they're focused on slides out from under them.
+        className="flex w-max animate-[ticker-scroll_120s_linear_infinite] group-hover:[animation-play-state:paused] focus-within:[animation-play-state:paused]"
         style={{ animationDuration: `${duration}s` }}
       >
         {withPrice.map((q) => (

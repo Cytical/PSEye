@@ -173,6 +173,8 @@ function NavDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelId = `nav-panel-${label.toLowerCase().replace(/\s+/g, "-")}`;
   const hasActiveChild = links.some((link) => isActive(link.href));
 
   // Close on outside click / Escape.
@@ -182,7 +184,12 @@ function NavDropdown({
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      // Escape must put focus back on the trigger, not drop it on <body> —
+      // otherwise the next Tab restarts from the top of the document and the
+      // keyboard user loses their place in the nav entirely.
+      triggerRef.current?.focus();
     }
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -193,12 +200,31 @@ function NavDropdown({
   }, [open]);
 
   return (
-    <div ref={ref} className="relative">
+    <div
+      ref={ref}
+      className="relative"
+      // Tabbing past the last link should close the panel the same way clicking
+      // outside does; without this the abandoned panel stays open over the page.
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          // ArrowDown is the conventional "open and enter" key for a nav
+          // disclosure; without it a keyboard user has no way to open the
+          // panel other than Enter/Space, and no way to land inside it.
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setOpen(true);
+            requestAnimationFrame(() => ref.current?.querySelector("a")?.focus());
+          }
+        }}
         aria-expanded={open}
-        aria-haspopup="menu"
+        aria-controls={panelId}
         className={`flex items-center gap-1 ${navLinkClass(hasActiveChild)}`}
       >
         {label}
@@ -218,9 +244,16 @@ function NavDropdown({
         </svg>
       </button>
 
+      {/* Disclosure pattern, deliberately not role="menu"/"menuitem": those roles
+          are a contract that the widget implements the full APG menu keyboard
+          model (arrow keys wrapping between items, Home/End, typeahead, focus
+          trapped to one tab stop). This is a list of plain navigation links, so
+          claiming the role while leaving that model unimplemented actively
+          misleads a screen-reader user about how it behaves. The APG's own
+          guidance is that site navigation should use a disclosure instead. */}
       {open && (
         <div
-          role="menu"
+          id={panelId}
           className={`absolute top-full z-20 mt-2 flex w-72 flex-col rounded-lg bg-panel py-1.5 ring-1 ring-panel-border shadow-lg shadow-black/5 ${
             align === "right" ? "right-0" : "left-0"
           }`}
@@ -229,7 +262,6 @@ function NavDropdown({
             <Link
               key={link.href}
               href={link.href}
-              role="menuitem"
               onClick={() => setOpen(false)}
               aria-current={isActive(link.href) ? "page" : undefined}
               className={`flex flex-col gap-0.5 px-3.5 py-2 ${

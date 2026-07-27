@@ -19,7 +19,9 @@ export function SiteFooter() {
           <div className="shrink-0 opacity-80">
             <Logo size={18} />
           </div>
-          <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          {/* Labelled so screen-reader landmark lists distinguish it from the
+              header's "Main" nav rather than announcing two bare "navigation"s. */}
+          <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
             {FOOTER_LINKS.map((link) => (
               <Link key={link.href} href={link.href} className="hover:text-foreground hover:underline">
                 {link.label}
