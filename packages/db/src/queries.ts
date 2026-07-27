@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, lte } from "drizzle-orm";
 import type { Db } from "./client";
 import {
   dailyQuotes,
@@ -161,6 +161,17 @@ export async function getRecentSnapshotDates(db: Db, limit = 60) {
 export async function getMarketSnapshotByDate(db: Db, date: string) {
   const [row] = await db.select().from(marketSnapshot).where(eq(marketSnapshot.snapshotDate, date)).limit(1);
   return row;
+}
+
+/** The `limit` most recent snapshot rows on or before `date`, oldest first (for charting a trailing PSEi trend on the /daily recap). */
+export async function getMarketSnapshotHistory(db: Db, date: string, limit = 30) {
+  const rows = await db
+    .select()
+    .from(marketSnapshot)
+    .where(lte(marketSnapshot.snapshotDate, date))
+    .orderBy(desc(marketSnapshot.snapshotDate))
+    .limit(limit);
+  return rows.reverse();
 }
 
 export async function getDailyQuotesByDate(db: Db, date: string) {

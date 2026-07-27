@@ -4,6 +4,7 @@ import {
   getDailyQuotesByDate,
   getDisclosuresBetween,
   getMarketSnapshotByDate,
+  getMarketSnapshotHistory,
   getNewsBetween,
   getRecentSnapshotDates,
   getStockForeignFlowByDate,
@@ -45,9 +46,16 @@ export interface RecapNewsItem {
   source: string;
 }
 
+export interface PseiHistoryPoint {
+  date: string;
+  pseiValue: number;
+}
+
 export interface DailyRecap {
   date: string;
   snapshot: { pseiValue: number; pseiChange: number; pseiPctChange: number } | null;
+  /** Trailing PSEi close trend ending on this date, oldest first — for the share card's mini chart. */
+  pseiHistory: PseiHistoryPoint[];
   /** Market breadth across every tracked stock that day. */
   breadth: {
     advancers: number;
@@ -80,6 +88,7 @@ function manilaDayWindow(date: string): { from: Date; to: Date } {
 }
 
 const MOVER_COUNT = 5;
+const PSEI_HISTORY_DAYS = 30;
 
 /**
  * Everything the site recorded for one trading day, joined from the tables the
@@ -96,7 +105,7 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
   try {
     const db = createDb(databaseUrl);
     const { from, to } = manilaDayWindow(date);
-    const [snapshotRow, quoteRows, flowRows, blockRows, disclosureRows, newsRows, snapshotDates] =
+    const [snapshotRow, quoteRows, flowRows, blockRows, disclosureRows, newsRows, snapshotDates, historyRows] =
       await Promise.all([
         getMarketSnapshotByDate(db, date),
         getDailyQuotesByDate(db, date),
@@ -105,6 +114,7 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
         getDisclosuresBetween(db, from, to),
         getNewsBetween(db, from, to),
         getRecentSnapshotDates(db, 120),
+        getMarketSnapshotHistory(db, date, PSEI_HISTORY_DAYS),
       ]);
 
     if (!snapshotRow && quoteRows.length === 0 && disclosureRows.length === 0 && blockRows.length === 0) {
@@ -154,6 +164,7 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
           }
         : null,
       breadth,
+      pseiHistory: historyRows.map((r) => ({ date: r.snapshotDate, pseiValue: Number(r.pseiValue) })),
       gainers: byPctDesc.filter((r) => r.pctChange > 0).slice(0, MOVER_COUNT),
       losers: byPctDesc
         .filter((r) => r.pctChange < 0)

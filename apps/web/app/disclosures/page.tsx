@@ -6,8 +6,8 @@ import { getDisclosures } from "@/lib/disclosures";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "PSE Disclosures — PSE Edge Filings Digest",
-  description: "PSE Edge filings distilled into a per-company digest.",
+  title: "PSE Disclosures — Filings Digest",
+  description: "PSE filings distilled into a per-company digest.",
   alternates: { canonical: "/disclosures" },
 };
 
@@ -47,7 +47,7 @@ export default async function DisclosuresPage() {
       <p className="kicker text-accent">Market Data</p>
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">Insider Disclosure Digest</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
-        PSE Edge filings, grouped by company — who&apos;s filing what, without the raw
+        PSE filings, grouped by company — who&apos;s filing what, without the raw
         real-time stream.
       </p>
 

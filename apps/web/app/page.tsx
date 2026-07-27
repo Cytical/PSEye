@@ -53,11 +53,11 @@ const FAQ = [
   },
   {
     q: "Is this live pricing?",
-    a: "Prices are delayed/end-of-day quotes sourced from PSE Edge, refreshed on a schedule through the trading day — not a tick-by-tick real-time feed.",
+    a: "Prices are delayed/end-of-day quotes, refreshed on a schedule through the trading day — not a tick-by-tick real-time feed.",
   },
   {
     q: "Where does the data come from?",
-    a: "PSE Edge, the exchange's own public data platform, plus PSE's published Daily Quotation Report and Market Watch PDFs for block sales and foreign flow. Everything is pulled by scheduled jobs, never scraped live on your visit.",
+    a: "The exchange's own public data pages, plus PSE's published Daily Quotation Report and Market Watch PDFs for block sales and foreign flow. Everything is pulled by scheduled jobs, never scraped live on your visit.",
   },
   {
     q: "Is PSEye free to use?",

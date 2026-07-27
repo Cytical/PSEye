@@ -475,7 +475,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       <RecentlyViewed excludeTicker={ticker} />
 
       <p className="mt-8 text-xs text-panel-fg/60">
-        Delayed/EOD data from PSE Edge, not real-time. Not financial advice, a stock pick, or a
+        Delayed/EOD data, not real-time. Not financial advice, a stock pick, or a
         buy/sell signal.
       </p>
     </div>

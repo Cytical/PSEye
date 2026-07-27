@@ -145,7 +145,7 @@ export default async function RegimePage() {
       )}
 
       <p className="mt-8 max-w-3xl text-xs text-panel-fg/55">
-        Delayed / end-of-day data from PSE Edge, recomputed by PSEye. A descriptive classification of
+        Delayed / end-of-day data, recomputed by PSEye. A descriptive classification of
         past market conditions — not a forecast, market-timing signal, or financial advice.
       </p>
     </div>

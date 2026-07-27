@@ -31,7 +31,7 @@ export default async function PortfolioPage() {
       </div>
 
       <p className="mt-8 text-xs text-panel-fg/60">
-        Not financial advice. Prices are end-of-day / delayed quotes from PSE Edge, refreshed
+        Not financial advice. Prices are end-of-day / delayed quotes, refreshed
         hourly during trading hours — not real-time.
       </p>
     </div>

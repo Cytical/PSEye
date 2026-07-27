@@ -37,7 +37,7 @@ export default async function MostActivePage() {
         </Link>{" "}
         (turnover), not raw share volume — a low-priced stock trading millions of shares and a
         high-priced stock trading a few hundred both move real money, but only value puts them on
-        the same scale. Prices are end-of-day / delayed quotes from PSE Edge.
+        the same scale. Prices are end-of-day / delayed quotes.
         {excludedCount > 0
           ? ` ${excludedCount} tracked ${excludedCount === 1 ? "ticker has" : "tickers have"} no trading activity on record today and ${excludedCount === 1 ? "is" : "are"} excluded.`
           : ""}

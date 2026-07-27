@@ -40,7 +40,7 @@ const DROPDOWNS: { label: string; links: NavLink[] }[] = [
       { href: "/calendar", label: "Calendar", description: "Ex-dividend and corporate action dates" },
       { href: "/foreign-flow", label: "Foreign Flow", description: "Weekly net foreign buying vs. selling" },
       { href: "/block-sales", label: "Block Sales", description: "Large negotiated trades off the order book" },
-      { href: "/disclosures", label: "Disclosures", description: "PSE Edge filings, grouped by company" },
+      { href: "/disclosures", label: "Disclosures", description: "PSE filings, grouped by company" },
     ],
   },
   {

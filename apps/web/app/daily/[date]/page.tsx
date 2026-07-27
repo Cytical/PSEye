@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDailyRecap, type DailyRecap } from "@/lib/dailyRecap";
+import { getDailyRecap, getRecentRecapDates, type DailyRecap } from "@/lib/dailyRecap";
 import { ShareButton } from "@/components/ShareButton";
 import { MarketHistogram } from "@/components/MarketHistogram";
+import { DailyRecapDateNav } from "@/components/DailyRecapDateNav";
+import { DailyRecapShareCard } from "@/components/DailyRecapShareCard";
 
 export const revalidate = 3600; // late disclosures/news can still land on "today's" page
 
@@ -124,7 +126,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
   const { date } = await params;
   if (!DATE_RE.test(date)) notFound();
 
-  const recap = await getDailyRecap(date);
+  const [recap, availableDates] = await Promise.all([getDailyRecap(date), getRecentRecapDates(400)]);
   if (!recap) notFound();
 
   const { snapshot, breadth } = recap;
@@ -147,6 +149,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
               ← {formatShortDate(recap.prevDate)}
             </Link>
           )}
+          <DailyRecapDateNav date={recap.date} availableDates={availableDates} />
           {recap.nextDate && (
             <Link
               href={`/daily/${recap.nextDate}`}
@@ -171,48 +174,19 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
         </div>
       </div>
 
-      {(snapshot || breadth) && (
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {snapshot && (
-            <>
-              <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-                <p className="kicker text-panel-fg/55">PSEi Close</p>
-                <p className="mt-1 text-xl font-semibold tabular-nums text-panel-fg">
-                  {snapshot.pseiValue.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
-              </div>
-              <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-                <p className="kicker text-panel-fg/55">Day Change</p>
-                <p
-                  className="mt-1 text-xl font-semibold tabular-nums"
-                  style={{ color: snapshot.pseiPctChange >= 0 ? UP : DOWN }}
-                >
-                  {snapshot.pseiPctChange >= 0 ? "+" : ""}
-                  {snapshot.pseiPctChange.toFixed(2)}%
-                  <span className="ml-2 text-sm font-normal text-panel-fg/50">
-                    {snapshot.pseiChange >= 0 ? "+" : ""}
-                    {snapshot.pseiChange.toFixed(2)} pts
-                  </span>
-                </p>
-              </div>
-            </>
-          )}
-          {breadth && (
-            <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <p className="kicker text-panel-fg/55">Breadth</p>
-              <p className="mt-1 text-xl font-semibold tabular-nums text-panel-fg">
-                <span style={{ color: UP }}>{breadth.advancers}▲</span>
-                <span className="mx-1.5 text-panel-fg/30">/</span>
-                <span style={{ color: DOWN }}>{breadth.decliners}▼</span>
-                <span className="ml-2 text-sm font-normal text-panel-fg/50">
-                  {breadth.unchanged} flat
-                  {breadth.noTrade > 0 ? `, ${breadth.noTrade} no trade` : ""}
-                </span>
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+      <div className="mt-6">
+        <DailyRecapShareCard
+          dateLabel={formatLongDate(recap.date)}
+          snapshot={snapshot}
+          breadth={breadth}
+          pseiHistory={recap.pseiHistory}
+        />
+      </div>
+
+      <div className="mt-8 flex items-center gap-3">
+        <span className="kicker shrink-0 text-panel-fg/40">Full Recap</span>
+        <span className="h-px flex-1 bg-panel-border" />
+      </div>
 
       {breadth && breadth.histogram.length > 1 && (
         <div className="mt-3">

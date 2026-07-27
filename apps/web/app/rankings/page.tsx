@@ -89,7 +89,7 @@ export default async function RankingsPage() {
         <Link href="/sectors" className="underline hover:text-panel-fg">
           sectors
         </Link>
-        . Prices are end-of-day / delayed quotes from PSE Edge.
+        . Prices are end-of-day / delayed quotes.
         {excludedCount > 0
           ? ` ${excludedCount} tracked ${excludedCount === 1 ? "ticker has" : "tickers have"} no market cap on file and ${excludedCount === 1 ? "is" : "are"} excluded rather than ranked.`
           : ""}
@@ -103,7 +103,7 @@ export default async function RankingsPage() {
           No — and it never will as an &quot;estimate.&quot; Market cap needs a real public share
           price and share count, both published by the exchange. A private company has neither, so
           any number PSEye showed for one would be a guess, not data. Every figure on this site
-          traces back to a real published source (PSE Edge or a PSE-published report); this ranking
+          traces back to a real published source; this ranking
           stays limited to the {rows.length + excludedCount} companies actually listed on the PSE
           rather than mixing in fabricated estimates for the rest.
         </p>

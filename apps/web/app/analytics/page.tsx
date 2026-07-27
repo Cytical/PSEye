@@ -156,7 +156,7 @@ export default async function AnalyticsPage() {
       )}
 
       <p className="mt-8 max-w-3xl text-xs text-panel-fg/55">
-        Delayed / end-of-day data from PSE Edge, recomputed by PSEye — not real-time and not a
+        Delayed / end-of-day data, recomputed by PSEye — not real-time and not a
         licensed feed. These are descriptive statistics on past prices, not financial advice, a
         stock pick, or a buy/sell signal.
       </p>

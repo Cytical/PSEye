@@ -67,7 +67,7 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     id: "pe-ratio",
     term: "P/E Ratio (Price-to-Earnings)",
     definition:
-      "Share price divided by earnings per share — a common measure of how expensive a stock is relative to its profit. PSEye doesn't display this: PSE Edge's own company pages have a P/E Ratio field, but it's left blank in practice for every company checked, and no other free, reliable source publishes it for PSE-listed stocks. Rather than estimate or guess a number, this site leaves it out.",
+      "Share price divided by earnings per share — a common measure of how expensive a stock is relative to its profit. PSEye doesn't display this: the exchange's own company pages have a P/E Ratio field, but it's left blank in practice for every company checked, and no other free, reliable source publishes it for PSE-listed stocks. Rather than estimate or guess a number, this site leaves it out.",
   },
   {
     id: "psei",

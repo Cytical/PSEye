@@ -120,8 +120,8 @@ export default async function ClustersPage() {
       )}
 
       <p className="mt-8 max-w-3xl text-xs text-panel-fg/55">
-        Computed over the largest ~100 PSE stocks with sufficient history. Delayed / end-of-day data
-        from PSE Edge, recomputed by PSEye. Descriptive statistics and unsupervised grouping — not
+        Computed over the largest ~100 PSE stocks with sufficient history. Delayed / end-of-day data,
+        recomputed by PSEye. Descriptive statistics and unsupervised grouping — not
         financial advice, a stock pick, or a buy/sell signal.
       </p>
     </div>

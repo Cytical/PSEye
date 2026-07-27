@@ -8,7 +8,7 @@ const USER_AGENT =
 
 /**
  * One-time backfill, not a scheduled job (no .github/workflows entry): a
- * company's business description, sourced from its PSE Edge "Company
+ * company's business description, sourced from its exchange "Company
  * Information" page (drawn from its own SEC Form 17-A filing), changes rarely
  * enough that a hand-triggered rerun beats a recurring cadence. Upserts on
  * ticker, so it's safe to rerun (e.g. after PSE relists a company or the
@@ -38,7 +38,7 @@ async function main() {
       .values({
         ticker: company.ticker,
         description: parsed.description,
-        source: parsed.citedSource ? `PSE Edge company profile — ${parsed.citedSource}` : "PSE Edge company profile",
+        source: parsed.citedSource ? `Company profile — ${parsed.citedSource}` : "Company profile",
         fetchedAt: new Date(),
       })
       .onConflictDoUpdate({

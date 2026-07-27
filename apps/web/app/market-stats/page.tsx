@@ -168,7 +168,7 @@ export default async function MarketStatsPage() {
       <p className="mt-8 max-w-3xl text-xs text-panel-fg/55">
         Breadth covers all {stats.totalTracked} tracked stocks; trend and distribution stats use the
         largest ~{stats.universeSize || 100} by market cap (small, thinly-traded tickers have noisy
-        history that distorts a market-wide distribution). Delayed / end-of-day data from PSE Edge,
+        history that distorts a market-wide distribution). Delayed / end-of-day data,
         recomputed by PSEye — descriptive statistics, not financial advice or a signal.
       </p>
     </div>

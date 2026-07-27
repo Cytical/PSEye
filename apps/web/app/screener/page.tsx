@@ -26,7 +26,7 @@ export default async function ScreenerPage() {
         <Link href="/dividends" className="underline hover:text-panel-fg">
           dividend screener
         </Link>
-        . Prices are end-of-day / delayed quotes from PSE Edge.
+        . Prices are end-of-day / delayed quotes.
       </p>
 
       <div className="mt-8">

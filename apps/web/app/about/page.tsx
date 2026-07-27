@@ -27,7 +27,7 @@ export default function AboutPage() {
         </p>
         <p>
           The data is real, not a demo: prices, dividends, disclosures, block sales, and
-          foreign flow are scraped on a schedule from PSE Edge&apos;s own public pages and PSE&apos;s
+          foreign flow are scraped on a schedule from the exchange&apos;s own public pages and PSE&apos;s
           published daily reports, not a licensed real-time feed — so figures are delayed/
           end-of-day, never claimed as live intraday data. A small number of features (the IPO/
           offerings tracker, and non-PSE charts) still run on placeholder data where no free,

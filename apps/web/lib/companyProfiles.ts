@@ -2,7 +2,7 @@ import { createDb, getCompanyProfiles as getCompanyProfilesQuery } from "@pseye/
 
 export interface CompanyProfile {
   description: string;
-  /** e.g. "PSE Edge company profile — SEC Form 17-A (2024)". */
+  /** e.g. "Company profile — SEC Form 17-A (2024)". */
   source: string;
 }
 
