@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, lt, lte } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, lte, sql } from "drizzle-orm";
 import type { Db } from "./client";
 import {
   dailyQuotes,
@@ -11,6 +11,7 @@ import {
   historicalQuotes,
   blockSales,
   newsItems,
+  newsOutletLogos,
   botPosts,
 } from "./schema";
 
@@ -227,6 +228,28 @@ export async function getHistoricalQuotes(db: Db, tickers: string[], fromDate: s
     .from(historicalQuotes)
     .where(and(inArray(historicalQuotes.ticker, tickers), gte(historicalQuotes.tradeDate, fromDate)))
     .orderBy(asc(historicalQuotes.tradeDate));
+}
+
+/**
+ * Every cached outlet-logo row (see newsOutletLogos' schema comment), keyed
+ * by `source` for O(1) lookup — fetch-news.ts reads this once per run rather
+ * than querying per-article, since the whole point is not re-deriving the
+ * same outlet's logo dozens of times in one run.
+ */
+export async function getNewsOutletLogos(db: Db): Promise<Map<string, string>> {
+  const rows = await db.select().from(newsOutletLogos);
+  return new Map(rows.map((r) => [r.source, r.logoUrl]));
+}
+
+/** Caches one outlet's resolved logo URL — upserts on `source` so a re-run after a bad lookup can overwrite it. */
+export async function upsertNewsOutletLogo(db: Db, source: string, logoUrl: string) {
+  await db
+    .insert(newsOutletLogos)
+    .values({ source, logoUrl, fetchedAt: new Date() })
+    .onConflictDoUpdate({
+      target: newsOutletLogos.source,
+      set: { logoUrl: sql`excluded.logo_url`, fetchedAt: sql`excluded.fetched_at` },
+    });
 }
 
 /** The bot's recorded post for one trading day, or undefined if it hasn't posted yet — see etl/jobs/post-daily-tweet.ts. */

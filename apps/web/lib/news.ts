@@ -1,4 +1,4 @@
-import { createDb, getRecentNews as getRecentNewsQuery } from "@pseye/db";
+import { createDb, getRecentNews as getRecentNewsQuery, getNewsOutletLogos } from "@pseye/db";
 import {
   RELIABLE_NEWS_SOURCES,
   UNVERIFIED_NEWS_SOURCES,
@@ -78,7 +78,10 @@ function fetchLiveProgressive(): { top: Promise<NewsItem[]>; rest: Promise<NewsI
 async function fetchRankedFromDb(databaseUrl: string): Promise<NewsItem[] | null> {
   try {
     const db = createDb(databaseUrl);
-    const rows = await getRecentNewsQuery(db, DB_FETCH_LIMIT);
+    const [rows, outletLogos] = await Promise.all([
+      getRecentNewsQuery(db, DB_FETCH_LIMIT),
+      getNewsOutletLogos(db),
+    ]);
     if (rows.length === 0) return null;
 
     return rankByRelevance(
@@ -90,6 +93,12 @@ async function fetchRankedFromDb(databaseUrl: string): Promise<NewsItem[] | null
         url: r.url,
         publishedAt: r.publishedAt,
         tickers: r.tickers,
+        // fetch-news.ts's third-choice image fallback stores the outlet's
+        // own cached logo straight into imageUrl (see news_outlet_logos'
+        // schema comment) rather than adding a new column — comparing
+        // against that same cache here is how NewsThumbnail.tsx knows to
+        // render it with object-contain instead of a cropping object-cover.
+        imageIsLogo: r.imageUrl != null && outletLogos.get(r.source) === r.imageUrl,
       }))
     );
   } catch (err) {

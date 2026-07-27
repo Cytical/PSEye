@@ -33,20 +33,21 @@ function Placeholder({ item, className }: { item: NewsItem; className: string })
 }
 
 /**
- * Renders the article's real image when the feed provided one (see
- * extractImageUrl in packages/sources/news/src/rssSource.ts — enclosure,
- * media:content, or an inline <img> pulled from the full-content HTML),
- * falling back to an outlet-mark placeholder card in two cases:
- *
- *  - imageUrl is null (that extraction found nothing — true for every
- *    Philstar Business article today, since its feed carries no image field
- *    at all, not even inline in the description).
- *  - imageUrl is set but 404s/fails to load at render time (an outlet's own
- *    hosted image having since moved or been removed — this app doesn't
- *    control that host). Without this, the bare <img> left a broken-image
- *    icon in place, which is the literal "images don't load" complaint this
- *    fixes; a client component (not the server-rendered NewsCard) only
- *    because onError needs to run in the browser.
+ * Renders the article's real image, tried in the same priority order
+ * fetch-news.ts fetches/stores them in: RSS extraction (enclosure,
+ * media:content, or an inline <img> — see extractImageUrl in
+ * packages/sources/news/src/rssSource.ts), then a per-article og:image/
+ * twitter:image scrape (ogImage.ts), then that outlet's own cached logo
+ * (outletLogo.ts) — all three land in the same `imageUrl` field, so this
+ * component doesn't need to know which one produced it except for fit
+ * (see imageIsLogo below). Falls back to an outlet-initials placeholder
+ * card only when every one of those came up empty, or when imageUrl 404s/
+ * fails to load at render time (an outlet's own hosted image having since
+ * moved or been removed — this app doesn't control that host). Without that
+ * onError handling, the bare <img> left a broken-image icon in place, which
+ * is the literal "images don't load" complaint this fixes; a client
+ * component (not the server-rendered NewsCard) only because onError needs to
+ * run in the browser.
  */
 export function NewsThumbnail({ item, className }: { item: NewsItem; className: string }) {
   const [failed, setFailed] = useState(false);
@@ -59,6 +60,16 @@ export function NewsThumbnail({ item, className }: { item: NewsItem; className: 
     );
   }
 
+  // A logo-fallback image (item.imageIsLogo, set in apps/web/lib/news.ts by
+  // comparing imageUrl against the outlet's cached logo) is usually a
+  // square/wordmark brand mark, not a landscape photo — object-cover would
+  // zoom in and crop it awkwardly, especially in HeroCard's wide aspect-video
+  // slot, so it gets object-contain with some breathing room instead. Real
+  // RSS/og:image photos keep the tighter object-cover crop, which suits them better.
+  const imageClassName = item.imageIsLogo
+    ? "h-full w-full object-contain p-4 transition duration-300 group-hover:scale-[1.03]"
+    : "h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]";
+
   return (
     <div className={`shrink-0 overflow-hidden bg-[#1A1210]/5 dark:bg-[#F2E9E2]/10 ${className}`}>
       {/* External, outlet-controlled hosts — next/image would need an
@@ -69,7 +80,7 @@ export function NewsThumbnail({ item, className }: { item: NewsItem; className: 
         loading="lazy"
         referrerPolicy="no-referrer"
         onError={() => setFailed(true)}
-        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+        className={imageClassName}
       />
     </div>
   );

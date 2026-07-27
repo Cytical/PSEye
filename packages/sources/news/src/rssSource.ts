@@ -69,12 +69,29 @@ function extractImageUrl(item: Parser.Item & RssImageFields): string | null {
 }
 
 /**
+ * The feed URL's own origin (e.g. "https://www.bworldonline.com" from
+ * ".../feed/") — used only as a best-effort homepage for
+ * fetchOutletLogo (outletLogo.ts) to look at. Undefined rather than thrown
+ * on a malformed feedUrl, since a missing homepage just means that outlet's
+ * logo lookup is skipped (falls through to the initials placeholder), not
+ * that source construction should fail.
+ */
+function deriveHomepageUrl(feedUrl: string): string | undefined {
+  try {
+    return new URL(feedUrl).origin;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Builds a NewsSource from any standard RSS/Atom feed. Adding or removing an
  * outlet is a config change (see outlets.ts), never a change to callers.
  */
 export function createRssSource(name: string, feedUrl: string): NewsSource {
   return {
     name,
+    homepageUrl: deriveHomepageUrl(feedUrl),
     async fetchLatest(): Promise<NewsItem[]> {
       const feed = await parser.parseURL(feedUrl);
 

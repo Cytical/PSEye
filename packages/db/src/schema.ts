@@ -46,10 +46,28 @@ export const newsItems = pgTable("news_items", {
   // Nullable: most outlets' RSS <enclosure>/media tags don't always carry one
   // (see extractImageUrl in packages/sources/news/src/rssSource.ts) — NewsCard's
   // Thumbnail already renders nothing when this is null, same as the live-fetch path.
+  // 2026-07: fetch-news.ts now backfills this with a per-article og:image scrape,
+  // then that outlet's own logo (see newsOutletLogos below), before finally
+  // leaving it null for NewsThumbnail's initials-card placeholder — so "null"
+  // now means all three of those came up empty, not just "RSS had nothing".
   imageUrl: text("image_url"),
   url: text("url").notNull().unique(),
   publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
   tickers: text("tickers").array().notNull().default([]),
+});
+
+// One row per outlet (keyed by the same `source` string as news_items.source
+// / NewsSource.name), caching that outlet's logo URL so fetch-news.ts's
+// per-article image fallback chain (RSS -> og:image -> outlet logo -> initials
+// placeholder, see newsItems.imageUrl's comment above) only ever looks the
+// logo up once per outlet, not once per article with a missing image — a
+// news outlet's own logo essentially never changes, so there's no periodic
+// refresh here, just lookup-if-missing (see fetchOutletLogo in
+// packages/sources/news/src/outletLogo.ts).
+export const newsOutletLogos = pgTable("news_outlet_logos", {
+  source: varchar("source", { length: 64 }).primaryKey(),
+  logoUrl: text("logo_url").notNull(),
+  fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull(),
 });
 
 // Populated by a one-time backfill (etl/jobs/backfill-company-profiles.ts), not
