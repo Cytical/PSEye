@@ -29,11 +29,18 @@ const geistMono = Geist_Mono({
 // finance desk" register) — a high-contrast, elegant face rather than a
 // plain workhorse serif. Kept off body copy/data (Geist stays there for
 // legibility and tabular-nums alignment); see globals.css's --font-serif.
+// Only 600 is declared because only 600 is ever used: every one of the 39
+// `font-serif` usages in the app pairs it with `font-semibold`, and the
+// `.kicker` rule in globals.css sets font-weight: 600 too. Declaring
+// 400/500/600/700 made next/font emit 24 @font-face rules and — measured on a
+// production build — preload the *700* normal and italic files (36 KB + 45 KB)
+// on every route, a weight nothing on the site actually renders in. Italic is
+// kept: it's load-bearing for the homepage h1's "Visualized."
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   style: ["normal", "italic"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["600"],
 });
 
 const SITE_URL =
