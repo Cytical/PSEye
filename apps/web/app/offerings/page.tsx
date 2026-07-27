@@ -57,10 +57,20 @@ function statusLabel(offering: Offering, status: Status, todayIso: string): stri
   return "Subscription closed";
 }
 
-/** "closed" has no color object — it uses the neutral panel-raised/panel-fg tokens directly instead of an accent tint, since "subscription closed" isn't a state worth drawing the eye to. */
-const STATUS_STYLE: Partial<Record<Status, { bg: string; text: string }>> = {
-  upcoming: { bg: "#b8862f1a", text: "#b8862f" },
-  open: { bg: "#2f8f4e1a", text: "#2f8f4e" },
+/**
+ * "closed" has no accent — it uses the neutral panel-raised/panel-fg tokens
+ * directly instead of a tint, since "subscription closed" isn't a state worth
+ * drawing the eye to.
+ *
+ * The other two are just the base hex now, not a {bg, text} pair: used raw as
+ * both a 10% fill and the label color they measured 3.67:1 light / 3.97:1
+ * dark, the same way the disclosure and corporate-action type badges did. Both
+ * now go through globals.css's .type-badge, which derives a per-theme label
+ * from the same hue and clears AA on either surface.
+ */
+const STATUS_ACCENT: Partial<Record<Status, string>> = {
+  upcoming: "#b8862f",
+  open: "#2f8f4e",
 };
 
 /** % of the subscription window elapsed, clamped [0,100] — only meaningful while status is "open". */
@@ -95,10 +105,10 @@ export default async function OfferingsPage() {
         {sorted.map((offering) => {
           const status = subscriptionStatus(offering, todayIso);
           const accent = TYPE_ACCENT[offering.type];
-          const statusStyle = STATUS_STYLE[status];
+          const statusAccent = STATUS_ACCENT[status];
           const statusClassName =
             "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" +
-            (statusStyle ? "" : " bg-panel-raised text-panel-fg/72");
+            (statusAccent ? " type-badge" : " bg-panel-raised text-panel-fg/72");
           return (
             <div
               key={`${offering.companyName}-${offering.type}-${offering.subscriptionStart}`}
@@ -134,7 +144,7 @@ export default async function OfferingsPage() {
                 </div>
                 <span
                   className={statusClassName}
-                  style={statusStyle ? { backgroundColor: statusStyle.bg, color: statusStyle.text } : undefined}
+                  style={statusAccent ? ({ "--badge-accent": statusAccent } as React.CSSProperties) : undefined}
                 >
                   {statusLabel(offering, status, todayIso)}
                 </span>
