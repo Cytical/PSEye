@@ -118,6 +118,19 @@ export default async function MarketMapPage() {
         <h1 className="mt-2 font-serif text-[clamp(1.75rem,4.6vw,3.25rem)] font-semibold leading-[1.05] tracking-tight sm:whitespace-nowrap">
           The Philippine Stock Market, <span className="italic text-accent">Visualized.</span>
         </h1>
+        {/* WCAG 2.4.1 again, for the widget rather than the page: the treemap
+            renders one focusable button per company — 284 of them, measured —
+            and it is the last thing in <main>, so without this a keyboard user
+            who wants the FAQ (or the footer) has to tab through every listed
+            stock to get there. Visually hidden until focused, like the
+            site-wide skip link in layout.tsx. Sits before MarketMap so it also
+            skips the filter sidebar and toolbar. */}
+        <a
+          href="#market-map-faq"
+          className="sr-only focus:not-sr-only focus:mt-4 focus:inline-block focus:rounded-md focus:bg-panel focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-panel-fg focus:ring-1 focus:ring-panel-border"
+        >
+          Skip the market map
+        </a>
         <div className="mt-7">
           <MarketMap
             stocks={quotes}
@@ -129,7 +142,11 @@ export default async function MarketMapPage() {
         </div>
       </div>
 
-      <MarketMapFaq items={FAQ} />
+      {/* Target of the "Skip the market map" bypass link above; tabIndex -1 so
+          the jump actually moves focus here rather than only scrolling. */}
+      <div id="market-map-faq" tabIndex={-1} className="focus:outline-none">
+        <MarketMapFaq items={FAQ} />
+      </div>
     </div>
   );
 }
