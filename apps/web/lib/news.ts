@@ -3,8 +3,19 @@ import {
   RELIABLE_NEWS_SOURCES,
   UNVERIFIED_NEWS_SOURCES,
   type NewsItem,
+  type NewsSentiment,
   type NewsSource,
 } from "@pseye/source-news";
+
+// news_items.sentiment is a plain `varchar(8) | null` column (see schema.ts)
+// — Drizzle's inferred row type is `string | null`, not the narrower
+// NewsSentiment union, so this narrows it back rather than casting. Returns
+// null both for legitimately-null rows (not yet (re-)scored, see the
+// schema's own comment) and for any unexpected value, which shouldn't ever
+// happen but a stray value shouldn't crash rendering either way.
+function isNewsSentiment(value: string | null): value is NewsSentiment {
+  return value === "positive" || value === "negative" || value === "neutral";
+}
 
 // Front page: 1 hero + 4 secondary stories. Kept small on purpose — a wall of
 // headlines is what this redesign is replacing.
@@ -35,6 +46,64 @@ function rankByRelevance(items: NewsItem[]): NewsItem[] {
   const tagged = sortByDate(fresh.filter((item) => item.tickers.length > 0));
   const untagged = sortByDate(fresh.filter((item) => item.tickers.length === 0));
   return [...tagged, ...untagged];
+}
+
+export interface NewsMoodSummary {
+  positive: number;
+  negative: number;
+  neutral: number;
+  total: number;
+}
+
+/**
+ * "Market Mood" strip aggregate — same breadth-strip spirit as the daily
+ * recap's advancers/decliners/unchanged count (see dailyRecap.ts and
+ * tweetCopy.ts's "X🟢 advancers · Y🔴 decliners · Z flat" line), just for
+ * headline sentiment instead of price moves. A null/unscored sentiment
+ * (pre-migration-0013 rows not yet re-fetched, or a live-fetch item — see
+ * NewsItem.sentiment's comment) counts as neutral rather than being dropped,
+ * so `positive + negative + neutral` always equals `total`.
+ */
+export function computeMoodSummary(items: NewsItem[]): NewsMoodSummary {
+  let positive = 0;
+  let negative = 0;
+  let neutral = 0;
+
+  for (const item of items) {
+    if (item.sentiment === "positive") positive++;
+    else if (item.sentiment === "negative") negative++;
+    else neutral++;
+  }
+
+  return { positive, negative, neutral, total: items.length };
+}
+
+export interface TrendingTicker {
+  ticker: string;
+  count: number;
+}
+
+const TRENDING_TICKER_COUNT = 8;
+
+/**
+ * "Most mentioned today" — counts how often each ticker appears across
+ * `items`' tickers arrays, no new storage (derived at render time over the
+ * same recent-news window every other function here already reads). Ties
+ * break alphabetically for a stable order rather than insertion order,
+ * which would otherwise silently depend on Map iteration/article order.
+ */
+export function computeTrendingTickers(items: NewsItem[]): TrendingTicker[] {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    for (const ticker of item.tickers) {
+      counts.set(ticker, (counts.get(ticker) ?? 0) + 1);
+    }
+  }
+
+  return Array.from(counts.entries())
+    .map(([ticker, count]) => ({ ticker, count }))
+    .sort((a, b) => b.count - a.count || a.ticker.localeCompare(b.ticker))
+    .slice(0, TRENDING_TICKER_COUNT);
 }
 
 async function fetchFrom(sources: NewsSource[]): Promise<NewsItem[]> {
@@ -99,6 +168,7 @@ async function fetchRankedFromDb(databaseUrl: string): Promise<NewsItem[] | null
         // against that same cache here is how NewsThumbnail.tsx knows to
         // render it with object-contain instead of a cropping object-cover.
         imageIsLogo: r.imageUrl != null && outletLogos.get(r.source) === r.imageUrl,
+        sentiment: isNewsSentiment(r.sentiment) ? r.sentiment : null,
       }))
     );
   } catch (err) {
@@ -155,6 +225,24 @@ export async function getNewsForTicker(ticker: string, limit = 5): Promise<NewsI
     : await fetchLiveAll();
 
   return ranked.filter((item) => item.tickers.includes(ticker)).slice(0, limit);
+}
+
+/**
+ * "Market Mood" + "Trending Tickers" data for /news — both derived from the
+ * same recent/relevant news window fetchNewsProgressive ranks from (DB when
+ * available and populated, live fetch otherwise, same fallback contract as
+ * getNewsForTicker above), computed fresh per request rather than persisted:
+ * cheap over <=80-200 rows, and unlike sentiment itself (which needs to be
+ * *stable* historically, hence persisted on the row — see NewsItem.sentiment)
+ * these are just today's snapshot, recomputed every time by design.
+ */
+export async function getNewsInsights(): Promise<{ mood: NewsMoodSummary; trending: TrendingTicker[] }> {
+  const databaseUrl = process.env.DATABASE_URL;
+  const ranked = databaseUrl
+    ? ((await fetchRankedFromDb(databaseUrl)) ?? (await fetchLiveAll()))
+    : await fetchLiveAll();
+
+  return { mood: computeMoodSummary(ranked), trending: computeTrendingTickers(ranked) };
 }
 
 /**

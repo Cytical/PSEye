@@ -1,6 +1,7 @@
 import Parser from "rss-parser";
 import type { NewsItem, NewsSource } from "./types";
 import { tagTickers } from "./tickerTagger";
+import { scoreSentiment } from "./sentiment";
 
 // Extra fields not in rss-parser's default Item shape, needed to recover a
 // thumbnail image — most PH outlet feeds carry it as media:content (Media
@@ -100,6 +101,7 @@ export function createRssSource(name: string, feedUrl: string): NewsSource {
 
         const snippet = stripHtmlAndTruncate(item.contentSnippet ?? item.content);
         const publishedAt = item.isoDate ? new Date(item.isoDate) : new Date();
+        const combinedText = `${item.title} ${snippet ?? ""}`;
 
         return [
           {
@@ -109,7 +111,8 @@ export function createRssSource(name: string, feedUrl: string): NewsSource {
             imageUrl: extractImageUrl(item),
             url: item.link,
             publishedAt,
-            tickers: tagTickers(`${item.title} ${snippet ?? ""}`),
+            tickers: tagTickers(combinedText),
+            sentiment: scoreSentiment(combinedText).sentiment,
           },
         ];
       });

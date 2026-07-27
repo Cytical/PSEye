@@ -54,6 +54,16 @@ export const newsItems = pgTable("news_items", {
   url: text("url").notNull().unique(),
   publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
   tickers: text("tickers").array().notNull().default([]),
+  // 'positive' | 'negative' | 'neutral' — lexicon word-count sentiment over
+  // title+snippet, computed once at fetch time (see scoreSentiment in
+  // packages/sources/news/src/sentiment.ts, called from rssSource.ts) and
+  // persisted rather than recomputed on every /news render. Nullable: rows
+  // written before this column existed haven't been re-scored yet (they get
+  // backfilled the next time fetch-news.ts's onConflictDoUpdate sees that
+  // same URL again, same "backfill on next natural re-fetch" pattern as
+  // image_url above) — apps/web/lib/news.ts's aggregates treat null the same
+  // as 'neutral'.
+  sentiment: varchar("sentiment", { length: 8 }),
 });
 
 // One row per outlet (keyed by the same `source` string as news_items.source

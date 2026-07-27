@@ -1,3 +1,5 @@
+import type { NewsSentiment } from "./sentiment";
+
 export interface NewsItem {
   source: string;
   title: string;
@@ -6,6 +8,15 @@ export interface NewsItem {
   url: string;
   publishedAt: Date;
   tickers: string[];
+  /**
+   * Lexicon-based headline+snippet sentiment (see sentiment.ts), computed
+   * once at RSS-fetch time (createRssSource, mirroring how tagTickers is
+   * computed there too) and persisted to news_items.sentiment rather than
+   * recomputed on every page render. Null only for rows written before this
+   * column existed and not yet re-fetched — treat the same as "neutral" in
+   * aggregates (see computeMoodSummary in apps/web/lib/news.ts).
+   */
+  sentiment: NewsSentiment | null;
   /**
    * True when imageUrl is that outlet's cached logo (fetch-news.ts's third
    * and last real-image fallback, after RSS and per-article og:image both

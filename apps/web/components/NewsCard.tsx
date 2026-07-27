@@ -38,6 +38,34 @@ function Kicker({ text, className = "" }: { text: string; className?: string }) 
   );
 }
 
+/**
+ * Small per-article sentiment indicator (lexicon-scored at fetch time, see
+ * scoreSentiment in packages/sources/news/src/sentiment.ts) — uses this
+ * site's existing green=up/red=down semantic convention (the `text-up`/
+ * `text-down` Tailwind theme colors defined from --up/--down in globals.css,
+ * the same pair DailyRecapShareCard.tsx and every price-change display site-
+ * wide already use) rather than inventing a news-specific palette, so it
+ * reads as native to the site instead of bolted on. Neutral renders nothing:
+ * most generic business headlines aren't emotionally loaded either
+ * direction, so a badge on literally every card would be more noise than
+ * signal — same reasoning the daily recap's breadth strip uses "48 flat" as
+ * plain, unstyled text rather than giving "unchanged" its own color chip.
+ */
+function SentimentBadge({ sentiment }: { sentiment: NewsItem["sentiment"] }) {
+  if (sentiment !== "positive" && sentiment !== "negative") return null;
+  const isPositive = sentiment === "positive";
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 font-mono text-[10px] font-semibold tracking-normal ${
+        isPositive ? "text-up" : "text-down"
+      }`}
+      title={isPositive ? "Positive sentiment" : "Negative sentiment"}
+    >
+      {isPositive ? "▲" : "▼"} {isPositive ? "Positive" : "Negative"}
+    </span>
+  );
+}
+
 function Byline({
   item,
   className = "",
@@ -62,6 +90,7 @@ function Byline({
       <span>{item.source}</span>
       <span aria-hidden>&middot;</span>
       <span>{formatTimeAgo(item.publishedAt)}</span>
+      <SentimentBadge sentiment={item.sentiment} />
       {chipTickers.map((ticker) =>
         TRACKED_TICKERS.has(ticker) ? (
           <Link

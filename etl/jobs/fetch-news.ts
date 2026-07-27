@@ -112,6 +112,7 @@ async function main() {
     url: item.url,
     publishedAt: item.publishedAt,
     tickers: item.tickers,
+    sentiment: item.sentiment,
   }));
 
   // onConflictDoUpdate (not onConflictDoNothing) so an already-seen article
@@ -120,7 +121,9 @@ async function main() {
   // while; onConflictDoNothing would leave every pre-existing row's
   // image_url permanently null since the job only sees the same URL again
   // while it's still within an outlet's RSS feed window (same bug pattern
-  // fixed for disclosures'/offerings' `url` column — see those jobs).
+  // fixed for disclosures'/offerings' `url` column — see those jobs). Same
+  // reasoning applies to `sentiment` (migration 0013): a row inserted before
+  // that column existed only gets scored once this job sees its URL again.
   await db
     .insert(newsItems)
     .values(rows)
@@ -133,6 +136,7 @@ async function main() {
         imageUrl: sql`excluded.image_url`,
         publishedAt: sql`excluded.published_at`,
         tickers: sql`excluded.tickers`,
+        sentiment: sql`excluded.sentiment`,
       },
     });
 
