@@ -222,7 +222,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       <RecordStockView ticker={ticker} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="text-xs text-panel-fg/50">
+      <nav className="text-xs text-panel-fg/68">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -238,7 +238,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             <h1 className="mt-0.5 font-serif text-2xl font-semibold leading-tight tracking-tight text-panel-fg">
               {company.companyName}
             </h1>
-            <p className="mt-1 text-sm text-panel-fg/60">{summaryLine}</p>
+            <p className="mt-1 text-sm text-panel-fg/72">{summaryLine}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -305,7 +305,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {closes.length >= 2 && (
         <div className="mt-6">
-          <h2 className="kicker text-panel-fg/55">Closing price, last {HISTORY_LOOKBACK_DAYS} days</h2>
+          <h2 className="kicker text-panel-fg/68">Closing price, last {HISTORY_LOOKBACK_DAYS} days</h2>
           <div className="mt-2 rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
             <StockPriceChart closes={closes} />
           </div>
@@ -318,7 +318,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {profile && (
         <div className="mt-6">
-          <h2 className="kicker text-panel-fg/55">About</h2>
+          <h2 className="kicker text-panel-fg/68">About</h2>
           <div className="mt-2 flex flex-col gap-2.5">
             {profile.description.split("\n\n").map((paragraph, i) => (
               <p key={i} className="text-sm leading-snug text-panel-fg/80">
@@ -326,13 +326,13 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
               </p>
             ))}
           </div>
-          <p className="mt-1.5 text-[11px] text-panel-fg/60">{profile.source}</p>
+          <p className="mt-1.5 text-[11px] text-panel-fg/72">{profile.source}</p>
         </div>
       )}
 
       {sectorPeers.length > 0 && (
         <div className="mt-8">
-          <h2 className="kicker text-panel-fg/55">Sector peers</h2>
+          <h2 className="kicker text-panel-fg/68">Sector peers</h2>
           <ul className="mt-2 flex flex-col divide-y divide-panel-border rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
             {sectorPeers.map((peer) => (
               <li key={peer.ticker}>
@@ -349,7 +349,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                     <span
                       className={
                         peer.pctChange == null
-                          ? "text-panel-fg/40"
+                          ? "text-panel-fg/65"
                           : peer.pctChange >= 0
                             ? "text-up"
                             : "text-down"
@@ -366,7 +366,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           </ul>
           <Link
             href={`/sectors/${sectorToSlug(sector)}`}
-            className="mt-2 inline-block text-xs text-panel-fg/50 hover:underline"
+            className="mt-2 inline-block text-xs text-panel-fg/68 hover:underline"
           >
             See all {sectorRanked.length} in {sector} →
           </Link>
@@ -375,7 +375,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
         <div>
-          <h2 className="kicker text-panel-fg/55">Recent disclosures</h2>
+          <h2 className="kicker text-panel-fg/68">Recent disclosures</h2>
           {companyDisclosures.length > 0 ? (
             <ul className="mt-2 flex flex-col gap-2">
               {companyDisclosures.map((d) => {
@@ -393,7 +393,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                       >
                         {DISCLOSURE_TYPE_LABELS[d.type]}
                       </span>
-                      <span className="ml-auto text-[11px] text-panel-fg/60">{formatRelative(d.filedAt)}</span>
+                      <span className="ml-auto text-[11px] text-panel-fg/72">{formatRelative(d.filedAt)}</span>
                     </div>
                     {d.url ? (
                       <a
@@ -412,15 +412,15 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
               })}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-panel-fg/50">No recent disclosures on record.</p>
+            <p className="mt-2 text-sm text-panel-fg/68">No recent disclosures on record.</p>
           )}
-          <Link href="/disclosures" className="mt-2 inline-block text-xs text-panel-fg/50 hover:underline">
+          <Link href="/disclosures" className="mt-2 inline-block text-xs text-panel-fg/68 hover:underline">
             All disclosures →
           </Link>
         </div>
 
         <div>
-          <h2 className="kicker text-panel-fg/55">Dividend &amp; corporate action history</h2>
+          <h2 className="kicker text-panel-fg/68">Dividend &amp; corporate action history</h2>
           {companyActions.length > 0 ? (
             <ul className="mt-2 flex flex-col gap-2">
               {companyActions.map((a) => {
@@ -438,7 +438,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                       >
                         {CORPORATE_ACTION_LABELS[a.type]}
                       </span>
-                      <span className="ml-auto text-[11px] text-panel-fg/60">Ex-date {formatDate(a.exDate)}</span>
+                      <span className="ml-auto text-[11px] text-panel-fg/72">Ex-date {formatDate(a.exDate)}</span>
                     </div>
                     <p className="mt-1 text-panel-fg">{a.details}</p>
                   </li>
@@ -446,9 +446,9 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
               })}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-panel-fg/50">No recent corporate actions on record.</p>
+            <p className="mt-2 text-sm text-panel-fg/68">No recent corporate actions on record.</p>
           )}
-          <Link href="/calendar" className="mt-2 inline-block text-xs text-panel-fg/50 hover:underline">
+          <Link href="/calendar" className="mt-2 inline-block text-xs text-panel-fg/68 hover:underline">
             Full calendar →
           </Link>
         </div>
@@ -456,14 +456,14 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {news.length > 0 && (
         <div className="mt-8">
-          <h2 className="kicker text-panel-fg/55">In the news</h2>
+          <h2 className="kicker text-panel-fg/68">In the news</h2>
           <ul className="mt-2 flex flex-col gap-2.5">
             {news.map((item) => (
               <li key={item.url} className="text-sm">
                 <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-panel-fg hover:underline">
                   {item.title}
                 </a>
-                <div className="text-[11px] text-panel-fg/60">
+                <div className="text-[11px] text-panel-fg/72">
                   {item.source} &middot; {formatRelative(item.publishedAt.toISOString())}
                 </div>
               </li>
@@ -474,7 +474,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       <RecentlyViewed excludeTicker={ticker} />
 
-      <p className="mt-8 text-xs text-panel-fg/60">
+      <p className="mt-8 text-xs text-panel-fg/72">
         Delayed/EOD data, not real-time. Not financial advice, a stock pick, or a
         buy/sell signal.
       </p>
@@ -487,7 +487,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "up
     tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-panel-fg";
   return (
     <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <div className="text-[11px] text-panel-fg/50">{label}</div>
+      <div className="text-[11px] text-panel-fg/68">{label}</div>
       <div className={`mt-0.5 text-lg font-semibold tabular-nums ${toneClass}`}>{value}</div>
     </div>
   );

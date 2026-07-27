@@ -20,7 +20,7 @@ export function RankingsTable({ rows, rankKey = "overallRank" }: { rows: Ranking
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
-            <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/50">
+            <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/68">
               <th className="w-10 py-1.5 pl-3 font-medium">#</th>
               <th className="w-9 py-1.5" aria-label="Watchlist" />
               <th className="py-1.5 pr-4 font-medium">Company</th>
@@ -32,7 +32,7 @@ export function RankingsTable({ rows, rankKey = "overallRank" }: { rows: Ranking
           <tbody className="divide-y divide-panel-border">
             {rows.map((row) => (
               <tr key={row.ticker} className="transition-colors hover:bg-panel-raised">
-                <td className="py-2.5 pl-3 tabular-nums text-panel-fg/50">{row[rankKey]}</td>
+                <td className="py-2.5 pl-3 tabular-nums text-panel-fg/68">{row[rankKey]}</td>
                 <td className="py-2">
                   <WatchlistStarButton ticker={row.ticker} size={16} />
                 </td>
@@ -43,11 +43,11 @@ export function RankingsTable({ rows, rankKey = "overallRank" }: { rows: Ranking
                   </Link>
                 </td>
                 <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">
-                  {row.price == null ? <span className="text-panel-fg/40">N/A</span> : `₱${row.price.toFixed(2)}`}
+                  {row.price == null ? <span className="text-panel-fg/65">N/A</span> : `₱${row.price.toFixed(2)}`}
                 </td>
                 <td className="py-2.5 pr-4 text-right font-medium tabular-nums">
                   {row.pctChange == null ? (
-                    <span className="text-panel-fg/40">—</span>
+                    <span className="text-panel-fg/65">—</span>
                   ) : (
                     <span className={changeColor(row.pctChange)}>
                       {row.pctChange >= 0 ? "+" : ""}

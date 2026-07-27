@@ -257,7 +257,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {availableDates.length > 0 ? (
-          <div className="flex items-center gap-2 text-xs font-medium text-panel-fg/60">
+          <div className="flex items-center gap-2 text-xs font-medium text-panel-fg/72">
             <span className="kicker">Time machine</span>
             <CalendarDatePicker
               value={viewDate}
@@ -292,7 +292,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
             <button
               type="button"
               onClick={() => selectDateInUrl(null)}
-              className="rounded-md px-2.5 py-1 text-xs font-medium text-panel-fg/60 transition-colors hover:bg-panel-raised hover:text-panel-fg"
+              className="rounded-md px-2.5 py-1 text-xs font-medium text-panel-fg/72 transition-colors hover:bg-panel-raised hover:text-panel-fg"
             >
               Back to today
             </button>
@@ -306,7 +306,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
           <button
             type="button"
             onClick={() => selectDateInUrl(null)}
-            className="rounded-md px-2.5 py-1 text-xs font-medium text-panel-fg/60 transition-colors hover:bg-panel-raised hover:text-panel-fg"
+            className="rounded-md px-2.5 py-1 text-xs font-medium text-panel-fg/72 transition-colors hover:bg-panel-raised hover:text-panel-fg"
           >
             Clear
           </button>
@@ -317,7 +317,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
           className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:sticky sm:top-16 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
           aria-label="Market map filters"
         >
-          <span className="kicker hidden border-b border-panel-border px-2 pb-2 text-panel-fg/55 sm:block">
+          <span className="kicker hidden border-b border-panel-border px-2 pb-2 text-panel-fg/68 sm:block">
             Filters
           </span>
           <div className="flex gap-2 sm:flex-col sm:gap-0.5">
@@ -338,7 +338,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
                   <span>{option.label}</span>
                   <span
                     className={`text-[11px] tabular-nums transition-colors ${
-                      isActive ? "text-panel-fg/60" : "text-panel-fg/55 group-hover:text-panel-fg/70"
+                      isActive ? "text-panel-fg/72" : "text-panel-fg/68 group-hover:text-panel-fg/70"
                     }`}
                   >
                     {countByFilter[option.key]}
@@ -405,7 +405,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
                 <button
                   type="button"
                   onClick={clearSharedTickersInUrl}
-                  className="rounded-md px-2.5 py-1 text-xs font-medium text-panel-fg/60 transition-colors hover:bg-panel-raised hover:text-panel-fg"
+                  className="rounded-md px-2.5 py-1 text-xs font-medium text-panel-fg/72 transition-colors hover:bg-panel-raised hover:text-panel-fg"
                 >
                   View my watchlist
                 </button>
@@ -419,13 +419,13 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
                 type="button"
                 onClick={() => setAddModalOpen(true)}
                 aria-label="Add a stock to your watchlist"
-                className="flex h-16 w-16 items-center justify-center rounded-lg border-2 border-dashed border-panel-border text-3xl font-light text-panel-fg/50 transition-colors hover:border-panel-fg/40 hover:text-panel-fg/80"
+                className="flex h-16 w-16 items-center justify-center rounded-lg border-2 border-dashed border-panel-border text-3xl font-light text-panel-fg/68 transition-colors hover:border-panel-fg/40 hover:text-panel-fg/80"
               >
                 +
               </button>
               <div>
                 <p className="text-sm font-medium text-panel-fg/70">Your watchlist is empty.</p>
-                <p className="max-w-xs text-xs text-panel-fg/60">
+                <p className="max-w-xs text-xs text-panel-fg/72">
                   Click the + to search and bookmark stocks, or star any stock from the map. Saved on this
                   device only.
                 </p>

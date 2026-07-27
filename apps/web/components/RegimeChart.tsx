@@ -71,14 +71,14 @@ export function RegimeChart({ points }: { points: RegimePoint[] }) {
       {yTicks.map((t) => (
         <g key={t}>
           <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={yFor(t)} y2={yFor(t)} className="stroke-panel-fg/10" strokeWidth={1} />
-          <text x={PAD_LEFT - 6} y={yFor(t)} textAnchor="end" dominantBaseline="middle" fontSize={10} className="fill-panel-fg/45">
+          <text x={PAD_LEFT - 6} y={yFor(t)} textAnchor="end" dominantBaseline="middle" fontSize={10} className="fill-panel-fg/65">
             {t.toFixed(0)}
           </text>
         </g>
       ))}
 
       {xTickIdx.map((i) => (
-        <text key={i} x={xFor(i)} y={HEIGHT - 10} textAnchor="middle" fontSize={10} className="fill-panel-fg/45">
+        <text key={i} x={xFor(i)} y={HEIGHT - 10} textAnchor="middle" fontSize={10} className="fill-panel-fg/65">
           {points[i].date.slice(0, 7)}
         </text>
       ))}

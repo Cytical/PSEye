@@ -98,7 +98,7 @@ export function DcaChart({ timeline }: { timeline: DcaPoint[] }) {
               textAnchor="end"
               dominantBaseline="middle"
               fontSize={10}
-              className="fill-panel-fg/40"
+              className="fill-panel-fg/65"
             >
               {currency(t)}
             </text>
@@ -154,7 +154,7 @@ export function DcaChart({ timeline }: { timeline: DcaPoint[] }) {
         />
       </svg>
 
-      <div className="mt-1 flex flex-wrap items-center gap-4 text-[11px] text-panel-fg/60">
+      <div className="mt-1 flex flex-wrap items-center gap-4 text-[11px] text-panel-fg/72">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2 w-2 rounded-full" style={{ background: "var(--series-value)" }} />
           Portfolio value

@@ -49,7 +49,7 @@ export function ForeignFlowChart({ periods }: { periods: IndexForeignFlow[] }) {
     <div className="relative">
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full" role="img" aria-label="Weekly net foreign fund flow">
         <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={zeroY} y2={zeroY} className="stroke-panel-fg/20" strokeWidth={1} />
-        <text x={PAD_LEFT - 8} y={zeroY} textAnchor="end" dominantBaseline="middle" fontSize={10} className="fill-panel-fg/40">
+        <text x={PAD_LEFT - 8} y={zeroY} textAnchor="end" dominantBaseline="middle" fontSize={10} className="fill-panel-fg/65">
           ₱0
         </text>
 
@@ -68,7 +68,7 @@ export function ForeignFlowChart({ periods }: { periods: IndexForeignFlow[] }) {
 
         {periods.map((p, i) =>
           i % 2 === 0 ? (
-            <text key={p.periodEnd} x={xForIndex(i)} y={HEIGHT - 6} textAnchor="middle" fontSize={9} className="fill-panel-fg/40">
+            <text key={p.periodEnd} x={xForIndex(i)} y={HEIGHT - 6} textAnchor="middle" fontSize={9} className="fill-panel-fg/65">
               {formatWeek(p.periodEnd)}
             </text>
           ) : null

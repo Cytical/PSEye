@@ -32,7 +32,7 @@ export default async function SectorsPage() {
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
-      <nav className="text-xs text-panel-fg/50">
+      <nav className="text-xs text-panel-fg/68">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -41,7 +41,7 @@ export default async function SectorsPage() {
       </nav>
 
       <h1 className="mt-2 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Sectors</h1>
-      <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
+      <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/72">
         Every tracked PSE-listed company grouped by sector. Pick one to see its full ranking by
         market capitalization, or see all sectors together on the{" "}
         <Link href="/rankings" className="underline hover:text-panel-fg">
@@ -58,7 +58,7 @@ export default async function SectorsPage() {
             className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border transition-colors hover:bg-panel-raised"
           >
             <div className="text-base font-semibold text-panel-fg">{sector}</div>
-            <div className="mt-1 text-xs text-panel-fg/60">
+            <div className="mt-1 text-xs text-panel-fg/72">
               {count} {count === 1 ? "company" : "companies"} · {formatMarketCap(totalMarketCap)} combined
               market cap
             </div>

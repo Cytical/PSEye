@@ -72,8 +72,8 @@ export function StockStatistics({
   return (
     <div className="mt-8">
       <div className="flex items-baseline justify-between">
-        <h2 className="kicker text-panel-fg/55">Statistical profile</h2>
-        <span className="text-[11px] text-panel-fg/40">{returns.length + 1} daily closes</span>
+        <h2 className="kicker text-panel-fg/68">Statistical profile</h2>
+        <span className="text-[11px] text-panel-fg/65">{returns.length + 1} daily closes</span>
       </div>
 
       {/* Risk-adjusted return */}
@@ -159,7 +159,7 @@ export function StockStatistics({
         <>
           <h3 className="mt-5 text-xs font-semibold text-panel-fg/70">
             Seasonality{" "}
-            <span className="font-normal text-panel-fg/45">
+            <span className="font-normal text-panel-fg/65">
               — average return by calendar month (up to {maxYears} {maxYears === 1 ? "year" : "years"} of data)
             </span>
           </h3>
@@ -168,7 +168,7 @@ export function StockStatistics({
               <thead>
                 <tr>
                   {monthly.map((m) => (
-                    <th key={m.month} className="p-1 font-medium text-panel-fg/55">
+                    <th key={m.month} className="p-1 font-medium text-panel-fg/68">
                       {MONTH_LABELS[m.month - 1]}
                     </th>
                   ))}
@@ -194,14 +194,14 @@ export function StockStatistics({
               </tbody>
             </table>
           </div>
-          <p className="mt-1 text-[11px] text-panel-fg/45">
+          <p className="mt-1 text-[11px] text-panel-fg/65">
             Only a few years of history back each month, so this is descriptive color, not a
             predictable &ldquo;month effect.&rdquo;
           </p>
         </>
       )}
 
-      <p className="mt-3 text-[11px] text-panel-fg/50">
+      <p className="mt-3 text-[11px] text-panel-fg/68">
         Sharpe/Sortino use a ~{(PH_ANNUAL_RISK_FREE * 100).toFixed(2)}% annual risk-free assumption.
         Value-at-Risk is historical (read off the actual return distribution), not a normal-model
         estimate. Descriptive statistics on past closes — not a forecast, stock pick, or buy/sell
@@ -245,7 +245,7 @@ function Tile({
 }) {
   return (
     <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <div className="text-[11px] text-panel-fg/50">{label}</div>
+      <div className="text-[11px] text-panel-fg/68">{label}</div>
       <div
         className={`mt-0.5 text-lg font-semibold tabular-nums ${
           tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-panel-fg"
@@ -253,7 +253,7 @@ function Tile({
       >
         {value}
       </div>
-      {hint && <div className="mt-0.5 text-[10px] text-panel-fg/45">{hint}</div>}
+      {hint && <div className="mt-0.5 text-[10px] text-panel-fg/65">{hint}</div>}
     </div>
   );
 }

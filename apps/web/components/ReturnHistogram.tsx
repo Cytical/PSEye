@@ -73,7 +73,7 @@ export function ReturnHistogram({ returns }: { returns: number[] }) {
           // viewBox edge and get clipped by the container's overflow.
           textAnchor={i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle"}
           fontSize={10}
-          className="fill-panel-fg/45"
+          className="fill-panel-fg/65"
         >
           {`${t >= 0 ? "+" : ""}${(t * 100).toFixed(1)}%`}
         </text>

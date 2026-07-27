@@ -40,7 +40,7 @@ export default async function BlockSalesPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
-                <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/55">
+                <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/68">
                   <th className="py-3 pl-4 pr-4 font-medium">Date</th>
                   <th className="py-3 pr-4 font-medium">Ticker</th>
                   <th className="py-3 pr-4 font-medium">Company</th>
@@ -55,7 +55,7 @@ export default async function BlockSalesPage() {
                     key={`${t.ticker}-${t.tradeDate}-${t.volume}`}
                     className="transition-colors hover:bg-panel-raised"
                   >
-                    <td className="py-2.5 pl-4 pr-4 text-panel-fg/60">{formatDate(t.tradeDate)}</td>
+                    <td className="py-2.5 pl-4 pr-4 text-panel-fg/72">{formatDate(t.tradeDate)}</td>
                     <td className="py-2.5 pr-4 font-mono text-xs">
                       <Link href={`/stocks/${t.ticker}`} className="text-panel-fg hover:underline">
                         {t.ticker}
@@ -80,13 +80,13 @@ export default async function BlockSalesPage() {
           </div>
         </div>
       ) : (
-        <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/60 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+        <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/72 shadow-sm shadow-black/5 ring-1 ring-panel-border">
           No block sales on record yet.
         </p>
       )}
 
       {source === "mock" && (
-        <p className="mt-6 text-xs text-panel-fg/60">
+        <p className="mt-6 text-xs text-panel-fg/72">
           Sample data — no real block sales are on record yet for the last 30 days. Figures
           here are illustrative, not actual trades.
         </p>

@@ -47,7 +47,7 @@ export function CompareChart({ series }: { series: CompareSeries[] }) {
 
   if (normalized.length === 0 || dateCount < 2) {
     return (
-      <p className="text-sm text-panel-fg/50">
+      <p className="text-sm text-panel-fg/68">
         Not enough overlapping price history for this selection yet.
       </p>
     );
@@ -91,7 +91,7 @@ export function CompareChart({ series }: { series: CompareSeries[] }) {
               className={t === 0 ? "stroke-panel-fg/25" : "stroke-panel-fg/10"}
               strokeWidth={1}
             />
-            <text x={PAD_LEFT - 8} y={yForPct(t)} textAnchor="end" dominantBaseline="middle" fontSize={10} className="fill-panel-fg/40">
+            <text x={PAD_LEFT - 8} y={yForPct(t)} textAnchor="end" dominantBaseline="middle" fontSize={10} className="fill-panel-fg/65">
               {formatPct(t)}
             </text>
           </g>
@@ -145,7 +145,7 @@ export function CompareChart({ series }: { series: CompareSeries[] }) {
         />
       </svg>
 
-      <div className="mt-2 flex flex-wrap items-center gap-4 text-[11px] text-panel-fg/60">
+      <div className="mt-2 flex flex-wrap items-center gap-4 text-[11px] text-panel-fg/72">
         {normalized.map((s, i) => (
           <span key={s.ticker} className="flex items-center gap-1.5">
             <span

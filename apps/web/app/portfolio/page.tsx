@@ -30,7 +30,7 @@ export default async function PortfolioPage() {
         <PortfolioTracker quotes={quotes} />
       </div>
 
-      <p className="mt-8 text-xs text-panel-fg/60">
+      <p className="mt-8 text-xs text-panel-fg/72">
         Not financial advice. Prices are end-of-day / delayed quotes, refreshed
         hourly during trading hours — not real-time.
       </p>

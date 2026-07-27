@@ -64,7 +64,7 @@ export default function ContactPage() {
               {link.icon}
             </span>
             <span>
-              <span className="kicker block text-foreground/50">{link.sublabel}</span>
+              <span className="kicker block text-foreground/68">{link.sublabel}</span>
               <span className="font-medium text-foreground">{link.label}</span>
             </span>
           </a>

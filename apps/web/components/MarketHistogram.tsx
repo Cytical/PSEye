@@ -75,7 +75,7 @@ export function MarketHistogram({
               textAnchor={xFor(refValue!) > WIDTH / 2 ? "end" : "start"}
               dx={xFor(refValue!) > WIDTH / 2 ? -4 : 4}
               fontSize={10}
-              className="fill-panel-fg/60"
+              className="fill-panel-fg/72"
             >
               {refLabel}
             </text>
@@ -93,7 +93,7 @@ export function MarketHistogram({
           // edge of the viewBox and get clipped by the container's overflow.
           textAnchor={i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle"}
           fontSize={10}
-          className="fill-panel-fg/45"
+          className="fill-panel-fg/65"
         >
           {formatX(t)}
         </text>

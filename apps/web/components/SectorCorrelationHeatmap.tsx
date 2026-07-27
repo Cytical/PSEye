@@ -23,7 +23,7 @@ export function SectorCorrelationHeatmap({ data }: { data: SectorCorrelation }) 
             {sectors.map((s) => (
               <th
                 key={s}
-                className="p-1 text-center align-bottom font-medium text-panel-fg/60"
+                className="p-1 text-center align-bottom font-medium text-panel-fg/72"
                 title={s}
               >
                 <span className="inline-block max-w-[4.5rem] leading-tight">{shortSector(s)}</span>
@@ -36,7 +36,7 @@ export function SectorCorrelationHeatmap({ data }: { data: SectorCorrelation }) 
             <tr key={rowSec}>
               <th
                 scope="row"
-                className="whitespace-nowrap p-1 text-right font-medium text-panel-fg/60"
+                className="whitespace-nowrap p-1 text-right font-medium text-panel-fg/72"
                 title={rowSec}
               >
                 {shortSector(rowSec)}

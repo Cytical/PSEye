@@ -210,7 +210,7 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
                 type="button"
                 onClick={() => removeTicker(ticker)}
                 aria-label={`Remove ${ticker}`}
-                className="rounded-full p-0.5 text-panel-fg/60 hover:bg-panel-raised hover:text-panel-fg"
+                className="rounded-full p-0.5 text-panel-fg/72 hover:bg-panel-raised hover:text-panel-fg"
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -235,7 +235,7 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
       )}
 
       {!loading && selected.length > 0 && isSampleData && (
-        <p className="text-xs text-panel-fg/60">
+        <p className="text-xs text-panel-fg/72">
           Price history is sample data for one or more of these tickers — a real EOD price
           history feed hasn&apos;t been backfilled for it yet. Results are illustrative, not
           historical fact.

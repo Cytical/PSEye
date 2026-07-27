@@ -91,7 +91,7 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search ticker or company…"
           aria-label="Search by ticker or company name"
-          className="min-w-[200px] flex-1 rounded-lg bg-panel px-3 py-2 text-sm text-panel-fg shadow-sm shadow-black/5 ring-1 ring-panel-border placeholder:text-panel-fg/40 focus:outline-none focus:ring-2 focus:ring-panel-fg/30"
+          className="min-w-[200px] flex-1 rounded-lg bg-panel px-3 py-2 text-sm text-panel-fg shadow-sm shadow-black/5 ring-1 ring-panel-border placeholder:text-panel-fg/65 focus:outline-none focus:ring-2 focus:ring-panel-fg/30"
         />
         <select
           value={sector}
@@ -120,7 +120,7 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
         </button>
       </div>
 
-      <p className="mt-3 text-xs text-panel-fg/50">
+      <p className="mt-3 text-xs text-panel-fg/68">
         {sorted.length} {sorted.length === 1 ? "stock" : "stocks"}
         {sorted.length !== rows.length ? ` of ${rows.length}` : ""}
       </p>
@@ -129,7 +129,7 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
-              <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/50">
+              <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/68">
                 <th className="w-9 py-1.5 pl-3" aria-label="Watchlist" />
                 {COLUMNS.map((col) => {
                   const isActive = sort.key === col.key;
@@ -170,11 +170,11 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
                   </td>
                   <td className="py-2.5 pr-4 whitespace-nowrap text-panel-fg/70">{row.sector}</td>
                   <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">
-                    {row.price == null ? <span className="text-panel-fg/40">N/A</span> : `₱${row.price.toFixed(2)}`}
+                    {row.price == null ? <span className="text-panel-fg/65">N/A</span> : `₱${row.price.toFixed(2)}`}
                   </td>
                   <td className="py-2.5 pr-4 text-right font-medium tabular-nums">
                     {row.pctChange == null ? (
-                      <span className="text-panel-fg/40">—</span>
+                      <span className="text-panel-fg/65">—</span>
                     ) : (
                       <span className={changeColor(row.pctChange)}>
                         {row.pctChange >= 0 ? "+" : ""}
@@ -185,7 +185,7 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
                   <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">{formatMarketCap(row.marketCap)}</td>
                   <td className="py-2.5 pr-4 text-right tabular-nums">
                     {row.yieldPct == null ? (
-                      <span className="text-panel-fg/40">—</span>
+                      <span className="text-panel-fg/65">—</span>
                     ) : (
                       <span className={row.yieldPct >= 4 ? "text-up" : "text-panel-fg"}>
                         {row.yieldPct.toFixed(2)}%
@@ -200,7 +200,7 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
       </div>
 
       {sorted.length === 0 && (
-        <p className="mt-6 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/50 ring-1 ring-panel-border">
+        <p className="mt-6 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/68 ring-1 ring-panel-border">
           {watchedOnly && watched.length === 0
             ? "Your watchlist is empty — tap a ★ to add stocks."
             : "No stocks match your filters."}

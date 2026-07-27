@@ -66,7 +66,7 @@ export function DividendScreenerTable({ rows }: { rows: DividendScreenerRow[] })
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
           <thead>
-            <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/50">
+            <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/68">
               {COLUMNS.map((col) => {
                 const isActive = sort.key === col.key;
                 return (
@@ -102,14 +102,14 @@ export function DividendScreenerTable({ rows }: { rows: DividendScreenerRow[] })
                   </Link>
                 </td>
                 <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">
-                  {row.price == null ? <span className="text-panel-fg/40">N/A</span> : `₱${row.price.toFixed(2)}`}
+                  {row.price == null ? <span className="text-panel-fg/65">N/A</span> : `₱${row.price.toFixed(2)}`}
                 </td>
                 <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">
-                  {row.ttmDividend > 0 ? `₱${row.ttmDividend.toFixed(4).replace(/\.?0+$/, "")}` : <span className="text-panel-fg/40">—</span>}
+                  {row.ttmDividend > 0 ? `₱${row.ttmDividend.toFixed(4).replace(/\.?0+$/, "")}` : <span className="text-panel-fg/65">—</span>}
                 </td>
                 <td className="py-2.5 pr-4 text-right font-medium tabular-nums">
                   {row.yieldPct == null ? (
-                    <span className="text-panel-fg/40">—</span>
+                    <span className="text-panel-fg/65">—</span>
                   ) : (
                     <span className={row.yieldPct >= 4 ? "text-up" : "text-panel-fg"}>{row.yieldPct.toFixed(2)}%</span>
                   )}
@@ -120,11 +120,11 @@ export function DividendScreenerTable({ rows }: { rows: DividendScreenerRow[] })
                     <>
                       {formatDate(row.nextExDate)}
                       {row.nextAmount != null && (
-                        <span className="ml-1.5 text-xs text-panel-fg/50">₱{row.nextAmount}</span>
+                        <span className="ml-1.5 text-xs text-panel-fg/68">₱{row.nextAmount}</span>
                       )}
                     </>
                   ) : (
-                    <span className="text-panel-fg/40">—</span>
+                    <span className="text-panel-fg/65">—</span>
                   )}
                 </td>
               </tr>

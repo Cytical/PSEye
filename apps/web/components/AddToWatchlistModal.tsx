@@ -89,7 +89,7 @@ export function AddToWatchlistModal({ onClose }: AddToWatchlistModalProps) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-md p-1 text-panel-fg/50 transition-colors hover:bg-panel-raised hover:text-panel-fg"
+            className="rounded-md p-1 text-panel-fg/68 transition-colors hover:bg-panel-raised hover:text-panel-fg"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -106,7 +106,7 @@ export function AddToWatchlistModal({ onClose }: AddToWatchlistModalProps) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search ticker or company…"
             aria-label="Search PSE stocks by ticker or company name"
-            className="w-full rounded-md border border-panel-border bg-[var(--background)] px-2.5 py-1.5 text-sm text-panel-fg placeholder:text-panel-fg/40"
+            className="w-full rounded-md border border-panel-border bg-[var(--background)] px-2.5 py-1.5 text-sm text-panel-fg placeholder:text-panel-fg/65"
           />
         </div>
 
@@ -126,7 +126,7 @@ export function AddToWatchlistModal({ onClose }: AddToWatchlistModalProps) {
                     <span className="truncate">{c.companyName}</span>
                   </span>
                   <span
-                    className={`shrink-0 text-xs font-medium ${watched ? "text-[#f5b400]" : "text-panel-fg/40"}`}
+                    className={`shrink-0 text-xs font-medium ${watched ? "text-[#f5b400]" : "text-panel-fg/65"}`}
                   >
                     {watched ? "★ Added" : "+ Add"}
                   </span>
@@ -135,7 +135,7 @@ export function AddToWatchlistModal({ onClose }: AddToWatchlistModalProps) {
             );
           })}
           {results.length === 0 && (
-            <li className="px-2.5 py-6 text-center text-sm text-panel-fg/50">No matching stocks.</li>
+            <li className="px-2.5 py-6 text-center text-sm text-panel-fg/68">No matching stocks.</li>
           )}
         </ul>
       </div>

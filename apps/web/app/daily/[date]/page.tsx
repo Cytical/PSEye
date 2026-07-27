@@ -67,7 +67,7 @@ function pct2OrDash(n: number | null): string {
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <div className="text-[11px] text-panel-fg/50">{label}</div>
+      <div className="text-[11px] text-panel-fg/68">{label}</div>
       <div className="mt-0.5 text-lg font-semibold tabular-nums text-panel-fg">{value}</div>
     </div>
   );
@@ -76,7 +76,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <h2 className="kicker text-panel-fg/55">{title}</h2>
+      <h2 className="kicker text-panel-fg/68">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   );
@@ -89,7 +89,7 @@ function MoverList({ movers }: { movers: DailyRecap["gainers"] }) {
         <li key={m.ticker} className="flex items-baseline justify-between gap-3 text-sm">
           <Link href={`/stocks/${m.ticker}`} className="min-w-0 truncate hover:underline">
             <span className="font-mono text-xs font-semibold text-panel-fg">{m.ticker}</span>
-            <span className="ml-2 text-panel-fg/60">{m.companyName}</span>
+            <span className="ml-2 text-panel-fg/72">{m.companyName}</span>
           </Link>
           <span
             className="shrink-0 font-medium tabular-nums"
@@ -111,7 +111,7 @@ function FlowList({ rows }: { rows: DailyRecap["foreignBuys"] }) {
         <li key={r.ticker} className="flex items-baseline justify-between gap-3 text-sm">
           <Link href={`/stocks/${r.ticker}`} className="min-w-0 truncate hover:underline">
             <span className="font-mono text-xs font-semibold text-panel-fg">{r.ticker}</span>
-            <span className="ml-2 text-panel-fg/60">{r.companyName}</span>
+            <span className="ml-2 text-panel-fg/72">{r.companyName}</span>
           </Link>
           <span className="shrink-0 font-medium tabular-nums" style={{ color: r.netValue >= 0 ? UP : DOWN }}>
             {formatCompactPeso(r.netValue)}
@@ -184,7 +184,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
       </div>
 
       <div className="mt-8 flex items-center gap-3">
-        <span className="kicker shrink-0 text-panel-fg/40">Full Recap</span>
+        <span className="kicker shrink-0 text-panel-fg/65">Full Recap</span>
         <span className="h-px flex-1 bg-panel-border" />
       </div>
 
@@ -204,7 +204,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
               />
             </div>
             <div className="mt-3">
-              <p className="mb-1 text-xs text-panel-fg/55">Distribution of that day&apos;s % change</p>
+              <p className="mb-1 text-xs text-panel-fg/68">Distribution of that day&apos;s % change</p>
               <MarketHistogram
                 bins={breadth.histogram}
                 colorSplit={0}
@@ -246,7 +246,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
                 <li key={`${t.ticker}-${i}`} className="flex items-baseline justify-between gap-3 text-sm">
                   <Link href={`/stocks/${t.ticker}`} className="min-w-0 truncate hover:underline">
                     <span className="font-mono text-xs font-semibold text-panel-fg">{t.ticker}</span>
-                    <span className="ml-2 text-panel-fg/60">
+                    <span className="ml-2 text-panel-fg/72">
                       {t.volume.toLocaleString("en-PH")} sh @ ₱{t.price.toFixed(2)}
                     </span>
                   </Link>
@@ -255,7 +255,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
               ))}
             </ul>
             {recap.blockSales.length > 8 && (
-              <p className="mt-2 text-xs text-panel-fg/50">
+              <p className="mt-2 text-xs text-panel-fg/68">
                 <Link href="/block-sales" className="hover:underline">
                   All recent block sales →
                 </Link>
@@ -271,7 +271,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
             <ul className="flex flex-col gap-2">
               {recap.disclosures.slice(0, 12).map((d, i) => (
                 <li key={i} className="flex items-baseline gap-3 text-sm">
-                  <span className="shrink-0 text-xs tabular-nums text-panel-fg/40">{formatManilaTime(d.filedAt)}</span>
+                  <span className="shrink-0 text-xs tabular-nums text-panel-fg/65">{formatManilaTime(d.filedAt)}</span>
                   <Link href={`/stocks/${d.ticker}`} className="shrink-0 font-mono text-xs font-semibold text-panel-fg hover:underline">
                     {d.ticker}
                   </Link>
@@ -291,7 +291,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
               ))}
             </ul>
             {recap.disclosures.length > 12 && (
-              <p className="mt-2 text-xs text-panel-fg/50">
+              <p className="mt-2 text-xs text-panel-fg/68">
                 <Link href="/disclosures" className="hover:underline">
                   All disclosures →
                 </Link>
@@ -310,7 +310,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
                   <a href={n.url} target="_blank" rel="noopener noreferrer" className="text-panel-fg/80 hover:underline">
                     {n.title}
                   </a>
-                  <span className="ml-2 text-xs text-panel-fg/40">{n.source}</span>
+                  <span className="ml-2 text-xs text-panel-fg/65">{n.source}</span>
                 </li>
               ))}
             </ul>
@@ -318,7 +318,7 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
         </div>
       )}
 
-      <p className="mt-6 text-xs text-panel-fg/50">
+      <p className="mt-6 text-xs text-panel-fg/68">
         Generated from data recorded by PSEye&apos;s own pipeline on this date — sections without
         recorded data are omitted rather than estimated.
       </p>

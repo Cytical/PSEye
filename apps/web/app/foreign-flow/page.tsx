@@ -35,7 +35,7 @@ export default async function ForeignFlowPage() {
         {indexFlow.length > 0 ? (
           <>
             <ForeignFlowChart periods={indexFlow} />
-            <div className="mt-1 flex items-center gap-4 text-[11px] text-panel-fg/60">
+            <div className="mt-1 flex items-center gap-4 text-[11px] text-panel-fg/72">
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-2 w-2 rounded-full bg-up" />
                 Net buying
@@ -47,14 +47,14 @@ export default async function ForeignFlowPage() {
             </div>
 
             <details className="mt-3 text-sm">
-              <summary className="cursor-pointer text-xs text-panel-fg/50 hover:text-panel-fg/80">
+              <summary className="cursor-pointer text-xs text-panel-fg/68 hover:text-panel-fg/80">
                 Show as table
               </summary>
               <IndexFlowTable periods={indexFlow} />
             </details>
           </>
         ) : (
-          <p className="text-sm text-panel-fg/50">No index-level foreign flow on record yet.</p>
+          <p className="text-sm text-panel-fg/68">No index-level foreign flow on record yet.</p>
         )}
       </div>
 
@@ -63,7 +63,7 @@ export default async function ForeignFlowPage() {
         <FlowTable title="Top net foreign selling" rows={topSelling} tone="down" periodEnd={periodEnd} />
       </div>
 
-      <p className="mt-6 text-xs text-panel-fg/60">
+      <p className="mt-6 text-xs text-panel-fg/72">
         {stockFlowSource === "real"
           ? "Per-stock rankings are real daily net foreign buying/selling figures from PSE's Daily Quotation Report."
           : "Per-stock rankings above are sample data — the real daily source hasn't populated any rows yet."}
@@ -76,7 +76,7 @@ function IndexFlowTable({ periods }: { periods: IndexForeignFlow[] }) {
   return (
     <table className="mt-2 w-full text-xs">
       <thead>
-        <tr className="border-b border-panel-border text-left text-panel-fg/50">
+        <tr className="border-b border-panel-border text-left text-panel-fg/68">
           <th className="py-1.5 pr-4 font-medium">Week ending</th>
           <th className="py-1.5 pr-4 text-right font-medium">Foreign buy</th>
           <th className="py-1.5 pr-4 text-right font-medium">Foreign sell</th>
@@ -122,7 +122,7 @@ function FlowTable({
   return (
     <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
       <h2 className="kicker text-panel-fg/70">{title}</h2>
-      <p className="text-[11px] text-panel-fg/60">
+      <p className="text-[11px] text-panel-fg/72">
         As of {new Date(periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "UTC" })}
       </p>
       {rows.length > 0 ? (
@@ -134,7 +134,7 @@ function FlowTable({
                 className="-mx-1.5 flex items-center justify-between gap-2 rounded px-1.5 py-1.5 transition-colors hover:bg-panel-raised"
               >
                 <span className="min-w-0 truncate text-panel-fg">
-                  <span className="text-panel-fg/50">{r.rank}.</span>{" "}
+                  <span className="text-panel-fg/68">{r.rank}.</span>{" "}
                   <span className="font-mono text-xs">{r.ticker}</span> {r.companyName}
                 </span>
                 <span className={`shrink-0 tabular-nums ${toneClass}`}>{formatPeso(r.netValue)}</span>
@@ -143,7 +143,7 @@ function FlowTable({
           ))}
         </ol>
       ) : (
-        <p className="mt-2 text-sm text-panel-fg/50">No data for this period.</p>
+        <p className="mt-2 text-sm text-panel-fg/68">No data for this period.</p>
       )}
     </div>
   );

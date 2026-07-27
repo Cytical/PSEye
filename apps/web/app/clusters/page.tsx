@@ -41,7 +41,7 @@ export default async function ClustersPage() {
     <div className="mx-auto max-w-[1240px] px-4 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="text-xs text-panel-fg/50">
+      <nav className="text-xs text-panel-fg/68">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -53,7 +53,7 @@ export default async function ClustersPage() {
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">
         Stocks Grouped by Behavior
       </h1>
-      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/60">
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/72">
         Sectors tell you what a company <em>does</em>; this groups stocks by how they actually{" "}
         <em>trade</em>. A k-means model clusters the largest PSE names on four standardized features
         — volatility, beta, 1-year momentum, and correlation to the market — surfacing which stocks
@@ -101,11 +101,11 @@ export default async function ClustersPage() {
                       aria-hidden="true"
                     />
                     <span className="font-medium text-panel-fg">{c.label}</span>
-                    <span className="text-panel-fg/50">· {c.size} stocks</span>
+                    <span className="text-panel-fg/68">· {c.size} stocks</span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 text-xs text-panel-fg/50">
+              <p className="mt-3 text-xs text-panel-fg/68">
                 Point size ∝ market cap; the dashed line marks beta = 1 (moves with the market).
               </p>
             </div>
@@ -119,7 +119,7 @@ export default async function ClustersPage() {
         </>
       )}
 
-      <p className="mt-8 max-w-3xl text-xs text-panel-fg/55">
+      <p className="mt-8 max-w-3xl text-xs text-panel-fg/68">
         Computed over the largest ~100 PSE stocks with sufficient history. Delayed / end-of-day data,
         recomputed by PSEye. Descriptive statistics and unsupervised grouping — not
         financial advice, a stock pick, or a buy/sell signal.
@@ -141,7 +141,7 @@ function ClusterCard({ cluster }: { cluster: StockCluster }) {
           aria-hidden="true"
         />
         <h3 className="font-serif text-base font-semibold text-panel-fg">{cluster.label}</h3>
-        <span className="ml-auto text-xs text-panel-fg/50">{cluster.size} stocks</span>
+        <span className="ml-auto text-xs text-panel-fg/68">{cluster.size} stocks</span>
       </div>
       <div className="mt-2 grid grid-cols-4 gap-2 text-center">
         <MiniStat label="Volatility" value={`${cluster.avgVolatility.toFixed(0)}%`} />
@@ -160,7 +160,7 @@ function ClusterCard({ cluster }: { cluster: StockCluster }) {
             {m.ticker}
           </Link>
         ))}
-        {rest > 0 && <span className="px-1 py-1 text-[11px] text-panel-fg/45">+{rest} more</span>}
+        {rest > 0 && <span className="px-1 py-1 text-[11px] text-panel-fg/65">+{rest} more</span>}
       </div>
     </div>
   );
@@ -169,7 +169,7 @@ function ClusterCard({ cluster }: { cluster: StockCluster }) {
 function MiniStat({ label, value, tone }: { label: string; value: string; tone?: "up" | "down" }) {
   return (
     <div>
-      <div className="text-[10px] text-panel-fg/50">{label}</div>
+      <div className="text-[10px] text-panel-fg/68">{label}</div>
       <div className={`text-sm font-semibold tabular-nums ${tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-panel-fg"}`}>
         {value}
       </div>

@@ -20,7 +20,7 @@ function TickerItem({ q, hidden }: { q: TickerQuote; hidden?: boolean }) {
       className="flex shrink-0 items-center gap-1.5 border-r border-panel-fg/10 px-4 py-1.5 hover:bg-panel-raised/60"
     >
       <span className="font-mono text-xs font-semibold text-panel-fg">{q.ticker}</span>
-      <span className="text-xs tabular-nums text-panel-fg/60">₱{q.price.toFixed(2)}</span>
+      <span className="text-xs tabular-nums text-panel-fg/72">₱{q.price.toFixed(2)}</span>
       <span className={`flex items-center gap-0.5 text-xs font-semibold tabular-nums ${changeColor(q.pctChange)}`}>
         {q.pctChange >= 0 ? "▲" : "▼"}
         {Math.abs(q.pctChange).toFixed(2)}%

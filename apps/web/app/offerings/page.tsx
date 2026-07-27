@@ -79,13 +79,13 @@ export default async function OfferingsPage() {
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
       <h1 className="text-2xl font-semibold tracking-tight">IPO &amp; Follow-on Offerings</h1>
-      <p className="mt-1.5 text-sm text-panel-fg/60">
+      <p className="mt-1.5 text-sm text-panel-fg/72">
         Subscription windows for new listings and follow-on offers, with plain-language
         context for deciding whether to participate.
       </p>
 
       {sorted.length === 0 && (
-        <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/50 ring-1 ring-panel-border">
+        <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/68 ring-1 ring-panel-border">
           No upcoming offerings on record right now.
         </p>
       )}
@@ -97,7 +97,7 @@ export default async function OfferingsPage() {
           const statusStyle = STATUS_STYLE[status];
           const statusClassName =
             "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold" +
-            (statusStyle ? "" : " bg-panel-raised text-panel-fg/60");
+            (statusStyle ? "" : " bg-panel-raised text-panel-fg/72");
           return (
             <div
               key={`${offering.companyName}-${offering.type}-${offering.subscriptionStart}`}
@@ -129,7 +129,7 @@ export default async function OfferingsPage() {
                   >
                     {OFFERING_TYPE_LABELS[offering.type]}
                   </span>
-                  <span className="text-xs text-panel-fg/50">{offering.sector}</span>
+                  <span className="text-xs text-panel-fg/68">{offering.sector}</span>
                 </div>
                 <span
                   className={statusClassName}
@@ -150,7 +150,7 @@ export default async function OfferingsPage() {
                 </div>
               )}
 
-              <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-panel-fg/50">
+              <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-panel-fg/68">
                 <span>Offer price: ₱{offering.offerPrice.toFixed(2)}</span>
                 <span>
                   Subscription: {formatDate(offering.subscriptionStart)} &ndash;{" "}
@@ -163,7 +163,7 @@ export default async function OfferingsPage() {
         })}
       </div>
 
-      <p className="mt-8 text-xs text-panel-fg/60">
+      <p className="mt-8 text-xs text-panel-fg/72">
         Sample data, including fictional pre-IPO company names — a real offering-disclosure
         tracker has not been wired in yet. Not financial advice.
       </p>

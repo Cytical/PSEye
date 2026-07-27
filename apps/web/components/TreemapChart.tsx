@@ -396,7 +396,7 @@ export function TreemapChart({
                 }}
                 aria-label="Add a stock to your watchlist"
                 title="Add a stock to your watchlist"
-                className="absolute flex flex-col items-center justify-center gap-1 overflow-hidden rounded-sm border-2 border-dashed border-panel-border text-panel-fg/45 transition-colors hover:border-panel-fg/50 hover:bg-panel-raised hover:text-panel-fg/80"
+                className="absolute flex flex-col items-center justify-center gap-1 overflow-hidden rounded-sm border-2 border-dashed border-panel-border text-panel-fg/65 transition-colors hover:border-panel-fg/50 hover:bg-panel-raised hover:text-panel-fg/80"
                 style={{ left: box.x0, top: box.y0, width: w, height: h }}
               >
                 <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -519,7 +519,7 @@ export function TreemapChart({
               <span
                 className={`text-sm font-semibold ${
                   hovered.pctChange == null
-                    ? "text-panel-fg/50"
+                    ? "text-panel-fg/68"
                     : hovered.pctChange >= 0
                       ? "text-up"
                       : "text-down"
@@ -528,8 +528,8 @@ export function TreemapChart({
                 {formatPctChange(hovered.pctChange)}
               </span>
             </div>
-            <div className="mt-0.5 truncate text-panel-fg/60">{hovered.companyName}</div>
-            <div className="text-[10px] uppercase tracking-wide text-panel-fg/60">{hovered.sector}</div>
+            <div className="mt-0.5 truncate text-panel-fg/72">{hovered.companyName}</div>
+            <div className="text-[10px] uppercase tracking-wide text-panel-fg/72">{hovered.sector}</div>
             <div className="mt-1.5 font-semibold">
               {hovered.price == null
                 ? "N/A"
@@ -538,10 +538,10 @@ export function TreemapChart({
             {sparkline && (
               <div className="mt-2 flex items-center gap-1.5 border-t border-panel-border pt-2">
                 <Sparkline closes={sparkline} />
-                <span className="text-[10px] text-panel-fg/50">1M</span>
+                <span className="text-[10px] text-panel-fg/68">1M</span>
               </div>
             )}
-            <div className="mt-1.5 text-[10px] text-panel-fg/60">Click for company info</div>
+            <div className="mt-1.5 text-[10px] text-panel-fg/72">Click for company info</div>
           </div>
         )}
       </div>
@@ -557,7 +557,7 @@ export function TreemapChart({
       )}
 
       <div className="flex w-full max-w-xs flex-col items-center gap-1.5">
-        <span className="kicker text-foreground/55">Day change</span>
+        <span className="kicker text-foreground/68">Day change</span>
         <div className="w-full">
           {/* finviz-style discrete bands, not a gradient — matches what the
               map's boxes actually render (see LEGEND_BANDS/bandFor in
@@ -571,7 +571,7 @@ export function TreemapChart({
               />
             ))}
           </div>
-          <div className="flex w-full justify-between text-[10px] font-medium text-foreground/55">
+          <div className="flex w-full justify-between text-[10px] font-medium text-foreground/68">
             {LEGEND_BANDS.map((band) => (
               <span key={band}>
                 {band > 0 ? "+" : ""}
@@ -580,7 +580,7 @@ export function TreemapChart({
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] font-medium text-foreground/55">
+        <div className="flex items-center gap-1.5 text-[10px] font-medium text-foreground/68">
           <span
             className="h-2.5 w-2.5 rounded-sm ring-1 ring-inset ring-foreground/10"
             style={{ background: NO_DATA_COLOR }}

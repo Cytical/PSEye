@@ -39,7 +39,7 @@ export function TopMovers({ quotes, count = 3 }: TopMoversProps) {
 function MoverList({ label, rows }: { label: string; rows: (MoverQuote & { pctChange: number })[] }) {
   return (
     <div>
-      <div className="kicker text-panel-fg/60">{label}</div>
+      <div className="kicker text-panel-fg/72">{label}</div>
       <ul className="mt-1 flex flex-col gap-1">
         {rows.map((q) => (
           <li key={q.ticker}>

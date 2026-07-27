@@ -56,12 +56,12 @@ export default async function DividendsPage() {
           <DividendScreenerTable rows={rows} />
         </div>
       ) : (
-        <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/50 ring-1 ring-panel-border">
+        <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/68 ring-1 ring-panel-border">
           No cash dividends on record yet.
         </p>
       )}
 
-      <div className="mt-6 flex flex-col gap-1.5 text-xs text-panel-fg/60">
+      <div className="mt-6 flex flex-col gap-1.5 text-xs text-panel-fg/72">
         {source === "mock" && (
           <p>
             Sample data — no real dividend declarations are on record yet. Figures here are

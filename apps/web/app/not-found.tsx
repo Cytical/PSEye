@@ -13,7 +13,7 @@ export default function NotFound() {
           strokeWidth="1.75"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-panel-fg/60"
+          className="text-panel-fg/72"
           aria-hidden="true"
         >
           <circle cx="11" cy="11" r="7" />
@@ -22,7 +22,7 @@ export default function NotFound() {
         </svg>
       </div>
       <h1 className="mt-4 text-xl font-semibold tracking-tight text-panel-fg">Page not found</h1>
-      <p className="mt-2 text-sm text-panel-fg/60">
+      <p className="mt-2 text-sm text-panel-fg/72">
         The page you&apos;re looking for doesn&apos;t exist or may have moved.
       </p>
       <div className="mt-6">

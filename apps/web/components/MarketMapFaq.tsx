@@ -13,7 +13,7 @@ interface FaqItem {
 export function MarketMapFaq({ items }: { items: FaqItem[] }) {
   return (
     <section className="mt-16 border-t border-foreground/10 pt-9">
-      <p className="kicker text-foreground/45">Good to know</p>
+      <p className="kicker text-foreground/65">Good to know</p>
       <h2 className="mt-1.5 font-serif text-2xl font-semibold tracking-tight sm:text-[1.75rem]">
         Frequently asked questions
       </h2>
@@ -22,7 +22,7 @@ export function MarketMapFaq({ items }: { items: FaqItem[] }) {
           <details key={item.q} className="group border-b border-foreground/10 py-4" open={i === 0}>
             <summary className="flex cursor-pointer list-none items-start justify-between gap-4 font-medium text-foreground [&::-webkit-details-marker]:hidden">
               <span className="flex gap-3">
-                <span className="font-mono text-xs text-foreground/35">{String(i + 1).padStart(2, "0")}</span>
+                <span className="font-mono text-xs text-foreground/65">{String(i + 1).padStart(2, "0")}</span>
                 <span>{item.q}</span>
               </span>
               <svg
@@ -35,7 +35,7 @@ export function MarketMapFaq({ items }: { items: FaqItem[] }) {
                 strokeWidth="2.25"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="mt-1 shrink-0 text-foreground/40 transition-transform duration-200 group-open:rotate-180"
+                className="mt-1 shrink-0 text-foreground/65 transition-transform duration-200 group-open:rotate-180"
               >
                 <polyline points="6 9 12 15 18 9" />
               </svg>

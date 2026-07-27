@@ -41,7 +41,7 @@ export default async function MarketStatsPage() {
     <div className="mx-auto max-w-[1240px] px-4 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="text-xs text-panel-fg/50">
+      <nav className="text-xs text-panel-fg/68">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -53,7 +53,7 @@ export default async function MarketStatsPage() {
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">
         Market-wide Statistics
       </h1>
-      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/60">
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/72">
         How the whole exchange looks in aggregate — breadth, trend participation, and the spread of
         returns, volatility, and beta across stocks. The cross-sectional companion to the per-stock{" "}
         <Link href="/analytics" className="underline hover:text-panel-fg">
@@ -67,7 +67,7 @@ export default async function MarketStatsPage() {
         <h2 className="font-serif text-lg font-semibold tracking-tight text-panel-fg">
           Market breadth (today)
         </h2>
-        <p className="mt-1 max-w-3xl text-sm text-panel-fg/60">
+        <p className="mt-1 max-w-3xl text-sm text-panel-fg/72">
           Of {stats.totalTracked} tracked stocks, how many rose vs. fell today, and the distribution
           of their percentage moves. Breadth shows whether a move is broad-based or driven by a few
           names.
@@ -86,7 +86,7 @@ export default async function MarketStatsPage() {
         </div>
         {b.todayHistogram.length > 1 && (
           <div className="mt-3 rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-            <p className="mb-1 text-xs text-panel-fg/55">Distribution of today&apos;s % change</p>
+            <p className="mb-1 text-xs text-panel-fg/68">Distribution of today&apos;s % change</p>
             <MarketHistogram bins={b.todayHistogram} colorSplit={0} formatX={(x) => `${x >= 0 ? "+" : ""}${x.toFixed(1)}%`} />
           </div>
         )}
@@ -108,9 +108,9 @@ export default async function MarketStatsPage() {
               <h2 className="font-serif text-lg font-semibold tracking-tight text-panel-fg">
                 Trend participation
               </h2>
-              {stats.asOf && <span className="text-xs text-panel-fg/45">closes through {stats.asOf}</span>}
+              {stats.asOf && <span className="text-xs text-panel-fg/65">closes through {stats.asOf}</span>}
             </div>
-            <p className="mt-1 max-w-3xl text-sm text-panel-fg/60">
+            <p className="mt-1 max-w-3xl text-sm text-panel-fg/72">
               Share of the {stats.universeSize} largest stocks trading above their own moving
               averages — a classic gauge of how many names are in an uptrend, not just the index.
             </p>
@@ -131,7 +131,7 @@ export default async function MarketStatsPage() {
             <h2 className="font-serif text-lg font-semibold tracking-tight text-panel-fg">
               Cross-sectional distributions
             </h2>
-            <p className="mt-1 max-w-3xl text-sm text-panel-fg/60">
+            <p className="mt-1 max-w-3xl text-sm text-panel-fg/72">
               How 1-year return, volatility, and beta are spread across the {stats.universeSize}-stock
               universe. The dashed line marks the median (or beta = 1). Wide spreads mean the
               &ldquo;average stock&rdquo; hides a lot of variation.
@@ -165,7 +165,7 @@ export default async function MarketStatsPage() {
         </>
       )}
 
-      <p className="mt-8 max-w-3xl text-xs text-panel-fg/55">
+      <p className="mt-8 max-w-3xl text-xs text-panel-fg/68">
         Breadth covers all {stats.totalTracked} tracked stocks; trend and distribution stats use the
         largest ~{stats.universeSize || 100} by market cap (small, thinly-traded tickers have noisy
         history that distorts a market-wide distribution). Delayed / end-of-day data,
@@ -194,12 +194,12 @@ function DistCard({
     <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
       <div className="flex items-baseline justify-between">
         <p className="text-sm font-medium text-panel-fg">{title}</p>
-        <span className="text-[11px] text-panel-fg/45">n = {dist.n}</span>
+        <span className="text-[11px] text-panel-fg/65">n = {dist.n}</span>
       </div>
       {dist.bins.length > 1 ? (
         <MarketHistogram bins={dist.bins} formatX={formatX} colorSplit={colorSplit} refValue={refValue} refLabel={medianLabel} />
       ) : (
-        <p className="py-8 text-center text-xs text-panel-fg/45">Not enough data.</p>
+        <p className="py-8 text-center text-xs text-panel-fg/65">Not enough data.</p>
       )}
     </div>
   );
@@ -245,7 +245,7 @@ function Tile({
 }) {
   return (
     <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <div className="text-[11px] text-panel-fg/50">{label}</div>
+      <div className="text-[11px] text-panel-fg/68">{label}</div>
       <div
         className={`mt-0.5 text-lg font-semibold tabular-nums ${
           tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-panel-fg"
@@ -253,7 +253,7 @@ function Tile({
       >
         {value}
       </div>
-      {hint && <div className="mt-0.5 text-[10px] text-panel-fg/45">{hint}</div>}
+      {hint && <div className="mt-0.5 text-[10px] text-panel-fg/65">{hint}</div>}
     </div>
   );
 }

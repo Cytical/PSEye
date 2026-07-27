@@ -17,7 +17,7 @@ export default async function DailyIndexPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-16 text-center">
       <h1 className="font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Daily Recap</h1>
-      <p className="mt-3 text-sm text-panel-fg/60">
+      <p className="mt-3 text-sm text-panel-fg/72">
         No trading days are on record yet — recaps are generated from real recorded market data, so
         they&apos;ll start appearing once the data pipeline has captured its first session.
       </p>

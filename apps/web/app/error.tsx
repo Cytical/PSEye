@@ -26,7 +26,7 @@ export default function Error({
           strokeWidth="1.75"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-panel-fg/60"
+          className="text-panel-fg/72"
           aria-hidden="true"
         >
           <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
@@ -35,7 +35,7 @@ export default function Error({
         </svg>
       </div>
       <h1 className="mt-4 text-xl font-semibold tracking-tight text-panel-fg">Something went wrong</h1>
-      <p className="mt-2 text-sm text-panel-fg/60">
+      <p className="mt-2 text-sm text-panel-fg/72">
         This page hit an unexpected error. It&apos;s been logged — try again in a moment.
       </p>
       <div className="mt-6 flex items-center gap-2">
@@ -48,7 +48,7 @@ export default function Error({
         </button>
         <Link
           href="/"
-          className="rounded-md px-4 py-2 text-sm font-medium text-panel-fg/60 transition-colors hover:text-panel-fg"
+          className="rounded-md px-4 py-2 text-sm font-medium text-panel-fg/72 transition-colors hover:text-panel-fg"
         >
           Back to market map
         </Link>

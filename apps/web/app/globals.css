@@ -28,9 +28,18 @@
   --panel-fg: #16181d;
   --panel-canvas: #f7f4ee;
   --panel-grid: #ffffff;
-  --up: #1c8a4b;
-  --down: #c23a2e;
-  --accent: #1c8a4b;
+  /* Darkened from #1c8a4b / #c23a2e. The old green measured 4.39:1 on
+   * --panel-bg and 4.14:1 on --background, under the 4.5:1 AA floor for
+   * normal text — and it's the color every gain figure, every `kicker`, and
+   * every accent label on the site renders in. Both now clear AA on all four
+   * light surfaces, worst case being --panel-bg-active (green 4.60, red 4.55);
+   * on plain --panel-bg they're 5.83 / 5.77. The pair is deliberately matched
+   * in luminance (5.83 vs 5.77) so a gain and a loss read with equal visual
+   * weight rather than one shouting louder than the other. Dark mode's
+   * #3ddc84 / #ff6b5e already clear AA comfortably and are unchanged. */
+  --up: #16743f;
+  --down: #b8382c;
+  --accent: #16743f;
   /* Without this, native form controls (<select> popups, scrollbars, date
    * pickers) always render with the browser's light-mode UA colors — in the
    * dark theme that meant a white dropdown list showing light (near-white)

@@ -113,7 +113,7 @@ export function NavLinks({ variant = "inline" }: { variant?: "inline" | "stacked
         ))}
         {DROPDOWNS.map((group) => (
           <div key={group.label} className="mt-1 flex flex-col gap-2 border-t border-foreground/10 pt-2.5">
-            <span className="kicker text-foreground/45">{group.label}</span>
+            <span className="kicker text-foreground/65">{group.label}</span>
             {group.links.map((link) => (
               <Link
                 key={link.href}
@@ -122,7 +122,7 @@ export function NavLinks({ variant = "inline" }: { variant?: "inline" | "stacked
                 className="flex flex-col gap-0.5"
               >
                 <span className={navLinkClass(isActive(link.href))}>{link.label}</span>
-                <span className="text-xs text-foreground/50">{link.description}</span>
+                <span className="text-xs text-foreground/68">{link.description}</span>
               </Link>
             ))}
           </div>
@@ -271,7 +271,7 @@ function NavDropdown({
               <span className={isActive(link.href) ? "font-medium text-panel-fg" : "text-panel-fg"}>
                 {link.label}
               </span>
-              <span className="text-xs text-panel-fg/55">{link.description}</span>
+              <span className="text-xs text-panel-fg/68">{link.description}</span>
             </Link>
           ))}
         </div>

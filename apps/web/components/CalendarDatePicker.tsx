@@ -138,7 +138,7 @@ export function CalendarDatePicker({
               type="button"
               onClick={() => goMonth(-1)}
               aria-label="Previous month"
-              className="flex h-7 w-7 items-center justify-center rounded-md text-panel-fg/60 transition-colors hover:bg-panel-raised hover:text-panel-fg"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-panel-fg/72 transition-colors hover:bg-panel-raised hover:text-panel-fg"
             >
               ‹
             </button>
@@ -147,7 +147,7 @@ export function CalendarDatePicker({
               type="button"
               onClick={() => goMonth(1)}
               aria-label="Next month"
-              className="flex h-7 w-7 items-center justify-center rounded-md text-panel-fg/60 transition-colors hover:bg-panel-raised hover:text-panel-fg"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-panel-fg/72 transition-colors hover:bg-panel-raised hover:text-panel-fg"
             >
               ›
             </button>
@@ -155,7 +155,7 @@ export function CalendarDatePicker({
 
           <div className="mt-2 grid grid-cols-7 gap-0.5 text-center">
             {WEEKDAY_LABELS.map((w, i) => (
-              <span key={i} className="text-[10px] font-medium text-panel-fg/40">
+              <span key={i} className="text-[10px] font-medium text-panel-fg/65">
                 {w}
               </span>
             ))}
@@ -195,7 +195,7 @@ export function CalendarDatePicker({
                 onClear();
                 setOpen(false);
               }}
-              className="mt-2 w-full rounded-md px-2 py-1.5 text-center text-xs font-medium text-panel-fg/60 transition-colors hover:bg-panel-raised hover:text-panel-fg"
+              className="mt-2 w-full rounded-md px-2 py-1.5 text-center text-xs font-medium text-panel-fg/72 transition-colors hover:bg-panel-raised hover:text-panel-fg"
             >
               {clearLabel}
             </button>

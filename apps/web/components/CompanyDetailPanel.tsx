@@ -69,7 +69,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
   const currency = stock.currency ?? "PHP";
   const symbol = currency === "USD" ? "$" : "₱";
   const changeColor =
-    stock.pctChange == null ? "text-panel-fg/50" : stock.pctChange >= 0 ? "text-up" : "text-down";
+    stock.pctChange == null ? "text-panel-fg/68" : stock.pctChange >= 0 ? "text-up" : "text-down";
 
   return (
     <div
@@ -92,7 +92,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
               <h2 id="company-detail-heading" className="font-serif text-xl font-semibold tracking-tight">
                 {stock.ticker}
               </h2>
-              <span className="text-[10px] uppercase tracking-wide text-panel-fg/60">{stock.sector}</span>
+              <span className="text-[10px] uppercase tracking-wide text-panel-fg/72">{stock.sector}</span>
             </div>
             <div className="mt-0.5 text-sm text-panel-fg/70">{stock.companyName}</div>
           </div>
@@ -102,7 +102,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="rounded-md p-1 text-panel-fg/50 transition-colors hover:bg-panel-raised hover:text-panel-fg"
+              className="rounded-md p-1 text-panel-fg/68 transition-colors hover:bg-panel-raised hover:text-panel-fg"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -124,7 +124,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
                   : `${stock.pctChange >= 0 ? "+" : ""}${stock.pctChange.toFixed(2)}% today`}
               </div>
             </div>
-            <div className="text-right text-xs text-panel-fg/50">
+            <div className="text-right text-xs text-panel-fg/68">
               <div>Market cap</div>
               <div className="font-semibold text-panel-fg/80">{formatMarketCap(stock.marketCap, currency)}</div>
               <div className="mt-1">
@@ -134,9 +134,9 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
           </div>
 
           <div>
-            <div className="kicker text-panel-fg/60">About</div>
+            <div className="kicker text-panel-fg/72">About</div>
             {profile == null ? (
-              <p className="mt-2 text-sm text-panel-fg/50">No company description yet for {stock.ticker}.</p>
+              <p className="mt-2 text-sm text-panel-fg/68">No company description yet for {stock.ticker}.</p>
             ) : (
               <>
                 {/* Only the first paragraph — a summary, not the full profile — so
@@ -145,7 +145,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
                 <p className="mt-2 text-sm leading-snug text-panel-fg/80">
                   {profile.description.split("\n\n")[0]}
                 </p>
-                <div className="mt-2.5 text-[11px] text-panel-fg/60">{profile.source}</div>
+                <div className="mt-2.5 text-[11px] text-panel-fg/72">{profile.source}</div>
               </>
             )}
           </div>

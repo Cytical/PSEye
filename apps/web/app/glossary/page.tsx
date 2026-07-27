@@ -41,7 +41,7 @@ export default function GlossaryPage() {
     <div className="mx-auto max-w-3xl px-4 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="text-xs text-panel-fg/50">
+      <nav className="text-xs text-panel-fg/68">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -58,7 +58,7 @@ export default function GlossaryPage() {
 
       <nav aria-label="Jump to term" className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-xs">
         {GLOSSARY_TERMS.map((t) => (
-          <a key={t.id} href={`#${t.id}`} className="text-panel-fg/60 hover:text-panel-fg hover:underline">
+          <a key={t.id} href={`#${t.id}`} className="text-panel-fg/72 hover:text-panel-fg hover:underline">
             {t.term}
           </a>
         ))}
@@ -72,7 +72,7 @@ export default function GlossaryPage() {
             {t.related && t.related.length > 0 && (
               <dd className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
                 {t.related.map((r) => (
-                  <Link key={r.href} href={r.href} className="text-panel-fg/60 hover:text-panel-fg hover:underline">
+                  <Link key={r.href} href={r.href} className="text-panel-fg/72 hover:text-panel-fg hover:underline">
                     See {r.label} →
                   </Link>
                 ))}

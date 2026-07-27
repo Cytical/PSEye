@@ -81,8 +81,8 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
   return (
     <div className="mt-6">
       <div className="flex items-baseline justify-between">
-        <h2 className="kicker text-panel-fg/55">Analytics</h2>
-        <span className="text-[11px] text-panel-fg/40">derived from ~1yr of closing prices</span>
+        <h2 className="kicker text-panel-fg/68">Analytics</h2>
+        <span className="text-[11px] text-panel-fg/65">derived from ~1yr of closing prices</span>
       </div>
       <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {metrics.map((m) => (
@@ -90,7 +90,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
             key={m.label}
             className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border"
           >
-            <div className="text-[11px] text-panel-fg/50">{m.label}</div>
+            <div className="text-[11px] text-panel-fg/68">{m.label}</div>
             <div
               className={`mt-0.5 text-lg font-semibold tabular-nums ${
                 m.tone === "up" ? "text-up" : m.tone === "down" ? "text-down" : "text-panel-fg"
@@ -98,11 +98,11 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
             >
               {m.value}
             </div>
-            {m.hint && <div className="mt-0.5 text-[10px] text-panel-fg/45">{m.hint}</div>}
+            {m.hint && <div className="mt-0.5 text-[10px] text-panel-fg/65">{m.hint}</div>}
           </div>
         ))}
       </div>
-      <p className="mt-2 text-[11px] text-panel-fg/50">
+      <p className="mt-2 text-[11px] text-panel-fg/68">
         Volatility is the annualized standard deviation of daily log returns; RSI uses Wilder&apos;s
         14-day smoothing; drawdown is the worst peak-to-trough drop over the window. Descriptive
         statistics, not a forecast or a signal.

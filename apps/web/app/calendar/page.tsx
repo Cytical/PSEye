@@ -75,7 +75,7 @@ export default async function CalendarPage() {
       <div className="mt-8 flex flex-col gap-8">
         {months.map(({ monthKey, actions }) => (
           <div key={monthKey}>
-            <h2 className="kicker text-panel-fg/60">
+            <h2 className="kicker text-panel-fg/72">
               {formatMonthHeading(actions[0].exDate)}
             </h2>
             <ul className="mt-3 flex flex-col gap-3">
@@ -93,7 +93,7 @@ export default async function CalendarPage() {
       </div>
 
       {sorted.length === 0 && (
-        <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/60 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+        <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/72 shadow-sm shadow-black/5 ring-1 ring-panel-border">
           No corporate actions on record for the current window.
         </p>
       )}
@@ -137,20 +137,20 @@ function ActionRow({ action, isPast, todayIso }: { action: CorporateAction; isPa
 
         <div className="mt-2.5 grid grid-cols-3 gap-2 border-t border-panel-border pt-2.5 text-xs">
           <div>
-            <div className="kicker text-panel-fg/60">Ex-date</div>
+            <div className="kicker text-panel-fg/72">Ex-date</div>
             <div className="mt-0.5 text-panel-fg/80">{formatDate(action.exDate)}</div>
           </div>
           <div>
-            <div className="kicker text-panel-fg/60">Record date</div>
+            <div className="kicker text-panel-fg/72">Record date</div>
             <div className="mt-0.5 text-panel-fg/80">{formatDate(action.recordDate)}</div>
           </div>
           <div>
-            <div className="kicker text-panel-fg/60">Payment date</div>
+            <div className="kicker text-panel-fg/72">Payment date</div>
             <div className="mt-0.5 text-panel-fg/80">{action.paymentDate ? formatDate(action.paymentDate) : "—"}</div>
           </div>
         </div>
 
-        <p className="mt-2.5 text-xs leading-snug text-panel-fg/60">{CORPORATE_ACTION_EXPLAINERS[action.type]}</p>
+        <p className="mt-2.5 text-xs leading-snug text-panel-fg/72">{CORPORATE_ACTION_EXPLAINERS[action.type]}</p>
       </div>
     </li>
   );

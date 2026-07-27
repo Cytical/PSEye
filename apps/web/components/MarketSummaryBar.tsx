@@ -41,7 +41,7 @@ function formatUpdatedAt(capturedAt: string): string {
 export function MarketSummaryBar({ snapshot, foreignFlow }: MarketSummaryBarProps) {
   return (
     <div className="group relative cursor-default px-3 py-2">
-      <div className="kicker text-panel-fg/60">PSEi</div>
+      <div className="kicker text-panel-fg/72">PSEi</div>
       <div className="mt-1 text-2xl font-bold tracking-tight tabular-nums text-panel-fg">
         {snapshot.pseiValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
@@ -50,12 +50,12 @@ export function MarketSummaryBar({ snapshot, foreignFlow }: MarketSummaryBarProp
         {snapshot.pseiChange.toFixed(2)} ({snapshot.pseiPctChange >= 0 ? "+" : ""}
         {snapshot.pseiPctChange.toFixed(2)}%)
       </div>
-      <div className="mt-0.5 text-[10px] tabular-nums text-panel-fg/45">
+      <div className="mt-0.5 text-[10px] tabular-nums text-panel-fg/65">
         Updated {formatUpdatedAt(snapshot.capturedAt)} PHT
       </div>
 
       <div className="pointer-events-none absolute bottom-full left-3 z-10 mb-2 w-max max-w-[220px] rounded-xl border border-panel-border bg-panel-raised px-3 py-2 opacity-0 shadow-xl shadow-black/20 transition-opacity duration-100 group-hover:opacity-100">
-        <div className="kicker text-panel-fg/60">
+        <div className="kicker text-panel-fg/72">
           Foreign flow, week of {formatPeriodLabel(foreignFlow.periodEnd)}
         </div>
         <div className={`text-sm font-semibold tabular-nums ${changeColor(foreignFlow.netValue)}`}>

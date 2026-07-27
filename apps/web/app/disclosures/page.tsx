@@ -61,7 +61,7 @@ export default async function DisclosuresPage() {
                 </span>
                 <span className="font-medium text-panel-fg">{group.companyName}</span>
               </Link>
-              <span className="shrink-0 text-[11px] text-panel-fg/60">
+              <span className="shrink-0 text-[11px] text-panel-fg/72">
                 {group.filings.length} filing{group.filings.length === 1 ? "" : "s"}
               </span>
             </div>
@@ -79,12 +79,12 @@ export default async function DisclosuresPage() {
                         {DISCLOSURE_TYPE_LABELS[f.type]}
                       </span>
                       {recent && (
-                        <span className="flex items-center gap-1 text-[10px] font-medium text-panel-fg/50">
+                        <span className="flex items-center gap-1 text-[10px] font-medium text-panel-fg/68">
                           <span className="inline-block h-1.5 w-1.5 rounded-full bg-up" />
                           New
                         </span>
                       )}
-                      <span className="ml-auto text-[11px] text-panel-fg/60">{formatRelative(f.filedAt)}</span>
+                      <span className="ml-auto text-[11px] text-panel-fg/72">{formatRelative(f.filedAt)}</span>
                     </div>
                     {f.url ? (
                       <a
@@ -107,7 +107,7 @@ export default async function DisclosuresPage() {
       </div>
 
       {groups.length === 0 && (
-        <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/60 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+        <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/72 shadow-sm shadow-black/5 ring-1 ring-panel-border">
           No disclosures on record yet for the last lookback window.
         </p>
       )}

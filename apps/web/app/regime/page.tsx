@@ -54,7 +54,7 @@ export default async function RegimePage() {
     <div className="mx-auto max-w-[1240px] px-4 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="text-xs text-panel-fg/50">
+      <nav className="text-xs text-panel-fg/68">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -66,7 +66,7 @@ export default async function RegimePage() {
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">
         Risk-On / Risk-Off Detection
       </h1>
-      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/60">
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/72">
         Markets alternate between calm uptrends (&ldquo;risk-on&rdquo;) and stressed downtrends
         (&ldquo;risk-off&rdquo;). This labels the PSE&apos;s history from three transparent signals of
         a reconstructed composite index — trend vs. its 200-day average, drawdown from the peak, and
@@ -89,7 +89,7 @@ export default async function RegimePage() {
               <h2 className="font-serif text-lg font-semibold tracking-tight text-panel-fg">
                 Composite index &amp; regimes
               </h2>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-panel-fg/55">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-panel-fg/68">
                 {(["risk-on", "neutral", "risk-off"] as Regime[]).map((r) => (
                   <span key={r} className="flex items-center gap-1.5">
                     <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: regimeDot(r) }} aria-hidden="true" />
@@ -100,7 +100,7 @@ export default async function RegimePage() {
             </div>
             <div className="mt-3 rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <RegimeChart points={result.points} />
-              <p className="mt-1 text-[11px] text-panel-fg/45">
+              <p className="mt-1 text-[11px] text-panel-fg/65">
                 Reconstructed cap-weighted composite (indexed to 100 at the series start) — a PSEi-like
                 proxy, not the official index. Background shading is the detected regime.
               </p>
@@ -111,7 +111,7 @@ export default async function RegimePage() {
             <h2 className="font-serif text-lg font-semibold tracking-tight text-panel-fg">
               Regime breakdown
             </h2>
-            <p className="mt-1 max-w-3xl text-sm text-panel-fg/60">
+            <p className="mt-1 max-w-3xl text-sm text-panel-fg/72">
               How much of the tracked history sat in each regime, and the composite&apos;s average
               daily move while there. Over this window the market was largely in a recovery uptrend,
               so the regimes separate more by trend and volatility than by the sign of returns — but
@@ -144,7 +144,7 @@ export default async function RegimePage() {
         </>
       )}
 
-      <p className="mt-8 max-w-3xl text-xs text-panel-fg/55">
+      <p className="mt-8 max-w-3xl text-xs text-panel-fg/68">
         Delayed / end-of-day data, recomputed by PSEye. A descriptive classification of
         past market conditions — not a forecast, market-timing signal, or financial advice.
       </p>
@@ -158,8 +158,8 @@ function CurrentRegimeCard({ current, asOf }: { current: CurrentRegime; asOf: st
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="inline-block h-4 w-4 rounded-full" style={{ backgroundColor: regimeDot(current.regime) }} aria-hidden="true" />
         <span className="font-serif text-xl font-semibold text-panel-fg">{REGIME_LABEL[current.regime]}</span>
-        <span className="text-sm text-panel-fg/55">since {fmtDate(current.since)}</span>
-        {asOf && <span className="ml-auto text-xs text-panel-fg/45">as of {asOf}</span>}
+        <span className="text-sm text-panel-fg/68">since {fmtDate(current.since)}</span>
+        {asOf && <span className="ml-auto text-xs text-panel-fg/65">as of {asOf}</span>}
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Signal
@@ -193,7 +193,7 @@ function RegimeStatCard({ stat, label, dot }: { stat: RegimeStat; label: string;
         <span className="text-sm font-medium text-panel-fg">{label}</span>
         <span className="ml-auto text-sm font-semibold tabular-nums text-panel-fg">{stat.pctTime.toFixed(0)}%</span>
       </div>
-      <div className="mt-2 text-xs text-panel-fg/60">
+      <div className="mt-2 text-xs text-panel-fg/72">
         {stat.days} trading days · avg move{" "}
         <span className={stat.avgDailyReturn >= 0 ? "text-up" : "text-down"}>
           {stat.avgDailyReturn >= 0 ? "+" : ""}
@@ -207,11 +207,11 @@ function RegimeStatCard({ stat, label, dot }: { stat: RegimeStat; label: string;
 function Signal({ label, value, tone, hint }: { label: string; value: string; tone?: "up" | "down"; hint?: string }) {
   return (
     <div className="rounded-lg bg-panel-raised/60 p-3">
-      <div className="text-[11px] text-panel-fg/50">{label}</div>
+      <div className="text-[11px] text-panel-fg/68">{label}</div>
       <div className={`mt-0.5 text-lg font-semibold tabular-nums ${tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-panel-fg"}`}>
         {value}
       </div>
-      {hint && <div className="mt-0.5 text-[10px] text-panel-fg/45">{hint}</div>}
+      {hint && <div className="mt-0.5 text-[10px] text-panel-fg/65">{hint}</div>}
     </div>
   );
 }

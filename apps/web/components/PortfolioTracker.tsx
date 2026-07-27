@@ -66,7 +66,7 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
     <div>
       <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3 rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
         <div className="flex flex-col gap-1">
-          <label htmlFor="portfolio-ticker" className="text-xs text-panel-fg/60">
+          <label htmlFor="portfolio-ticker" className="text-xs text-panel-fg/72">
             Ticker
           </label>
           <input
@@ -86,7 +86,7 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
           </datalist>
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor="portfolio-shares" className="text-xs text-panel-fg/60">
+          <label htmlFor="portfolio-shares" className="text-xs text-panel-fg/72">
             Shares
           </label>
           <input
@@ -101,7 +101,7 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor="portfolio-avgcost" className="text-xs text-panel-fg/60">
+          <label htmlFor="portfolio-avgcost" className="text-xs text-panel-fg/72">
             Avg. cost (₱/share)
           </label>
           <input
@@ -125,7 +125,7 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
       {error && <p className="mt-2 text-xs text-down">{error}</p>}
 
       {rows.length === 0 ? (
-        <p className="mt-8 text-sm text-panel-fg/60">
+        <p className="mt-8 text-sm text-panel-fg/72">
           No holdings yet — add one above to see live gain/loss. Stored only in your browser; nothing
           is sent anywhere.
         </p>
@@ -133,29 +133,29 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
         <>
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <div className="text-xs text-panel-fg/50">Cost basis</div>
+              <div className="text-xs text-panel-fg/68">Cost basis</div>
               <div className="mt-1 text-lg font-semibold tabular-nums text-panel-fg">{formatPeso(totalCost)}</div>
             </div>
             <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <div className="text-xs text-panel-fg/50">Market value</div>
+              <div className="text-xs text-panel-fg/68">Market value</div>
               <div className="mt-1 text-lg font-semibold tabular-nums text-panel-fg">{formatPeso(totalValue)}</div>
             </div>
             <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <div className="text-xs text-panel-fg/50">Gain / loss</div>
+              <div className="text-xs text-panel-fg/68">Gain / loss</div>
               <div className={`mt-1 text-lg font-semibold tabular-nums ${changeColor(totalGainLoss)}`}>
                 {totalGainLoss >= 0 ? "+" : ""}
                 {formatPeso(totalGainLoss)}
               </div>
             </div>
             <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <div className="text-xs text-panel-fg/50">Gain / loss %</div>
-              <div className={`mt-1 text-lg font-semibold tabular-nums ${totalGainLossPct == null ? "text-panel-fg/40" : changeColor(totalGainLossPct)}`}>
+              <div className="text-xs text-panel-fg/68">Gain / loss %</div>
+              <div className={`mt-1 text-lg font-semibold tabular-nums ${totalGainLossPct == null ? "text-panel-fg/65" : changeColor(totalGainLossPct)}`}>
                 {totalGainLossPct == null ? "N/A" : `${totalGainLossPct >= 0 ? "+" : ""}${totalGainLossPct.toFixed(2)}%`}
               </div>
             </div>
           </div>
           {missingPriceCount > 0 && (
-            <p className="mt-2 text-xs text-panel-fg/50">
+            <p className="mt-2 text-xs text-panel-fg/68">
               {missingPriceCount} {missingPriceCount === 1 ? "holding has" : "holdings have"} no current price
               (suspended or no trade yet today) and {missingPriceCount === 1 ? "is" : "are"} excluded from the
               totals above.
@@ -166,7 +166,7 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] text-sm">
                 <thead>
-                  <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/50">
+                  <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/68">
                     <th className="py-1.5 pl-3 font-medium">Company</th>
                     <th className="py-1.5 pr-4 text-right font-medium">Shares</th>
                     <th className="py-1.5 pr-4 text-right font-medium">Avg. cost</th>
@@ -188,14 +188,14 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
                       <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">{row.shares.toLocaleString("en-PH")}</td>
                       <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">{formatPeso(row.avgCost)}</td>
                       <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">
-                        {row.price == null ? <span className="text-panel-fg/40">N/A</span> : formatPeso(row.price)}
+                        {row.price == null ? <span className="text-panel-fg/65">N/A</span> : formatPeso(row.price)}
                       </td>
                       <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">
-                        {row.marketValue == null ? <span className="text-panel-fg/40">N/A</span> : formatPeso(row.marketValue)}
+                        {row.marketValue == null ? <span className="text-panel-fg/65">N/A</span> : formatPeso(row.marketValue)}
                       </td>
                       <td className="py-2.5 pr-4 text-right font-medium tabular-nums">
                         {row.gainLoss == null ? (
-                          <span className="text-panel-fg/40">N/A</span>
+                          <span className="text-panel-fg/65">N/A</span>
                         ) : (
                           <span className={changeColor(row.gainLoss)}>
                             {row.gainLoss >= 0 ? "+" : ""}
@@ -210,7 +210,7 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
                           onClick={() => remove(row.ticker)}
                           aria-label={`Remove ${row.ticker} from portfolio`}
                           title="Remove"
-                          className="rounded p-1 text-panel-fg/40 hover:bg-panel-active hover:text-panel-fg"
+                          className="rounded p-1 text-panel-fg/65 hover:bg-panel-active hover:text-panel-fg"
                         >
                           ✕
                         </button>

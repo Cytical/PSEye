@@ -77,7 +77,7 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
     <div className="mx-auto max-w-[1240px] px-4 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="text-xs text-panel-fg/50">
+      <nav className="text-xs text-panel-fg/68">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -90,7 +90,7 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
       </nav>
 
       <h1 className="mt-2 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">{sector}</h1>
-      <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
+      <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/72">
         {sectorRows.length} PSE-listed {sectorRows.length === 1 ? "company" : "companies"} in{" "}
         {sector}, ranked by market capitalization. Combined market cap:{" "}
         {formatMarketCap(totalMarketCap)}. {gainers} of {sectorRows.length}{" "}
@@ -102,7 +102,7 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
         <RankingsTable rows={sectorRows} rankKey="sectorRank" />
       </div>
 
-      <p className="mt-6 text-sm text-panel-fg/60">
+      <p className="mt-6 text-sm text-panel-fg/72">
         See how {sector} compares to every other sector on the{" "}
         <Link href={`/rankings#sector-${sector}`} className="underline hover:text-panel-fg">
           full rankings page

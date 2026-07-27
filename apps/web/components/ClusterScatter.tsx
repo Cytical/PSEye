@@ -55,13 +55,13 @@ export function ClusterScatter({ points }: { points: ScatterPoint[] }) {
       {yTicks.map((t) => (
         <g key={`y${t}`}>
           <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={sy(t)} y2={sy(t)} className="stroke-panel-fg/10" strokeWidth={1} />
-          <text x={PAD_LEFT - 6} y={sy(t)} textAnchor="end" dominantBaseline="middle" fontSize={10} className="fill-panel-fg/45">
+          <text x={PAD_LEFT - 6} y={sy(t)} textAnchor="end" dominantBaseline="middle" fontSize={10} className="fill-panel-fg/65">
             {t.toFixed(0)}%
           </text>
         </g>
       ))}
       {xTicks.map((t) => (
-        <text key={`x${t}`} x={sx(t)} y={HEIGHT - PAD_BOTTOM + 16} textAnchor="middle" fontSize={10} className="fill-panel-fg/45">
+        <text key={`x${t}`} x={sx(t)} y={HEIGHT - PAD_BOTTOM + 16} textAnchor="middle" fontSize={10} className="fill-panel-fg/65">
           {t.toFixed(1)}
         </text>
       ))}
@@ -77,10 +77,10 @@ export function ClusterScatter({ points }: { points: ScatterPoint[] }) {
         </circle>
       ))}
 
-      <text x={PAD_LEFT + plotW / 2} y={HEIGHT - 6} textAnchor="middle" fontSize={11} className="fill-panel-fg/60">
+      <text x={PAD_LEFT + plotW / 2} y={HEIGHT - 6} textAnchor="middle" fontSize={11} className="fill-panel-fg/72">
         Beta (vs market) →
       </text>
-      <text x={12} y={PAD_TOP + plotH / 2} textAnchor="middle" fontSize={11} className="fill-panel-fg/60" transform={`rotate(-90 12 ${PAD_TOP + plotH / 2})`}>
+      <text x={12} y={PAD_TOP + plotH / 2} textAnchor="middle" fontSize={11} className="fill-panel-fg/72" transform={`rotate(-90 12 ${PAD_TOP + plotH / 2})`}>
         Annualized volatility →
       </text>
     </svg>

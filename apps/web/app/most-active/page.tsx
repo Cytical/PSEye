@@ -20,7 +20,7 @@ export default async function MostActivePage() {
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
-      <nav className="text-xs text-panel-fg/50">
+      <nav className="text-xs text-panel-fg/68">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -30,7 +30,7 @@ export default async function MostActivePage() {
 
       <p className="kicker mt-2 text-accent">Market Data</p>
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Most Active Stocks</h1>
-      <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/60">
+      <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/72">
         Ranked by today&apos;s traded ₱{" "}
         <Link href="/glossary#trading-value-volume" className="underline hover:text-panel-fg">
           value
@@ -48,13 +48,13 @@ export default async function MostActivePage() {
           <VolumeLeadersTable rows={top} />
         </div>
       ) : (
-        <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/50 ring-1 ring-panel-border">
+        <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/68 ring-1 ring-panel-border">
           No trading-volume data on record yet — this is a newly added metric and needs at least
           one quotes run to populate.
         </p>
       )}
 
-      <p className="mt-8 text-xs text-panel-fg/60">Not financial advice, a stock pick, or a buy/sell signal.</p>
+      <p className="mt-8 text-xs text-panel-fg/72">Not financial advice, a stock pick, or a buy/sell signal.</p>
     </div>
   );
 }

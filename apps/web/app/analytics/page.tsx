@@ -44,7 +44,7 @@ export default async function AnalyticsPage() {
     <div className="mx-auto max-w-[1240px] px-4 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="text-xs text-panel-fg/50">
+      <nav className="text-xs text-panel-fg/68">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -56,7 +56,7 @@ export default async function AnalyticsPage() {
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">
         Market Analytics
       </h1>
-      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/60">
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/72">
         Risk and behavior metrics computed from about a year of end-of-day closing prices —{" "}
         annualized volatility, beta against a reconstructed market benchmark, trailing return, and
         RSI — plus how the exchange&apos;s sectors move together. Descriptive statistics only, never
@@ -104,7 +104,7 @@ export default async function AnalyticsPage() {
               <h2 className="font-serif text-lg font-semibold tracking-tight text-panel-fg">
                 Sector return correlation
               </h2>
-              <p className="mt-1 max-w-3xl text-sm text-panel-fg/60">
+              <p className="mt-1 max-w-3xl text-sm text-panel-fg/72">
                 How closely each pair of PSE sectors&apos; daily returns move together over the window.
                 1.00 = move in lockstep, 0 = unrelated, negative = tend to move opposite. Diversifying
                 across weakly-correlated sectors is the classic way to cut portfolio swings.
@@ -121,16 +121,16 @@ export default async function AnalyticsPage() {
                 Stock analytics leaderboard
               </h2>
               {analytics.asOf && (
-                <span className="text-xs text-panel-fg/45">closes through {analytics.asOf}</span>
+                <span className="text-xs text-panel-fg/65">closes through {analytics.asOf}</span>
               )}
             </div>
-            <p className="mt-1 max-w-3xl text-sm text-panel-fg/60">
+            <p className="mt-1 max-w-3xl text-sm text-panel-fg/72">
               The {analytics.rows.length} largest stocks by market cap with enough price history.
             </p>
             <div className="mt-3 overflow-x-auto rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <table className="w-full min-w-[720px] text-sm">
                 <thead>
-                  <tr className="border-b border-panel-border text-left text-xs text-panel-fg/55">
+                  <tr className="border-b border-panel-border text-left text-xs text-panel-fg/68">
                     <th className="px-3 py-2.5 font-medium">Stock</th>
                     <th className="px-3 py-2.5 text-right font-medium">Price</th>
                     <th className="px-3 py-2.5 text-right font-medium">Today</th>
@@ -155,7 +155,7 @@ export default async function AnalyticsPage() {
         </>
       )}
 
-      <p className="mt-8 max-w-3xl text-xs text-panel-fg/55">
+      <p className="mt-8 max-w-3xl text-xs text-panel-fg/68">
         Delayed / end-of-day data, recomputed by PSEye — not real-time and not a
         licensed feed. These are descriptive statistics on past prices, not financial advice, a
         stock pick, or a buy/sell signal.
@@ -174,20 +174,20 @@ function Row({ row }: { row: AnalyticsRow }) {
           <span className="font-mono text-xs font-semibold text-panel-fg group-hover:underline">
             {row.ticker}
           </span>
-          <span className="max-w-[16rem] truncate text-[11px] text-panel-fg/55">{row.companyName}</span>
+          <span className="max-w-[16rem] truncate text-[11px] text-panel-fg/68">{row.companyName}</span>
         </Link>
       </td>
       <td className="px-3 py-2.5 text-right tabular-nums text-panel-fg/85">{formatPeso(row.price)}</td>
       <td
         className={`px-3 py-2.5 text-right tabular-nums ${
-          row.pctChange == null ? "text-panel-fg/40" : row.pctChange >= 0 ? "text-up" : "text-down"
+          row.pctChange == null ? "text-panel-fg/65" : row.pctChange >= 0 ? "text-up" : "text-down"
         }`}
       >
         {row.pctChange == null ? "—" : pct(row.pctChange)}
       </td>
       <td
         className={`px-3 py-2.5 text-right tabular-nums ${
-          row.return1y == null ? "text-panel-fg/40" : row.return1y >= 0 ? "text-up" : "text-down"
+          row.return1y == null ? "text-panel-fg/65" : row.return1y >= 0 ? "text-up" : "text-down"
         }`}
       >
         {pct(row.return1y)}

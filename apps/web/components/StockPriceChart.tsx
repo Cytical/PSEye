@@ -58,7 +58,7 @@ export function StockPriceChart({ closes }: { closes: HistoricalClose[] }) {
             textAnchor="end"
             dominantBaseline="middle"
             fontSize={10}
-            className="fill-panel-fg/40"
+            className="fill-panel-fg/65"
           >
             {t.toFixed(2)}
           </text>

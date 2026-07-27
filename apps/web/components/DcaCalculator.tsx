@@ -173,7 +173,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "up
   const toneClass = tone === "up" ? "text-up" : tone === "down" ? "text-down" : "";
   return (
     <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <div className="kicker text-panel-fg/60">{label}</div>
+      <div className="kicker text-panel-fg/72">{label}</div>
       <div className={`mt-0.5 text-lg font-semibold tabular-nums ${toneClass}`}>{value}</div>
     </div>
   );
