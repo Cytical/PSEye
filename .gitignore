@@ -12,3 +12,4 @@ dist/
 .dev-server.err.log
 .vercel
 .env*
+etl/dry-run-market-map.png

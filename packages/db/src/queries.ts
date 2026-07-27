@@ -11,6 +11,7 @@ import {
   historicalQuotes,
   blockSales,
   newsItems,
+  botPosts,
 } from "./schema";
 
 /** All rows for the most recent trade_date on record, or [] if the table is empty. */
@@ -226,4 +227,10 @@ export async function getHistoricalQuotes(db: Db, tickers: string[], fromDate: s
     .from(historicalQuotes)
     .where(and(inArray(historicalQuotes.ticker, tickers), gte(historicalQuotes.tradeDate, fromDate)))
     .orderBy(asc(historicalQuotes.tradeDate));
+}
+
+/** The bot's recorded post for one trading day, or undefined if it hasn't posted yet — see etl/jobs/post-daily-tweet.ts. */
+export async function getBotPostByDate(db: Db, date: string) {
+  const [row] = await db.select().from(botPosts).where(eq(botPosts.postDate, date)).limit(1);
+  return row;
 }

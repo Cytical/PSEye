@@ -96,24 +96,30 @@ export default async function MarketMapPage() {
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-8 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
-      <div className="flex flex-wrap items-center gap-2.5">
-        <p className="kicker text-accent">Market Map</p>
-        <span className="flex items-center gap-1.5 rounded-full border border-panel-border bg-panel px-2 py-0.5 text-[10px] font-medium text-panel-fg/70">
-          <span className={`h-1.5 w-1.5 rounded-full ${status.open ? "animate-pulse bg-up" : "bg-panel-fg/30"}`} />
-          {status.label}
-        </span>
-      </div>
-      <h1 className="mt-2 whitespace-nowrap font-serif text-[clamp(1.35rem,4.6vw,3.25rem)] font-semibold leading-[1.05] tracking-tight">
-        The Philippine Stock Market, <span className="italic text-accent">Visualized.</span>
-      </h1>
-      <div className="mt-7">
-        <MarketMap
-          stocks={quotes}
-          profileByTicker={profileByTicker}
-          snapshot={snapshot}
-          foreignFlow={foreignFlow}
-          sparklineByTicker={sparklineByTicker}
-        />
+      {/* Screenshotted by etl/jobs/post-daily-tweet.ts (Playwright targets this
+          id) for the daily X/Twitter post — kept to just the headline + map,
+          not the FAQ below, so the captured image stays a compact, shareable
+          card instead of an awkwardly tall crop. */}
+      <div id="market-map-capture">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <p className="kicker text-accent">Market Map</p>
+          <span className="flex items-center gap-1.5 rounded-full border border-panel-border bg-panel px-2 py-0.5 text-[10px] font-medium text-panel-fg/70">
+            <span className={`h-1.5 w-1.5 rounded-full ${status.open ? "animate-pulse bg-up" : "bg-panel-fg/30"}`} />
+            {status.label}
+          </span>
+        </div>
+        <h1 className="mt-2 whitespace-nowrap font-serif text-[clamp(1.35rem,4.6vw,3.25rem)] font-semibold leading-[1.05] tracking-tight">
+          The Philippine Stock Market, <span className="italic text-accent">Visualized.</span>
+        </h1>
+        <div className="mt-7">
+          <MarketMap
+            stocks={quotes}
+            profileByTicker={profileByTicker}
+            snapshot={snapshot}
+            foreignFlow={foreignFlow}
+            sparklineByTicker={sparklineByTicker}
+          />
+        </div>
       </div>
 
       <MarketMapFaq items={FAQ} />

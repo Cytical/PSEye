@@ -1,0 +1,44 @@
+name: Post daily tweet (market map + recap)
+
+# Runs once/day after PSE's ~3:30pm PHT close: screenshots the live market map
+# and posts it to X, then replies with a text recap (top movers, breadth, a
+# link to the day's /daily/[date] page). Cron fires at 08:35 UTC (~4:35pm
+# PHT) — 19 minutes after market-data-hourly.yml's final 08:16 UTC run, which
+# is what actually finalizes today's close in daily_quotes/market_snapshot
+# (see that workflow's own doc comment). The job itself also force-revalidates
+# the homepage right before screenshotting (see app/api/revalidate/route.ts)
+# so a stale ISR cache can't leave the screenshot showing an older render.
+#
+# This is a new daily (once-a-day) cron, the same shape as fetch-daily.yml —
+# that workflow's doc comment documents GitHub silently delaying scheduled
+# daily-cron runs by 1h40m-2h15m, confirmed live over 5 consecutive days. This
+# workflow hasn't been observed long enough yet to know if it's affected the
+# same way. If it is, compensate the same way fetch-daily.yml did: move the
+# cron earlier by roughly the observed delay so the *actual* run lands near
+# the intended ~4:35pm PHT time.
+on:
+  schedule:
+    - cron: "35 8 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  post-daily-tweet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl exec playwright install --with-deps chromium
+      - run: pnpm --filter @pseye/etl post-daily-tweet
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}

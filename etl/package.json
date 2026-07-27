@@ -14,6 +14,7 @@
     "fetch-historical-quotes": "tsx jobs/fetch-historical-quotes.ts",
     "fetch-market-snapshot": "tsx jobs/fetch-market-snapshot.ts",
     "backfill-company-profiles": "tsx jobs/backfill-company-profiles.ts",
+    "post-daily-tweet": "tsx jobs/post-daily-tweet.ts",
     "migrate-db": "tsx jobs/migrate-db.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
@@ -26,7 +27,9 @@
     "@pseye/source-disclosures": "workspace:*",
     "@pseye/source-foreign-flow": "workspace:*",
     "drizzle-orm": "^0.36.4",
-    "pdfjs-dist": "4.0.379"
+    "pdfjs-dist": "4.0.379",
+    "playwright": "^1.48.0",
+    "twitter-api-v2": "^1.19.0"
   },
   "devDependencies": {
     "@pseye/config": "workspace:*",

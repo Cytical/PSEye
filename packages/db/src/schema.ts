@@ -173,3 +173,16 @@ export const historicalQuotes = pgTable(
   },
   (table) => [unique().on(table.ticker, table.tradeDate)]
 );
+
+// One row per trading day the X/Twitter bot has posted a market-map screenshot
+// + recap reply (see etl/jobs/post-daily-tweet.ts) — the natural-key guard
+// against posting twice for the same day if the workflow is re-run (manual
+// workflow_dispatch, a retried step), without spending X API read quota on a
+// duplicate check.
+export const botPosts = pgTable("bot_posts", {
+  id: serial("id").primaryKey(),
+  postDate: date("post_date").notNull().unique(),
+  tweetId: varchar("tweet_id", { length: 32 }).notNull(),
+  replyTweetId: varchar("reply_tweet_id", { length: 32 }),
+  postedAt: timestamp("posted_at", { withTimezone: true }).notNull(),
+});
