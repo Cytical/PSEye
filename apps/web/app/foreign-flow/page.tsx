@@ -120,7 +120,10 @@ function FlowTable({
 }) {
   const toneClass = tone === "up" ? "text-up" : "text-down";
   return (
-    <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+    // min-w-0: this is a grid item, and the default min-width: auto sized the
+    // column to the longest company name below, scrolling the page sideways by
+    // 107px on a 390px phone.
+    <div className="min-w-0 rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
       <h2 className="kicker text-panel-fg/70">{title}</h2>
       <p className="text-[11px] text-panel-fg/72">
         As of {new Date(periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "UTC" })}

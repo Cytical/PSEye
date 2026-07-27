@@ -171,10 +171,16 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
 
         {selected.length < MAX_TICKERS && availableToAdd.length > 0 && (
           <div className="flex items-end gap-2">
-            <label className="flex flex-col gap-1 text-sm">
+            {/* A select's intrinsic width is its widest option, and these read
+                "ICT — International Container Terminal Services, Inc." — enough
+                to push the page 254px wider than a 390px phone. min-w-0 on the
+                flex item plus w-full on the control lets it shrink to the
+                column instead; the native picker still shows each option in
+                full. */}
+            <label className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
               <span className="kicker text-panel-fg/70">Add a stock</span>
               <select
-                className="rounded-lg border border-panel-border bg-panel px-2.5 py-1.5 text-panel-fg shadow-sm shadow-black/5"
+                className="w-full min-w-0 rounded-lg border border-panel-border bg-panel px-2.5 py-1.5 text-panel-fg shadow-sm shadow-black/5"
                 value={pending}
                 onChange={(e) => setPending(e.target.value)}
               >

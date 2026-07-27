@@ -108,7 +108,14 @@ export default async function MarketMapPage() {
             {status.label}
           </span>
         </div>
-        <h1 className="mt-2 whitespace-nowrap font-serif text-[clamp(1.35rem,4.6vw,3.25rem)] font-semibold leading-[1.05] tracking-tight">
+        {/* nowrap only from sm up. Below that the vw term bottoms out at the
+            clamp minimum, so the line stops scaling with the viewport and
+            simply overflowed it: measured on a 390px phone, "Visualized."
+            ended 42px past the right edge and gave the whole homepage a
+            horizontal scrollbar. Wrapping to two lines breaks naturally after
+            the comma, which also lets the minimum size go up from 1.35rem to
+            1.75rem — the headline is bigger on phones now, not smaller. */}
+        <h1 className="mt-2 font-serif text-[clamp(1.75rem,4.6vw,3.25rem)] font-semibold leading-[1.05] tracking-tight sm:whitespace-nowrap">
           The Philippine Stock Market, <span className="italic text-accent">Visualized.</span>
         </h1>
         <div className="mt-7">

@@ -75,7 +75,14 @@ function StatTile({ label, value }: { label: string; value: string }) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+    // min-w-0 because these are grid items, and a grid item's default
+    // min-width: auto sizes the track to its content's min-content width. The
+    // mover/flow lists inside carry long company names, so on a 390px phone the
+    // column resolved to 415px and the whole /daily page scrolled sideways by
+    // 58px. With the floor removed the track follows the container and the
+    // links' existing `truncate` ellipsizes the names, which is what it was
+    // always there to do.
+    <section className="min-w-0 rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
       <h2 className="kicker text-panel-fg/68">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
