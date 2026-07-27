@@ -9,9 +9,14 @@ import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 // not the real proprietary FT cuts.
 // Scoped to this route via `.variable`, not registered globally, so the
 // rest of the site keeps its existing Geist typography.
+// 600/700 only: every `font-news-serif` usage in the route pairs it with
+// font-semibold or font-bold, so the declared 400 was six @font-face rules and
+// a downloaded subset that nothing ever rendered in. IBM Plex Sans below keeps
+// all four weights — those are genuinely in use (500 alone appears on 45
+// elements of the news front page).
 export const newsSerif = Source_Serif_4({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: ["600", "700"],
   variable: "--font-news-serif",
 });
 
