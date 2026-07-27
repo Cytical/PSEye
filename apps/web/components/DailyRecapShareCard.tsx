@@ -5,35 +5,96 @@ const UP = "#3ddc84";
 const DOWN = "#ff6b5e";
 const MUTED = "#8b93a1";
 
-const SPARK_WIDTH = 120;
-const SPARK_HEIGHT = 44;
+const CHART_WIDTH = 240;
+const CHART_HEIGHT = 56;
+const PAD_X = 4;
+const PAD_TOP = 16;
+const PAD_BOTTOM = 16;
+const SVG_WIDTH = CHART_WIDTH;
+const SVG_HEIGHT = PAD_TOP + CHART_HEIGHT + PAD_BOTTOM;
 
-/** Trailing PSEi trend ending on this recap's date — same fixed dark-palette
- * reasoning as the rest of this card, so it renders identically live or
- * screenshotted regardless of site theme. */
+function formatIndexValue(n: number): string {
+  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatShortDate(iso: string): string {
+  return new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
+/** Trailing PSEi trend ending on this recap's date, styled like a
+ * MarketWatch-style mini chart (gradient-filled area, high/low value
+ * callouts, date range) — same fixed dark-palette reasoning as the rest of
+ * this card, so it renders identically live or screenshotted regardless of
+ * site theme. */
 function PseiSparkline({ history, color }: { history: PseiHistoryPoint[]; color: string }) {
   const values = history.map((h) => h.pseiValue);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
+  const minIndex = values.indexOf(min);
+  const maxIndex = values.indexOf(max);
+  const floorY = PAD_TOP + CHART_HEIGHT;
 
-  const points = values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * SPARK_WIDTH;
-      const y = SPARK_HEIGHT - ((v - min) / range) * SPARK_HEIGHT;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
+  const plotWidth = SVG_WIDTH - PAD_X * 2;
+  const xFor = (i: number) => PAD_X + (i / (values.length - 1)) * plotWidth;
+  const yFor = (v: number) => PAD_TOP + CHART_HEIGHT - ((v - min) / range) * CHART_HEIGHT;
+  const clampX = (x: number) => Math.min(Math.max(x, PAD_X + 18), SVG_WIDTH - PAD_X - 18);
+
+  const points = values.map((v, i) => `${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).join(" ");
+  const areaPoints = `${xFor(0).toFixed(1)},${floorY} ${points} ${xFor(values.length - 1).toFixed(1)},${floorY}`;
+  const gradientId = "pseiSparkGradient";
 
   return (
     <svg
-      width={SPARK_WIDTH}
-      height={SPARK_HEIGHT}
+      width={SVG_WIDTH}
+      height={SVG_HEIGHT}
       className="shrink-0"
       role="img"
-      aria-label={`PSEi trend from ${history[0].date} to ${history[history.length - 1].date}`}
+      aria-label={`PSEi trend from ${history[0].date} to ${history[history.length - 1].date}, ranging from ${formatIndexValue(min)} to ${formatIndexValue(max)}`}
     >
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.28} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+
+      <line x1={PAD_X} y1={floorY} x2={SVG_WIDTH - PAD_X} y2={floorY} stroke="#ffffff" strokeOpacity={0.08} />
+
+      <polygon points={areaPoints} fill={`url(#${gradientId})`} stroke="none" />
       <polyline points={points} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+
+      {maxIndex !== minIndex && (
+        <text
+          x={clampX(xFor(maxIndex))}
+          y={Math.max(yFor(max) - 5, 9)}
+          textAnchor="middle"
+          className="font-mono"
+          fontSize={9}
+          fill="#ffffff"
+          fillOpacity={0.55}
+        >
+          {formatIndexValue(max)}
+        </text>
+      )}
+      <text
+        x={clampX(xFor(minIndex))}
+        y={Math.min(yFor(min) + 12, floorY - 2)}
+        textAnchor="middle"
+        className="font-mono"
+        fontSize={9}
+        fill="#ffffff"
+        fillOpacity={0.55}
+      >
+        {formatIndexValue(min)}
+      </text>
+
+      <text x={PAD_X} y={SVG_HEIGHT - 3} textAnchor="start" fontSize={9} fill="#ffffff" fillOpacity={0.35}>
+        {formatShortDate(history[0].date)}
+      </text>
+      <text x={SVG_WIDTH - PAD_X} y={SVG_HEIGHT - 3} textAnchor="end" fontSize={9} fill="#ffffff" fillOpacity={0.35}>
+        {formatShortDate(history[history.length - 1].date)}
+      </text>
     </svg>
   );
 }
