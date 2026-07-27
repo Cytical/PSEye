@@ -136,6 +136,18 @@ export function TreemapChart({
   const selectedTicker = useSyncExternalStore(subscribeToTickerUrl, getTickerFromUrl, (): string | null => null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [measuredWidth, setMeasuredWidth] = useState(widthProp ?? 1000);
+  /**
+   * Whether measuredWidth is a real measurement yet, as opposed to the 1000px
+   * placeholder. The canvas used to be painted at that placeholder width and
+   * then snap to the measured one, which was the largest layout-shift source
+   * on the homepage (measured: the canvas box jumping 1000px -> 1023px, and in
+   * another load 910px -> 930px). The box itself is now sized by CSS so it is
+   * correct in the very first paint, and the tiles — which are absolutely
+   * positioned from layout coordinates that genuinely do need the pixel width
+   * — wait one frame for it. Elements appearing don't count as layout shift;
+   * elements moving do.
+   */
+  const [hasMeasured, setHasMeasured] = useState(widthProp != null);
 
   useEffect(() => {
     if (widthProp != null) return;
@@ -143,7 +155,10 @@ export function TreemapChart({
     if (!el) return;
     const observer = new ResizeObserver((entries) => {
       const w = entries[0]?.contentRect.width;
-      if (w) setMeasuredWidth(Math.floor(w));
+      if (w) {
+        setMeasuredWidth(Math.floor(w));
+        setHasMeasured(true);
+      }
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -340,8 +355,13 @@ export function TreemapChart({
           per-stock button inside from screen readers entirely. */}
       <div
         ref={canvasBoxRef}
-        className="relative select-none overflow-hidden rounded-xl shadow-sm shadow-black/10 ring-1 ring-panel-border"
-        style={{ width, height, background: CANVAS_BG }}
+        // w-full (not the measured pixel width) whenever the caller isn't
+        // dictating a width: the box then has its final size in the server-
+        // rendered HTML, so it never resizes once ResizeObserver reports.
+        className={`relative select-none overflow-hidden rounded-xl shadow-sm shadow-black/10 ring-1 ring-panel-border ${
+          widthProp == null ? "w-full" : ""
+        }`}
+        style={{ width: widthProp, height, background: CANVAS_BG }}
         role="group"
         aria-label="PSE market map: box size is market cap, color is today's percent change. Scroll to zoom, drag to pan."
       >
@@ -350,6 +370,7 @@ export function TreemapChart({
             ResizeObserver watches) fixed; only the painted content moves. */}
         <div
           className="absolute inset-0"
+          hidden={!hasMeasured}
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: "0 0",

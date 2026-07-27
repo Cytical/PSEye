@@ -114,6 +114,15 @@ body {
  * so clickable vs. static content is still distinguishable — only the
  * default/idle cursor is replaced. */
 html {
+  /* Reserve the scrollbar's width whether or not one is showing. Without it,
+   * the classic-scrollbar browsers (Windows/Linux Chrome and Firefox) narrow
+   * the viewport by ~15-20px the moment a page grows tall enough to scroll,
+   * and every centered `mx-auto` container on the site jumps left by half
+   * that. Measured on the homepage: the market map's canvas shifted from
+   * 910px to 930px wide mid-load, which was the single largest layout-shift
+   * source on the page. Also stops the same jump on client-side navigation
+   * between a short route (/about) and a tall one (/screener). */
+  scrollbar-gutter: stable;
   cursor:
     url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyNCcgaGVpZ2h0PScyNCcgdmlld0JveD0nMCAwIDI0IDI0Jz48cGF0aCBkPSdNNCw0IEw0LDE4IEw4LDE0LjUgTDExLDIwLjUgTDEzLDE5LjUgTDEwLDEzLjUgTDE2LDEzLjUgWicgZmlsbD0nIzhlZTZhYicgc3Ryb2tlPScjMGQwZjE0JyBzdHJva2Utd2lkdGg9JzEuNScgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCcvPjwvc3ZnPg==")
       4 4,
