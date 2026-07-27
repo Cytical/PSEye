@@ -14,8 +14,27 @@ interface RssImageFields {
 // Bounds how long a single outlet can block a fetch. Without it, an
 // unreachable feed (see the UNVERIFIED outlets in outlets.ts) hangs on the
 // default socket timeout instead of failing fast enough to stream around.
+//
+// `headers` overrides rss-parser's own default request headers
+// (`User-Agent: 'rss-parser'`, `Accept: 'application/rss+xml'`) — confirmed
+// live that this literal default User-Agent is exactly why
+// "Inquirer Business" (Cloudflare-protected) silently returned zero items on
+// *every* run despite being in the RELIABLE tier: Cloudflare served its
+// "Just a moment..." JS-challenge HTML page instead of the feed XML, which
+// rss-parser's XML parser then fails on — a rejection Promise.allSettled
+// swallows in fetchFrom (apps/web/lib/news.ts), so it never surfaced as
+// anything louder than a console.error in the ETL job. A realistic browser
+// User-Agent (and a broader Accept header some feeds' WAFs also key off)
+// clears the challenge. This is the actual mechanism behind "sometimes the
+// news data doesn't get received" — not occasional flakiness, a 100%,
+// silent failure rate for that one outlet.
 const parser = new Parser<Record<string, unknown>, RssImageFields>({
   timeout: 8_000,
+  headers: {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    Accept: "application/rss+xml, application/xml, text/xml, */*",
+  },
   customFields: {
     item: ["media:content", "content:encoded"],
   },
@@ -29,7 +48,13 @@ function stripHtmlAndTruncate(input: string | undefined, maxLength = 240): strin
 }
 
 function extractImageUrl(item: Parser.Item & RssImageFields): string | null {
-  if (item.enclosure?.url) return item.enclosure.url;
+  // Guard against non-image enclosures (podcast audio, PDFs, etc.) — an
+  // <enclosure type="audio/mpeg"> rendered straight into <img src> is exactly
+  // the "image doesn't load" failure mode this whole pass is fixing. No
+  // outlet in outlets.ts is known to do this today, but nothing stops a feed
+  // from adding one later, and the check is free.
+  if (item.enclosure?.url && (!item.enclosure.type || item.enclosure.type.startsWith("image")))
+    return item.enclosure.url;
 
   const media = item["media:content"];
   const mediaUrl = Array.isArray(media) ? media[0]?.$?.url : media?.$?.url;

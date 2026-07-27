@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 import type { NewsItem } from "@pseye/source-news";
+import { NewsThumbnail } from "./NewsThumbnail";
 
 const TRACKED_TICKERS = new Set(PSE_EDGE_COMPANIES.map((c) => c.ticker));
 
@@ -37,7 +38,23 @@ function Kicker({ text, className = "" }: { text: string; className?: string }) 
   );
 }
 
-function Byline({ item, className = "" }: { item: NewsItem; className?: string }) {
+function Byline({
+  item,
+  className = "",
+  hideKickerTicker = false,
+}: {
+  item: NewsItem;
+  className?: string;
+  /**
+   * HeroCard/SecondaryCard render a Kicker above this byline using
+   * kickerFor(item), i.e. item.tickers[0] — pass true from those variants so
+   * the chip list doesn't repeat that same company right below it.
+   * CompactCard has no Kicker, so it keeps the full tickers list.
+   */
+  hideKickerTicker?: boolean;
+}) {
+  const chipTickers = hideKickerTicker ? item.tickers.slice(1) : item.tickers;
+
   return (
     <div
       className={`font-news-sans mt-2 flex flex-wrap items-center gap-x-1.5 text-[11px] font-medium uppercase tracking-[0.04em] text-[#1A1210]/70 dark:text-[#F2E9E2]/70 ${className}`}
@@ -45,7 +62,7 @@ function Byline({ item, className = "" }: { item: NewsItem; className?: string }
       <span>{item.source}</span>
       <span aria-hidden>&middot;</span>
       <span>{formatTimeAgo(item.publishedAt)}</span>
-      {item.tickers.map((ticker) =>
+      {chipTickers.map((ticker) =>
         TRACKED_TICKERS.has(ticker) ? (
           <Link
             key={ticker}
@@ -67,28 +84,11 @@ function Byline({ item, className = "" }: { item: NewsItem; className?: string }
   );
 }
 
-function Thumbnail({ item, className }: { item: NewsItem; className: string }) {
-  if (!item.imageUrl) return null;
-  return (
-    <div className={`shrink-0 overflow-hidden bg-[#1A1210]/5 dark:bg-[#F2E9E2]/10 ${className}`}>
-      {/* External, outlet-controlled hosts — next/image would need an
-          unbounded remotePatterns allowlist for one <img>'s worth of value. */}
-      <img
-        src={item.imageUrl}
-        alt=""
-        loading="lazy"
-        referrerPolicy="no-referrer"
-        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-      />
-    </div>
-  );
-}
-
 function HeroCard({ item }: { item: NewsItem }) {
   return (
     <article>
       <a href={item.url} target="_blank" rel="noopener noreferrer" className="group block">
-        <Thumbnail item={item} className="aspect-video w-full" />
+        <NewsThumbnail item={item} className="aspect-video w-full" />
         <Kicker text={kickerFor(item)} className="mt-4" />
         <h3 className="font-news-serif mt-1.5 text-3xl font-bold leading-[1.08] tracking-tight group-hover:underline sm:text-4xl">
           {item.title}
@@ -99,7 +99,7 @@ function HeroCard({ item }: { item: NewsItem }) {
           {item.snippet}
         </p>
       )}
-      <Byline item={item} className="mt-3" />
+      <Byline item={item} className="mt-3" hideKickerTicker />
     </article>
   );
 }
@@ -108,7 +108,7 @@ function SecondaryCard({ item }: { item: NewsItem }) {
   return (
     <article>
       <a href={item.url} target="_blank" rel="noopener noreferrer" className="group flex gap-4">
-        <Thumbnail item={item} className="h-20 w-20 sm:h-24 sm:w-24" />
+        <NewsThumbnail item={item} className="h-20 w-20 sm:h-24 sm:w-24" />
         <div className="min-w-0 flex-1">
           <Kicker text={kickerFor(item)} />
           <h3 className="font-news-serif mt-1 text-lg font-semibold leading-snug group-hover:underline">
@@ -116,7 +116,7 @@ function SecondaryCard({ item }: { item: NewsItem }) {
           </h3>
         </div>
       </a>
-      <Byline item={item} />
+      <Byline item={item} hideKickerTicker />
     </article>
   );
 }
