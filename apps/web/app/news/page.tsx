@@ -107,10 +107,14 @@ async function MarketMood({ moodPromise }: { moodPromise: Promise<NewsMoodSummar
       <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 gap-y-1">
         <span className="font-news-sans text-sm font-bold tabular-nums text-up">{positivePct}% Positive</span>
         <span className="font-news-sans text-sm font-bold tabular-nums text-down">{negativePct}% Negative</span>
-        <span className="font-news-sans text-sm font-semibold tabular-nums text-[#1A1210]/55 dark:text-[#F2E9E2]/55">
+        {/* /65 and /60 rather than the /55 and /40 these started at: on this
+            route's FT-paper background (#FFF1E5) those measured 3.96:1 and
+            2.58:1, under the 4.5:1 AA floor. /65 (5.45:1) and /60 (4.70:1)
+            clear it while keeping the caption quieter than the figure. */}
+        <span className="font-news-sans text-sm font-semibold tabular-nums text-[#1A1210]/65 dark:text-[#F2E9E2]/65">
           {neutralPct}% Neutral
         </span>
-        <span className="font-news-sans text-[11px] text-[#1A1210]/40 dark:text-[#F2E9E2]/40">
+        <span className="font-news-sans text-[11px] text-[#1A1210]/60 dark:text-[#F2E9E2]/60">
           across {mood.total} recent headlines
         </span>
       </div>
@@ -127,7 +131,7 @@ async function FrontPage({ itemsPromise }: { itemsPromise: Promise<NewsItem[]> }
 
   if (items.length === 0) {
     return (
-      <p className="font-news-sans text-sm text-[#1A1210]/50 dark:text-[#F2E9E2]/50">
+      <p className="font-news-sans text-sm text-[#1A1210]/65 dark:text-[#F2E9E2]/65">
         No items fetched yet — outlet feeds may be unreachable from this environment, or none
         matched. See packages/sources/news/src/outlets.ts.
       </p>

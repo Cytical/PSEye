@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { MockOfferingSource, OFFERING_TYPE_LABELS, type Offering, type OfferingType } from "@pseye/source-offerings";
+import { manilaToday } from "@/lib/manilaDate";
 
 export const revalidate = 86400;
 
@@ -73,7 +74,7 @@ function windowProgress(offering: Offering, todayIso: string): number {
 export default async function OfferingsPage() {
   const source = new MockOfferingSource();
   const offerings = await source.getUpcoming();
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = manilaToday();
   const sorted = [...offerings].sort((a, b) => a.subscriptionEnd.localeCompare(b.subscriptionEnd));
 
   return (
@@ -124,8 +125,8 @@ export default async function OfferingsPage() {
                     </span>
                   )}
                   <span
-                    className="rounded-full px-2 py-0.5 text-[10px] font-medium"
-                    style={{ backgroundColor: `${accent}1a`, color: accent }}
+                    className="type-badge rounded-full px-2 py-0.5 text-[10px] font-medium"
+                    style={{ "--badge-accent": accent } as React.CSSProperties}
                   >
                     {OFFERING_TYPE_LABELS[offering.type]}
                   </span>

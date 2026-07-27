@@ -8,6 +8,7 @@ import { getDailyQuotes } from "@/lib/quotes";
 import { getCompanyProfiles } from "@/lib/companyProfiles";
 import { getDisclosures } from "@/lib/disclosures";
 import { getCorporateActions } from "@/lib/corporateActions";
+import { manilaToday } from "@/lib/manilaDate";
 import { getNewsForTicker } from "@/lib/news";
 import { getHistoricalQuotes } from "@/lib/historicalQuotes";
 import { StockPriceChart } from "@/components/StockPriceChart";
@@ -170,7 +171,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
   // Trailing-12-month cash dividend → yield, reusing the corporate-actions the
   // page already fetched and dividends.ts's amount parser. statsFromIso is
   // exactly 365 days back, so it doubles as the TTM window start.
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = manilaToday();
   let ttmDividend = 0;
   let dividendPayoutCount = 0;
   for (const a of corporateActions) {
@@ -388,8 +389,8 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className="rounded-full px-2 py-0.5 text-[10px] font-medium"
-                        style={{ backgroundColor: `${accent}1a`, color: accent }}
+                        className="type-badge rounded-full px-2 py-0.5 text-[10px] font-medium"
+                        style={{ "--badge-accent": accent } as React.CSSProperties}
                       >
                         {DISCLOSURE_TYPE_LABELS[d.type]}
                       </span>
@@ -433,8 +434,8 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className="rounded-full px-2 py-0.5 text-[10px] font-medium"
-                        style={{ backgroundColor: `${accent}1a`, color: accent }}
+                        className="type-badge rounded-full px-2 py-0.5 text-[10px] font-medium"
+                        style={{ "--badge-accent": accent } as React.CSSProperties}
                       >
                         {CORPORATE_ACTION_LABELS[a.type]}
                       </span>

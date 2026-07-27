@@ -2,6 +2,7 @@ import { createDb, getCashDividends } from "@pseye/db";
 import { MockCorporateActionSource } from "@pseye/source-corporate-actions";
 import type { Quote } from "@pseye/source-quotes";
 import { getDailyQuotes } from "./quotes";
+import { manilaToday } from "./manilaDate";
 
 /** One cash-dividend declaration, as stored by the corporate-actions ETL. */
 export interface CashDividendInput {
@@ -146,7 +147,7 @@ export function buildDividendScreener(
  * Falls back on any DB error too — same contract as getDailyQuotes.
  */
 export async function getDividendScreener(): Promise<DividendScreenerResult> {
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = manilaToday();
   const quotes = await getDailyQuotes();
   const databaseUrl = process.env.DATABASE_URL;
 

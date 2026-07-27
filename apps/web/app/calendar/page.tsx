@@ -7,6 +7,8 @@ import {
   type CorporateAction,
 } from "@pseye/source-corporate-actions";
 import { getCorporateActions } from "@/lib/corporateActions";
+import { formatCorporateActionRate } from "@/lib/corporateActionRate";
+import { manilaToday } from "@/lib/manilaDate";
 
 export const revalidate = 86400;
 
@@ -57,11 +59,53 @@ function groupByMonth(actions: CorporateAction[]): { monthKey: string; actions: 
     .map(([monthKey, actions]) => ({ monthKey, actions }));
 }
 
+function MonthGroup({
+  months,
+  todayIso,
+  isPast,
+}: {
+  months: { monthKey: string; actions: CorporateAction[] }[];
+  todayIso: string;
+  isPast: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-8">
+      {months.map(({ monthKey, actions }) => (
+        <div key={monthKey}>
+          <h3 className="kicker text-panel-fg/72">{formatMonthHeading(actions[0].exDate)}</h3>
+          <ul className="mt-3 flex flex-col gap-3">
+            {actions.map((action) => (
+              <ActionRow
+                key={`${action.ticker}-${action.type}-${action.exDate}`}
+                action={action}
+                isPast={isPast}
+                todayIso={todayIso}
+              />
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default async function CalendarPage() {
   const actions = await getCorporateActions();
   const sorted = [...actions].sort((a, b) => a.exDate.localeCompare(b.exDate));
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const months = groupByMonth(sorted);
+  const todayIso = manilaToday();
+
+  // The page used to render one flat ascending list, which meant it opened on
+  // whatever the oldest row on file was — months-dead ex-dates the visitor
+  // can no longer act on — with the actually-actionable upcoming dates pushed
+  // below the fold. Everything a dividend calendar is for is in the future, so
+  // upcoming leads and past is collapsed behind a <details> underneath.
+  const upcoming = sorted.filter((a) => a.exDate >= todayIso);
+  const past = sorted.filter((a) => a.exDate < todayIso);
+  const upcomingMonths = groupByMonth(upcoming);
+  // Most-recent-first: when you do go looking through past actions, the one
+  // that just happened is far likelier to be the one you want.
+  const pastMonths = groupByMonth(past).reverse();
+  const nextUp = upcoming[0];
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
@@ -72,25 +116,40 @@ export default async function CalendarPage() {
         corporate actions. Own the stock before the ex-date to be entitled.
       </p>
 
-      <div className="mt-8 flex flex-col gap-8">
-        {months.map(({ monthKey, actions }) => (
-          <div key={monthKey}>
-            <h2 className="kicker text-panel-fg/72">
-              {formatMonthHeading(actions[0].exDate)}
-            </h2>
-            <ul className="mt-3 flex flex-col gap-3">
-              {actions.map((action) => (
-                <ActionRow
-                  key={`${action.ticker}-${action.type}-${action.exDate}`}
-                  action={action}
-                  isPast={action.exDate < todayIso}
-                  todayIso={todayIso}
-                />
-              ))}
-            </ul>
+      {nextUp && (
+        <p className="mt-4 text-sm text-panel-fg/72">
+          <span className="font-semibold text-panel-fg">{upcoming.length}</span> upcoming
+          {" · next ex-date "}
+          <Link href={`/stocks/${nextUp.ticker}`} className="font-semibold text-accent hover:underline">
+            {nextUp.ticker}
+          </Link>{" "}
+          {countdownLabel(daysUntil(nextUp.exDate, todayIso)).toLowerCase()}
+        </p>
+      )}
+
+      {upcomingMonths.length > 0 && (
+        <div className="mt-8">
+          <MonthGroup months={upcomingMonths} todayIso={todayIso} isPast={false} />
+        </div>
+      )}
+
+      {upcoming.length === 0 && sorted.length > 0 && (
+        <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/72 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+          No upcoming corporate actions on record. PSE Edge publishes these as companies declare
+          them — past actions are listed below.
+        </p>
+      )}
+
+      {pastMonths.length > 0 && (
+        <details className="mt-10 border-t border-panel-border pt-6">
+          <summary className="kicker text-panel-fg/72 hover:text-panel-fg">
+            Past actions ({past.length})
+          </summary>
+          <div className="mt-5">
+            <MonthGroup months={pastMonths} todayIso={todayIso} isPast />
           </div>
-        ))}
-      </div>
+        </details>
+      )}
 
       {sorted.length === 0 && (
         <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/72 shadow-sm shadow-black/5 ring-1 ring-panel-border">
@@ -107,7 +166,14 @@ function ActionRow({ action, isPast, todayIso }: { action: CorporateAction; isPa
 
   return (
     <li
-      className={`overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border ${isPast ? "opacity-50" : ""}`}
+      // Past rows used to carry `opacity-50`, which halved the contrast of
+      // every string inside them — a card whose body text sat at ~2:1. They no
+      // longer need to shout for attention from inside the collapsed "Past"
+      // section, so the de-emphasis moves to the surface (a recessed
+      // background) and leaves the text itself at full, legible contrast.
+      className={`overflow-hidden rounded-xl shadow-sm shadow-black/5 ring-1 ring-panel-border ${
+        isPast ? "bg-panel-raised/60" : "bg-panel"
+      }`}
       style={{ borderLeft: `3px solid ${accent}` }}
     >
       <div className="p-4">
@@ -120,8 +186,8 @@ function ActionRow({ action, isPast, todayIso }: { action: CorporateAction; isPa
               <span className="font-medium text-panel-fg">{action.companyName}</span>
             </Link>
             <span
-              className="rounded-full px-2 py-0.5 text-[10px] font-medium"
-              style={{ backgroundColor: `${accent}1a`, color: accent }}
+              className="type-badge rounded-full px-2 py-0.5 text-[10px] font-medium"
+              style={{ "--badge-accent": accent } as React.CSSProperties}
             >
               {CORPORATE_ACTION_LABELS[action.type]}
             </span>
@@ -133,7 +199,9 @@ function ActionRow({ action, isPast, todayIso }: { action: CorporateAction; isPa
           )}
         </div>
 
-        <p className="mt-2 text-sm text-panel-fg">{action.details}</p>
+        <p className="mt-2 text-sm font-medium tabular-nums text-panel-fg">
+          {formatCorporateActionRate(action.details)}
+        </p>
 
         <div className="mt-2.5 grid grid-cols-3 gap-2 border-t border-panel-border pt-2.5 text-xs">
           <div>

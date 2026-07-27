@@ -141,6 +141,26 @@ label[for] {
   border-radius: 2px;
 }
 
+/* Category pill for disclosure / corporate-action / offering types, driven by
+ * the one mid-tone brand hex each type carries in its source package's
+ * *_TYPE_ACCENT map (passed in as --badge-accent). Those hexes were previously
+ * used raw as both a 10%-alpha fill and the label color in BOTH themes, which
+ * can't work: a single mid-tone reads at 3.6-4.0:1 on white and no better on
+ * near-black. Deriving the label from the same hex per theme — pulled toward
+ * black in light mode, toward white in dark — keeps every type's hue as the
+ * thing that distinguishes it while clearing AA. Measured across all 11 accent
+ * hexes and all three surface tones per theme: worst case 4.58:1 light (rights
+ * offer's ochre) and 5.23:1 dark (SEC filing's near-grey). */
+.type-badge {
+  background-color: color-mix(in srgb, var(--badge-accent) 14%, transparent);
+  color: color-mix(in oklab, var(--badge-accent) 78%, black);
+}
+
+[data-theme="dark"] .type-badge {
+  background-color: color-mix(in srgb, var(--badge-accent) 20%, transparent);
+  color: color-mix(in oklab, var(--badge-accent) 55%, white);
+}
+
 /* MarketTicker.tsx's marquee: the track renders its row of quotes twice back
  * to back and animates exactly -50% (not -100%), so the moment the first
  * copy has scrolled fully offscreen the second copy is sitting exactly where

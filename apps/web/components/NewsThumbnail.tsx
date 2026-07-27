@@ -25,7 +25,12 @@ function Placeholder({ item, className }: { item: NewsItem; className: string })
       className={`flex items-center justify-center bg-[#990F3D]/10 dark:bg-[#D75980]/15 ${className}`}
       aria-hidden
     >
-      <span className="font-news-serif text-2xl font-bold tracking-tight text-[#990F3D]/45 dark:text-[#D75980]/55">
+      {/* Solid brand color, not the /45 and /55 washes this started at: against
+          its own 10%/15% tint those measured 2.30:1 and 1.90:1 — below even the
+          3:1 large-text floor, so the outlet monogram (the only thing
+          identifying the source when no image loaded) was barely visible.
+          Solid reads 6.41:1 light / 4.35:1 dark and suits the mark better. */}
+      <span className="font-news-serif text-2xl font-bold tracking-tight text-[#990F3D] dark:text-[#D75980]">
         {outletInitials(item.source)}
       </span>
     </div>

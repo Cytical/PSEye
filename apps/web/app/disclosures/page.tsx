@@ -73,8 +73,8 @@ export default async function DisclosuresPage() {
                   <li key={f.referenceNo} className="px-4 py-3 text-sm" style={{ borderLeft: `3px solid ${accent}` }}>
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className="rounded-full px-2 py-0.5 text-[10px] font-medium"
-                        style={{ backgroundColor: `${accent}1a`, color: accent }}
+                        className="type-badge rounded-full px-2 py-0.5 text-[10px] font-medium"
+                        style={{ "--badge-accent": accent } as React.CSSProperties}
                       >
                         {DISCLOSURE_TYPE_LABELS[f.type]}
                       </span>
