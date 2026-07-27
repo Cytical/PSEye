@@ -20,11 +20,17 @@ export function MarketMapFaq({ items }: { items: FaqItem[] }) {
       <div className="mt-5 sm:grid sm:grid-cols-2 sm:gap-x-10">
         {items.map((item, i) => (
           <details key={item.q} className="group border-b border-foreground/10 py-4" open={i === 0}>
+            {/* The question is an <h3> inside the <summary>, not a bare span:
+                jumping between headings is a primary way screen-reader users
+                navigate a page, and with only the section's own <h2> in the
+                outline the six questions were invisible to that. Heading
+                content is explicitly allowed in <summary>, and the h3 sits
+                under the section's h2 so the outline stays well-formed. */}
             <summary className="flex cursor-pointer list-none items-start justify-between gap-4 font-medium text-foreground [&::-webkit-details-marker]:hidden">
-              <span className="flex gap-3">
+              <h3 className="flex gap-3 text-base font-medium">
                 <span className="font-mono text-xs text-foreground/65">{String(i + 1).padStart(2, "0")}</span>
                 <span>{item.q}</span>
-              </span>
+              </h3>
               <svg
                 aria-hidden
                 width="13"
@@ -40,6 +46,7 @@ export function MarketMapFaq({ items }: { items: FaqItem[] }) {
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </summary>
+
             <p className="mt-2.5 pl-7 text-sm leading-relaxed text-foreground/65">{item.a}</p>
           </details>
         ))}
