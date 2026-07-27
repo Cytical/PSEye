@@ -30,41 +30,47 @@ export default function NewsPage() {
   });
 
   return (
-    <div
-      className={`${newsSerif.variable} ${newsSans.variable} mx-auto max-w-[1536px] px-4 py-8 sm:px-6`}
-    >
-      <header className="border-b-4 border-black pb-3 dark:border-white">
-        <p className="font-news-sans text-xs font-semibold uppercase tracking-[0.14em] text-black/50 dark:text-white/50">
-          {today}
-        </p>
-        <h1 className="font-news-serif mt-1 text-4xl font-bold tracking-tight sm:text-5xl">
-          Markets News
-        </h1>
-        <p className="font-news-sans mt-2 text-sm text-black/60 dark:text-white/60">
-          The most relevant headlines, ranked by relevance to PSE-listed companies and linked
-          back to the original outlet.
-        </p>
-        <a
-          href="/feed.xml"
-          className="font-news-sans mt-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#b8862f] hover:underline"
-        >
-          RSS feed
-        </a>
-      </header>
+    // FT-paper background: pale salmon/pink in light mode, a warm (not cold)
+    // near-black charcoal in dark mode — the palette is scoped to this route
+    // only via arbitrary-value classes, same scoping principle as the fonts
+    // below, rather than touching globals.css's site-wide tokens. The bg
+    // lives on this outer, unconstrained-width div (not the inner max-w one)
+    // so it fills `main`'s full width edge-to-edge like a real front page.
+    <div className={`${newsSerif.variable} ${newsSans.variable} bg-[#FFF1E5] dark:bg-[#14100E]`}>
+      <div className="mx-auto max-w-[1536px] px-4 py-8 text-[#1A1210] sm:px-6 dark:text-[#F2E9E2]">
+        <header className="border-b-4 border-[#990F3D] pb-3 dark:border-[#D75980]">
+          <p className="font-news-sans text-xs font-semibold uppercase tracking-[0.14em] text-[#1A1210]/60 dark:text-[#F2E9E2]/60">
+            {today}
+          </p>
+          <h1 className="font-news-serif mt-1 text-4xl font-bold tracking-tight sm:text-5xl">
+            Markets News
+          </h1>
+          <p className="font-news-sans mt-2 text-sm text-[#1A1210]/70 dark:text-[#F2E9E2]/70">
+            The most relevant headlines, ranked by relevance to PSE-listed companies and linked
+            back to the original outlet.
+          </p>
+          <a
+            href="/feed.xml"
+            className="font-news-sans mt-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#990F3D] hover:underline dark:text-[#D75980]"
+          >
+            RSS feed
+          </a>
+        </header>
 
-      <div className="mt-8">
-        <Suspense fallback={<NewsFrontSkeleton />}>
-          <FrontPage itemsPromise={top} />
-        </Suspense>
-      </div>
+        <div className="mt-8">
+          <Suspense fallback={<NewsFrontSkeleton />}>
+            <FrontPage itemsPromise={top} />
+          </Suspense>
+        </div>
 
-      <div className="mt-14">
-        <h2 className="font-news-sans border-b-2 border-black pb-2 text-sm font-bold uppercase tracking-[0.12em] dark:border-white">
-          More Headlines
-        </h2>
-        <Suspense fallback={<NewsMoreSkeleton />}>
-          <MoreHeadlines itemsPromise={rest} />
-        </Suspense>
+        <div className="mt-14">
+          <h2 className="font-news-sans border-b-2 border-[#990F3D] pb-2 text-sm font-bold uppercase tracking-[0.12em] dark:border-[#D75980]">
+            More Headlines
+          </h2>
+          <Suspense fallback={<NewsMoreSkeleton />}>
+            <MoreHeadlines itemsPromise={rest} />
+          </Suspense>
+        </div>
       </div>
     </div>
   );
@@ -75,7 +81,7 @@ async function FrontPage({ itemsPromise }: { itemsPromise: Promise<NewsItem[]> }
 
   if (items.length === 0) {
     return (
-      <p className="font-news-sans text-sm text-black/50 dark:text-white/50">
+      <p className="font-news-sans text-sm text-[#1A1210]/50 dark:text-[#F2E9E2]/50">
         No items fetched yet — outlet feeds may be unreachable from this environment, or none
         matched. See packages/sources/news/src/outlets.ts.
       </p>
@@ -113,11 +119,11 @@ async function FrontPage({ itemsPromise }: { itemsPromise: Promise<NewsItem[]> }
         <NewsCard item={hero} variant="hero" />
       </div>
       {secondary.length > 0 && (
-        <div className="flex flex-col lg:col-span-1 lg:border-l lg:border-black/15 lg:pl-8 lg:dark:border-white/15">
+        <div className="flex flex-col lg:col-span-1 lg:border-l lg:border-[#1A1210]/15 lg:pl-8 lg:dark:border-[#F2E9E2]/15">
           {secondary.map((item) => (
             <div
               key={item.url}
-              className="border-t border-black/10 py-6 first:border-t-0 first:pt-0 dark:border-white/10"
+              className="border-t border-[#1A1210]/10 py-6 first:border-t-0 first:pt-0 dark:border-[#F2E9E2]/10"
             >
               <NewsCard item={item} variant="secondary" />
             </div>
@@ -136,7 +142,7 @@ async function MoreHeadlines({ itemsPromise }: { itemsPromise: Promise<NewsItem[
   return (
     <ul className="mt-5 grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 xl:grid-cols-3">
       {items.map((item) => (
-        <li key={item.url} className="border-b border-black/10 pb-5 dark:border-white/10">
+        <li key={item.url} className="border-b border-[#1A1210]/10 pb-5 dark:border-[#F2E9E2]/10">
           <NewsCard item={item} variant="compact" />
         </li>
       ))}

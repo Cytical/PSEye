@@ -12,20 +12,25 @@ import { newsSerif, newsSans } from "./fonts";
  */
 export default function Loading() {
   return (
-    <div className={`${newsSerif.variable} ${newsSans.variable} mx-auto max-w-[1536px] px-4 py-8 sm:px-6`}>
-      <header className="border-b-4 border-black pb-3 dark:border-white">
-        <SkeletonBar className="h-3 w-40" />
-        <SkeletonBar className="mt-2 h-10 w-72" />
-        <SkeletonBar className="mt-2 h-4 w-full max-w-xl" />
-      </header>
+    // Same FT-paper background wrapper as app/news/page.tsx, so navigating
+    // to /news never flashes the old plain background before this skeleton
+    // (or the real page) paints.
+    <div className={`${newsSerif.variable} ${newsSans.variable} bg-[#FFF1E5] dark:bg-[#14100E]`}>
+      <div className="mx-auto max-w-[1536px] px-4 py-8 sm:px-6">
+        <header className="border-b-4 border-[#990F3D] pb-3 dark:border-[#D75980]">
+          <SkeletonBar className="h-3 w-40" />
+          <SkeletonBar className="mt-2 h-10 w-72" />
+          <SkeletonBar className="mt-2 h-4 w-full max-w-xl" />
+        </header>
 
-      <div className="mt-8">
-        <NewsFrontSkeleton />
-      </div>
+        <div className="mt-8">
+          <NewsFrontSkeleton />
+        </div>
 
-      <div className="mt-14">
-        <SkeletonBar className="h-4 w-40" />
-        <NewsMoreSkeleton />
+        <div className="mt-14">
+          <SkeletonBar className="h-4 w-40" />
+          <NewsMoreSkeleton />
+        </div>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import { TopMovers } from "./TopMovers";
 import { AddToWatchlistModal } from "./AddToWatchlistModal";
 import { ShareButton } from "./ShareButton";
 import { FullscreenButton } from "./FullscreenButton";
+import { CalendarDatePicker } from "@/components/CalendarDatePicker";
 import { MARKET_MAP_FILTERS, filterMarketMapStocks, type MarketMapFilter } from "@/lib/marketMapFilters";
 import { NASDAQ_100_STOCKS } from "@/lib/nasdaq100";
 import { useWatchlist } from "@/lib/watchlist";
@@ -256,21 +257,17 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {availableDates.length > 0 ? (
-          <label className="flex items-center gap-2 text-xs font-medium text-panel-fg/60">
+          <div className="flex items-center gap-2 text-xs font-medium text-panel-fg/60">
             <span className="kicker">Time machine</span>
-            <select
-              value={viewDate ?? ""}
-              onChange={(e) => selectDateInUrl(e.target.value || null)}
-              className="rounded-md bg-panel px-2 py-1.5 text-sm text-panel-fg shadow-sm shadow-black/5 ring-1 ring-panel-border"
-            >
-              <option value="">Today</option>
-              {availableDates.map((d) => (
-                <option key={d} value={d}>
-                  {formatPickerDate(d)}
-                </option>
-              ))}
-            </select>
-          </label>
+            <CalendarDatePicker
+              value={viewDate}
+              availableDates={availableDates}
+              onSelect={(iso) => selectDateInUrl(iso)}
+              onClear={() => selectDateInUrl(null)}
+              clearLabel="Today"
+              triggerLabel={viewDate ? formatPickerDate(viewDate) : "Today"}
+            />
+          </div>
         ) : (
           <span />
         )}

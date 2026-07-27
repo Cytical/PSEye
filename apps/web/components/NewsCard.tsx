@@ -6,7 +6,7 @@ const TRACKED_TICKERS = new Set(PSE_EDGE_COMPANIES.map((c) => c.ticker));
 
 type Variant = "hero" | "secondary" | "compact";
 
-/** "3h ago" style timestamp, matching the NYT/FT convention this redesign follows. */
+/** "3h ago" style timestamp, matching the FT convention this redesign follows. */
 function formatTimeAgo(date: Date): string {
   const diffMinutes = Math.round((Date.now() - date.getTime()) / 60_000);
   if (diffMinutes < 1) return "just now";
@@ -24,10 +24,13 @@ function kickerFor(item: NewsItem): string {
   return item.tickers[0] ?? "BUSINESS";
 }
 
+// FT house style: kickers run in claret with a thin claret rule beneath,
+// not plain black — see apps/web/app/news/page.tsx's palette comment for the
+// route-scoped hex values these mirror.
 function Kicker({ text, className = "" }: { text: string; className?: string }) {
   return (
     <p
-      className={`font-news-sans text-[11px] font-bold uppercase tracking-[0.1em] text-black/70 dark:text-white/70 ${className}`}
+      className={`font-news-sans inline-block border-b-2 border-[#990F3D] pb-0.5 text-[11px] font-bold uppercase tracking-[0.1em] text-[#990F3D] dark:border-[#D75980] dark:text-[#D75980] ${className}`}
     >
       {text}
     </p>
@@ -37,7 +40,7 @@ function Kicker({ text, className = "" }: { text: string; className?: string }) 
 function Byline({ item, className = "" }: { item: NewsItem; className?: string }) {
   return (
     <div
-      className={`font-news-sans mt-2 flex flex-wrap items-center gap-x-1.5 text-[11px] font-medium uppercase tracking-[0.04em] text-black/65 dark:text-white/65 ${className}`}
+      className={`font-news-sans mt-2 flex flex-wrap items-center gap-x-1.5 text-[11px] font-medium uppercase tracking-[0.04em] text-[#1A1210]/70 dark:text-[#F2E9E2]/70 ${className}`}
     >
       <span>{item.source}</span>
       <span aria-hidden>&middot;</span>
@@ -47,14 +50,14 @@ function Byline({ item, className = "" }: { item: NewsItem; className?: string }
           <Link
             key={ticker}
             href={`/stocks/${ticker}`}
-            className="border border-black/20 px-1 py-px font-mono text-[10px] tracking-normal text-black/60 hover:border-black/40 hover:text-black/90 dark:border-white/25 dark:text-white/60 dark:hover:border-white/50 dark:hover:text-white/90"
+            className="border border-[#990F3D]/40 px-1 py-px font-mono text-[10px] tracking-normal text-[#990F3D] hover:border-[#990F3D] hover:bg-[#990F3D]/10 dark:border-[#D75980]/45 dark:text-[#D75980] dark:hover:border-[#D75980] dark:hover:bg-[#D75980]/15"
           >
             {ticker}
           </Link>
         ) : (
           <span
             key={ticker}
-            className="border border-black/20 px-1 py-px font-mono text-[10px] tracking-normal text-black/60 dark:border-white/25 dark:text-white/60"
+            className="border border-[#990F3D]/25 px-1 py-px font-mono text-[10px] tracking-normal text-[#990F3D]/70 dark:border-[#D75980]/30 dark:text-[#D75980]/70"
           >
             {ticker}
           </span>
@@ -67,7 +70,7 @@ function Byline({ item, className = "" }: { item: NewsItem; className?: string }
 function Thumbnail({ item, className }: { item: NewsItem; className: string }) {
   if (!item.imageUrl) return null;
   return (
-    <div className={`shrink-0 overflow-hidden bg-black/5 dark:bg-white/10 ${className}`}>
+    <div className={`shrink-0 overflow-hidden bg-[#1A1210]/5 dark:bg-[#F2E9E2]/10 ${className}`}>
       {/* External, outlet-controlled hosts — next/image would need an
           unbounded remotePatterns allowlist for one <img>'s worth of value. */}
       <img
@@ -92,7 +95,7 @@ function HeroCard({ item }: { item: NewsItem }) {
         </h3>
       </a>
       {item.snippet && (
-        <p className="mt-3 font-[Georgia,'Times_New_Roman',serif] text-[17px] leading-relaxed text-black/80 line-clamp-3 dark:text-white/80">
+        <p className="mt-3 font-[Georgia,'Times_New_Roman',serif] text-[17px] leading-relaxed text-[#1A1210]/80 line-clamp-3 dark:text-[#F2E9E2]/80">
           {item.snippet}
         </p>
       )}
