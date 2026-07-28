@@ -47,7 +47,6 @@ export interface RecapNewsItem {
   title: string;
   url: string;
   source: string;
-  imageUrl: string | null;
 }
 
 export interface RecapActiveRow {
@@ -122,24 +121,12 @@ const MOVER_COUNT = 5;
 // meaningful range to actually zoom into rather than just a slightly longer
 // sparkline — one row/day in market_snapshot, so still a cheap query.
 const PSEI_HISTORY_DAYS = 90;
-const NEWS_COUNT = 2;
-
-/**
- * Same relevance rule /news's front page ranks by (see lib/news.ts's
- * rankByRelevance) — ticker-tagged stories (actually about a listed company)
- * lead, generic business news follows, each tier newest-first. Duplicated
- * rather than imported: that function isn't exported, and it's five lines
- * over a different row shape (NewsItem vs. this file's raw query rows).
- * Applied here so the share card's "top" 2 stories are the same ones a
- * visitor would see leading /news, not just whatever happened to publish
- * first in the day's date window.
- */
-function rankNewsByRelevance<T extends { tickers: string[]; publishedAt: Date }>(items: T[]): T[] {
-  const byDateDesc = [...items].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
-  const tagged = byDateDesc.filter((item) => item.tickers.length > 0);
-  const untagged = byDateDesc.filter((item) => item.tickers.length === 0);
-  return [...tagged, ...untagged];
-}
+// Not ticker-tagged-first the way /news's own front page ranks (see
+// lib/news.ts's rankByRelevance) — that prioritizes stories naming a
+// specific listed company, which skews narrower than "what's actually
+// relevant in PH news today." getNewsBetween already orders by publishedAt
+// descending, so plain recency across every tracked outlet is enough.
+const NEWS_COUNT = 4;
 
 /**
  * Everything the site recorded for one trading day, joined from the tables the
@@ -278,9 +265,7 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
         filedAt: r.filedAt.toISOString(),
         url: r.url,
       })),
-      news: rankNewsByRelevance(newsRows)
-        .slice(0, NEWS_COUNT)
-        .map((r) => ({ title: r.title, url: r.url, source: r.source, imageUrl: r.imageUrl })),
+      news: newsRows.slice(0, NEWS_COUNT).map((r) => ({ title: r.title, url: r.url, source: r.source })),
       prevDate,
       nextDate,
     };

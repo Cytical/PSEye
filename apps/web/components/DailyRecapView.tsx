@@ -155,7 +155,13 @@ function MostActiveList({ rows }: { rows: DailyRecap["mostActive"] }) {
  * table's own doc comment), not the full ~380-ticker board, so "all stocks"
  * here really means "all of what's tracked". Net buying grows left from a
  * center zero-line, net selling grows right, same convention the per-ticker
- * version this replaced used, just collapsed to the two totals.
+ * version this replaced used, just collapsed to the two totals. The single
+ * biggest buyer/seller are called out below the bar (buys/sells arrive
+ * ranked by |value| already, per getStockForeignFlowByDate's `orderBy(rank)`
+ * — first row is the biggest) — the aggregate alone left this panel visibly
+ * shorter than its row-mates (Sector Movers, Breadth Detail), and "who
+ * actually moved the most money" is a real, specific detail worth surfacing
+ * even after collapsing the rest to one number.
  */
 function ForeignFlowSummary({ buys, sells }: { buys: DailyRecap["foreignBuys"]; sells: DailyRecap["foreignSells"] }) {
   const buyTotal = buys.reduce((sum, r) => sum + r.netValue, 0);
@@ -164,6 +170,8 @@ function ForeignFlowSummary({ buys, sells }: { buys: DailyRecap["foreignBuys"]; 
   const maxAbs = Math.max(1, buyTotal, Math.abs(sellTotal));
   const buyPct = (buyTotal / maxAbs) * 50;
   const sellPct = (Math.abs(sellTotal) / maxAbs) * 50;
+  const topBuy = buys[0];
+  const topSell = sells[0];
 
   return (
     <div>
@@ -183,6 +191,35 @@ function ForeignFlowSummary({ buys, sells }: { buys: DailyRecap["foreignBuys"]; 
         <span style={{ color: UP }}>Buying {formatCompactPeso(buyTotal)}</span>
         <span style={{ color: DOWN }}>Selling {formatCompactPeso(Math.abs(sellTotal))}</span>
       </div>
+
+      {(topBuy || topSell) && (
+        <div className="mt-3 flex flex-col gap-1.5 border-t border-panel-border pt-2.5">
+          {topBuy && (
+            <div className="flex items-baseline justify-between text-[12px]">
+              <span className="text-panel-fg/65">Top buy</span>
+              <Link href={`/stocks/${topBuy.ticker}`} className="flex min-w-0 items-baseline gap-1.5 hover:underline">
+                <span className="truncate text-panel-fg/80">{topBuy.companyName}</span>
+                <span className="shrink-0 font-mono text-[11px] font-semibold text-panel-fg">{topBuy.ticker}</span>
+                <span className="shrink-0 font-medium tabular-nums" style={{ color: UP }}>
+                  +{formatCompactPeso(topBuy.netValue)}
+                </span>
+              </Link>
+            </div>
+          )}
+          {topSell && (
+            <div className="flex items-baseline justify-between text-[12px]">
+              <span className="text-panel-fg/65">Top sell</span>
+              <Link href={`/stocks/${topSell.ticker}`} className="flex min-w-0 items-baseline gap-1.5 hover:underline">
+                <span className="truncate text-panel-fg/80">{topSell.companyName}</span>
+                <span className="shrink-0 font-mono text-[11px] font-semibold text-panel-fg">{topSell.ticker}</span>
+                <span className="shrink-0 font-medium tabular-nums" style={{ color: DOWN }}>
+                  −{formatCompactPeso(Math.abs(topSell.netValue))}
+                </span>
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
