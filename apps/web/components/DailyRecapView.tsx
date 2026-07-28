@@ -183,6 +183,7 @@ function ForeignFlowSummary({
   sells: DailyRecap["foreignSells"];
   overview: DailyRecap["marketOverview"];
 }) {
+  const hasFlow = buys.length > 0 || sells.length > 0;
   const buyTotal = buys.reduce((sum, r) => sum + r.netValue, 0);
   const sellTotal = sells.reduce((sum, r) => sum + r.netValue, 0); // already negative per-row
   const net = buyTotal + sellTotal;
@@ -194,7 +195,7 @@ function ForeignFlowSummary({
 
   return (
     <div>
-      <div className="mb-3 grid grid-cols-2 gap-2 border-b border-panel-border pb-3">
+      <div className={hasFlow ? "mb-3 grid grid-cols-2 gap-2 border-b border-panel-border pb-3" : "grid grid-cols-2 gap-2"}>
         <StatTile label="Total Market Cap" value={formatCompactPeso(overview.totalMarketCap)} />
         <StatTile
           label="PSEi 1Y High / Low"
@@ -204,22 +205,33 @@ function ForeignFlowSummary({
         <StatTile label="PSEi 1Y Avg" value={formatIndexValue(overview.yearAvgPsei)} />
       </div>
 
-      <div className="flex items-baseline justify-between">
-        <span className="text-xs text-panel-fg/65">Net</span>
-        <span className="text-lg font-semibold tabular-nums" style={{ color: net >= 0 ? UP : DOWN }}>
-          {net >= 0 ? "+" : "−"}
-          {formatCompactPeso(Math.abs(net))}
-        </span>
-      </div>
-      <div className="relative mt-2 h-2 rounded-full bg-panel-border/60">
-        <div className="absolute inset-y-0 left-1/2 w-px bg-panel-border" />
-        <div className="absolute inset-y-0 rounded-l-full" style={{ right: "50%", width: `${buyPct}%`, background: UP }} />
-        <div className="absolute inset-y-0 rounded-r-full" style={{ left: "50%", width: `${sellPct}%`, background: DOWN }} />
-      </div>
-      <div className="mt-1.5 flex items-center justify-between text-[11px]">
-        <span style={{ color: UP }}>Buying {formatCompactPeso(buyTotal)}</span>
-        <span style={{ color: DOWN }}>Selling {formatCompactPeso(Math.abs(sellTotal))}</span>
-      </div>
+      {/* A genuine zero-net day is implausible for real foreign trading — an
+          empty buys/sells pair means this source has no data recorded for
+          the date, not that flow was exactly ₱0. Says so rather than
+          rendering a bar/Net/Buying/Selling row that would otherwise look
+          like a real (if boring) reading. */}
+      {!hasFlow ? (
+        <p className="mt-3 text-[12px] text-panel-fg/65">No foreign flow data recorded for this date.</p>
+      ) : (
+        <>
+          <div className="flex items-baseline justify-between">
+            <span className="text-xs text-panel-fg/65">Net</span>
+            <span className="text-lg font-semibold tabular-nums" style={{ color: net >= 0 ? UP : DOWN }}>
+              {net >= 0 ? "+" : "−"}
+              {formatCompactPeso(Math.abs(net))}
+            </span>
+          </div>
+          <div className="relative mt-2 h-2 rounded-full bg-panel-border/60">
+            <div className="absolute inset-y-0 left-1/2 w-px bg-panel-border" />
+            <div className="absolute inset-y-0 rounded-l-full" style={{ right: "50%", width: `${buyPct}%`, background: UP }} />
+            <div className="absolute inset-y-0 rounded-r-full" style={{ left: "50%", width: `${sellPct}%`, background: DOWN }} />
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-[11px]">
+            <span style={{ color: UP }}>Buying {formatCompactPeso(buyTotal)}</span>
+            <span style={{ color: DOWN }}>Selling {formatCompactPeso(Math.abs(sellTotal))}</span>
+          </div>
+        </>
+      )}
 
       {(topBuy || topSell) && (
         <div className="mt-3 flex flex-col gap-1.5 border-t border-panel-border pt-2.5">
@@ -384,7 +396,13 @@ export function DailyRecapView({
             <MostActiveList rows={recap.mostActive} />
           </Panel>
         )}
-        {(recap.foreignBuys.length > 0 || recap.foreignSells.length > 0) && (
+        {/* Gated on marketOverview too, not just foreign flow — the overview
+            stats (total market cap, PSEi averages/high-low) live in this
+            panel per request but don't actually depend on foreign-flow data
+            existing. Gating on foreign flow alone would have hidden them
+            entirely on any day that source came up empty, even though
+            they'd have been perfectly renderable. */}
+        {(recap.foreignBuys.length > 0 || recap.foreignSells.length > 0 || recap.marketOverview.totalMarketCap > 0) && (
           <Panel title="Foreign Fund Flow" moreHref="/foreign-flow">
             <ForeignFlowSummary buys={recap.foreignBuys} sells={recap.foreignSells} overview={recap.marketOverview} />
           </Panel>

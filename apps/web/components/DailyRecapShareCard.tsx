@@ -78,7 +78,9 @@ export function DailyRecapShareCard({
       </div>
 
       {snapshot ? (
-        <div className="mt-3 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-[7fr_3fr]">
+        <div
+          className={`mt-3 grid grid-cols-1 gap-x-8 gap-y-4 ${news.length > 0 ? "sm:grid-cols-[7fr_3fr]" : ""}`}
+        >
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
               <span className="text-xs text-panel-fg/50">PSEi</span>

@@ -104,6 +104,8 @@ export async function getMarketAnalytics(): Promise<MarketAnalytics> {
   // by sector (not just the leaderboard's top 40 rows) for a fuller signal.
   const bySector = new Map<string, DatedReturn[][]>();
   for (const q of withHistory) {
+    // SME Board excluded for now — see sectorSlug.ts's VISIBLE_SECTORS for why.
+    if (q.sector === "SME Board") continue;
     let series = bySector.get(q.sector);
     if (!series) {
       series = [];

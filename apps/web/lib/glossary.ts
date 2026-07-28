@@ -79,7 +79,7 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     id: "sector",
     term: "Sector",
     definition:
-      "The industry group a listed company belongs to under PSE's own classification — Financials, Industrial, Holding Firms, Property, Services, Mining & Oil, plus the SME Board and equity ETFs tracked separately from the six main boards.",
+      "The industry group a listed company belongs to under PSE's own classification — Financials, Industrial, Holding Firms, Property, Services, Mining & Oil, plus equity ETFs tracked separately from the six main boards. (PSE's SME Board listing tier is excluded from sector browsing for now.)",
     related: [{ href: "/sectors", label: "Browse by sector" }],
   },
   {
