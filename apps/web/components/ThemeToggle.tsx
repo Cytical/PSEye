@@ -29,10 +29,9 @@ export function ThemeToggle() {
           aria-label={`${label} theme`}
           aria-pressed={active === value}
           title={label}
-          // The active swatch depends on the client's real theme, which the
-          // pre-hydration script may already have changed away from the
-          // server's "light" default (e.g. system dark mode) — expected
-          // per Next's inline-script theming pattern, not a real mismatch.
+          // Same client-theme-vs-server-default reasoning as the span below —
+          // aria-pressed is also active-dependent, so it needs its own
+          // suppression on this element.
           suppressHydrationWarning
           // The button is 24px (meets the 24x24 minimum touch-target size)
           // even though the visible swatch inside stays a small 16px dot —
@@ -41,6 +40,13 @@ export function ThemeToggle() {
           className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition hover:scale-110"
         >
           <span
+            // The active swatch depends on the client's real theme, which the
+            // pre-hydration script may already have changed away from the
+            // server's "dark" default (e.g. a stored/system light preference)
+            // — expected per Next's inline-script theming pattern, not a real
+            // mismatch. Lives on this span (not the button above) because
+            // that's where the active-dependent className actually is now.
+            suppressHydrationWarning
             className={`h-4 w-4 rounded-full border transition ${
               active === value
                 ? "border-foreground/60 ring-2 ring-offset-2 ring-offset-background ring-foreground/50"

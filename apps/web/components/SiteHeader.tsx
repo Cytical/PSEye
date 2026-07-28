@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { NavLinks } from "./NavLinks";
 import { TickerSearch } from "./TickerSearch";
@@ -16,9 +16,32 @@ import { Logo } from "./Logo";
  */
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Same close-on-outside-click/Escape contract as NavLinks' NavDropdown and
+  // CalendarDatePicker — without it, this was the one disclosure on the site
+  // that only closed by tapping a link inside it or the toggle button again.
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: PointerEvent) {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-foreground/10 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/75">
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-30 border-b border-foreground/10 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/75"
+    >
       {/* max-w matches page.tsx's widest content container (the market map) so the
           header never reads as narrower than the page below it. Fixed h-16 (rather
           than py-N) so other pages can reliably offset sticky elements below the
