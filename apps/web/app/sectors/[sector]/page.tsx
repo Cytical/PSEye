@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PSE_SECTORS } from "@pseye/source-quotes";
 import { getRankings } from "@/lib/rankings";
 import { RankingsTable } from "@/components/RankingsTable";
-import { sectorToSlug, slugToSector } from "@/lib/sectorSlug";
+import { sectorToSlug, slugToSector, VISIBLE_SECTORS } from "@/lib/sectorSlug";
 
 export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as /rankings
 
 export function generateStaticParams() {
-  return PSE_SECTORS.map((sector) => ({ sector: sectorToSlug(sector) }));
+  return VISIBLE_SECTORS.map((sector) => ({ sector: sectorToSlug(sector) }));
 }
 
 /** Peso market cap, abbreviated — same formatter as RankingsTable/ScreenerTable. */

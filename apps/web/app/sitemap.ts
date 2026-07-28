@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
-import { PSE_EDGE_COMPANIES, PSE_SECTORS } from "@pseye/source-quotes";
+import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 import { getRecentRecapDates } from "@/lib/dailyRecap";
-import { sectorToSlug } from "@/lib/sectorSlug";
+import { sectorToSlug, VISIBLE_SECTORS } from "@/lib/sectorSlug";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -86,8 +86,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  // One entry per sector (see app/sectors/[sector]/page.tsx).
-  const sectorEntries = PSE_SECTORS.map((sector) => ({
+  // One entry per sector (see app/sectors/[sector]/page.tsx). VISIBLE_SECTORS,
+  // not PSE_SECTORS — SME Board isn't linked or statically generated right now.
+  const sectorEntries = VISIBLE_SECTORS.map((sector) => ({
     url: `${SITE_URL}/sectors/${sectorToSlug(sector)}`,
     lastModified: latestQuoteDate,
     changeFrequency: "daily" as const,

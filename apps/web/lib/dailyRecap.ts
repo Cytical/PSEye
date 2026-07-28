@@ -62,6 +62,19 @@ export interface RecapSectorMove {
   count: number;
 }
 
+export interface RecapMarketOverview {
+  /** Sum of every tracked company's market cap that day — a real total, not an index. */
+  totalMarketCap: number;
+  /** Trailing ~1-month and ~1-year average PSEi close, null when there isn't enough history yet. */
+  monthAvgPsei: number | null;
+  yearAvgPsei: number | null;
+  /** Highest/lowest PSEi close over the trailing ~1 year on record (not intraday — market_snapshot
+   * only ever stores one close per day, so "high/low" here means across days, same "52-week"
+   * framing the glossary already uses for individual stocks, just applied to the index). */
+  yearHighPsei: number | null;
+  yearLowPsei: number | null;
+}
+
 export interface PseiHistoryPoint {
   date: string;
   pseiValue: number;
@@ -94,6 +107,7 @@ export interface DailyRecap {
   /** Average % move per sector that traded — the market-wide breadth stat,
    * cut by sector instead of collapsed into one number. */
   sectorMoves: RecapSectorMove[];
+  marketOverview: RecapMarketOverview;
   foreignBuys: RecapFlowRow[];
   foreignSells: RecapFlowRow[];
   blockSales: RecapBlockSale[];
@@ -117,10 +131,16 @@ function previousDateString(date: string): string {
 }
 
 const MOVER_COUNT = 5;
-// 90 (vs. the original 30) gives the now-zoomable PseiTrendChart a
-// meaningful range to actually zoom into rather than just a slightly longer
-// sparkline — one row/day in market_snapshot, so still a cheap query.
-const PSEI_HISTORY_DAYS = 90;
+// The share card's chart only ever shows the trailing slice below — one
+// row/day in market_snapshot, so fetching a full trailing year (~252 trading
+// days; 260 for margin) to also cover the month/year-average and 52-week
+// high/low stats is still a cheap, single indexed query, not two.
+const PSEI_HISTORY_DAYS = 260;
+// The chart's own trailing window — 90 (vs. the original 30) gives the
+// zoomable PseiTrendChart a meaningful range to actually zoom into rather
+// than just a slightly longer sparkline.
+const PSEI_CHART_DAYS = 90;
+const PSEI_MONTH_TRADING_DAYS = 21;
 // Not ticker-tagged-first the way /news's own front page ranks (see
 // lib/news.ts's rankByRelevance) — that prioritizes stories naming a
 // specific listed company, which skews narrower than "what's actually
@@ -194,7 +214,8 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
     const sectorTotals = new Map<string, { total: number; count: number }>();
     for (const r of traded) {
       const sector = SECTOR_BY_TICKER.get(r.ticker);
-      if (!sector) continue;
+      // SME Board excluded for now — see sectorSlug.ts's VISIBLE_SECTORS for why.
+      if (!sector || sector === "SME Board") continue;
       const cur = sectorTotals.get(sector) ?? { total: 0, count: 0 };
       cur.total += r.pctChange;
       cur.count += 1;
@@ -203,6 +224,17 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
     const sectorMoves = [...sectorTotals.entries()]
       .map(([sector, { total, count }]) => ({ sector, avgPctChange: total / count, count }))
       .sort((a, b) => b.avgPctChange - a.avgPctChange);
+
+    const totalMarketCap = quoteRows.reduce((sum, r) => sum + Number(r.marketCap ?? 0), 0);
+    const yearPseiValues = historyRows.map((r) => Number(r.pseiValue));
+    const monthPseiValues = yearPseiValues.slice(-PSEI_MONTH_TRADING_DAYS);
+    const marketOverview: RecapMarketOverview = {
+      totalMarketCap,
+      monthAvgPsei: monthPseiValues.length ? mean(monthPseiValues) : null,
+      yearAvgPsei: yearPseiValues.length ? mean(yearPseiValues) : null,
+      yearHighPsei: yearPseiValues.length ? Math.max(...yearPseiValues) : null,
+      yearLowPsei: yearPseiValues.length ? Math.min(...yearPseiValues) : null,
+    };
 
     const todayPct = traded.map((r) => r.pctChange);
     const breadth =
@@ -237,7 +269,9 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
           }
         : null,
       breadth,
-      pseiHistory: historyRows.map((r) => ({ date: r.snapshotDate, pseiValue: Number(r.pseiValue) })),
+      pseiHistory: historyRows
+        .slice(-PSEI_CHART_DAYS)
+        .map((r) => ({ date: r.snapshotDate, pseiValue: Number(r.pseiValue) })),
       gainers: byPctDesc.filter((r) => r.pctChange > 0).slice(0, MOVER_COUNT),
       losers: byPctDesc
         .filter((r) => r.pctChange < 0)
@@ -245,6 +279,7 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
         .reverse(),
       mostActive,
       sectorMoves,
+      marketOverview,
       foreignBuys: flowRows
         .filter((r) => r.netValue > 0)
         .map((r) => ({ ticker: r.ticker, companyName: r.companyName, netValue: r.netValue })),

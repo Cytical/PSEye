@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PSE_SECTORS } from "@pseye/source-quotes";
 import { getRankings } from "@/lib/rankings";
-import { sectorToSlug } from "@/lib/sectorSlug";
+import { sectorToSlug, VISIBLE_SECTORS } from "@/lib/sectorSlug";
 
 export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as /rankings
 
 export const metadata: Metadata = {
   title: "PSE Sectors — Browse Philippine Stocks by Industry",
   description:
-    "Every PSE-listed company grouped by sector — Financials, Industrial, Holding Firms, Property, Services, Mining & Oil, SME Board, and ETFs — ranked by market cap. Free, no login.",
+    "Every PSE-listed company grouped by sector — Financials, Industrial, Holding Firms, Property, Services, Mining & Oil, and ETFs — ranked by market cap. Free, no login.",
   alternates: { canonical: "/sectors" },
 };
 
@@ -24,7 +23,7 @@ function formatMarketCap(value: number): string {
 export default async function SectorsPage() {
   const { rows } = await getRankings();
 
-  const sectors = PSE_SECTORS.map((sector) => {
+  const sectors = VISIBLE_SECTORS.map((sector) => {
     const sectorRows = rows.filter((r) => r.sector === sector);
     const totalMarketCap = sectorRows.reduce((sum, r) => sum + r.marketCap, 0);
     return { sector, slug: sectorToSlug(sector), count: sectorRows.length, totalMarketCap };

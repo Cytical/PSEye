@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { PSE_SECTORS } from "@pseye/source-quotes";
 import type { ScreenerRow } from "@/lib/screener";
 import { useWatchlist } from "@/lib/watchlist";
+import { VISIBLE_SECTORS } from "@/lib/sectorSlug";
 import { WatchlistStarButton } from "./WatchlistStarButton";
 
 type SortKey = "ticker" | "sector" | "price" | "pctChange" | "marketCap" | "yieldPct";
@@ -100,7 +100,7 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
           className="rounded-lg bg-panel px-3 py-2 text-sm text-panel-fg shadow-sm shadow-black/5 ring-1 ring-panel-border focus:outline-none focus:ring-2 focus:ring-panel-fg/30"
         >
           <option value="all">All sectors</option>
-          {PSE_SECTORS.map((s) => (
+          {VISIBLE_SECTORS.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>

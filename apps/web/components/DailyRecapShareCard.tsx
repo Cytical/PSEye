@@ -45,7 +45,11 @@ function MiniNewsList({ news }: { news: DailyRecap["news"] }) {
  * card's height. The right column shows a text-only news list rather than
  * top movers — movers already get their own panels in the dashboard row
  * below, and news doesn't appear anywhere else on this page, so it's the one
- * thing worth surfacing here that isn't duplicated.
+ * thing worth surfacing here that isn't duplicated. A 7fr/3fr grid (not
+ * flex-1 on both sides) fixes the split at 70/30 regardless of content —
+ * flex-grow distributes only the *leftover* space evenly between the two
+ * columns, so two different `basis` values don't actually produce a
+ * predictable ratio; `fr` tracks split the row itself.
  */
 export function DailyRecapShareCard({
   dateLabel,
@@ -74,8 +78,8 @@ export function DailyRecapShareCard({
       </div>
 
       {snapshot ? (
-        <div className="mt-3 flex flex-wrap gap-x-8 gap-y-4">
-          <div className="min-w-0 flex-1 basis-[320px]">
+        <div className="mt-3 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-[7fr_3fr]">
+          <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
               <span className="text-xs text-panel-fg/50">PSEi</span>
               <span className="text-4xl font-bold tabular-nums text-panel-fg sm:text-5xl">
@@ -110,7 +114,7 @@ export function DailyRecapShareCard({
           </div>
 
           {news.length > 0 && (
-            <div className="flex min-w-0 flex-1 basis-[220px]">
+            <div className="min-w-0">
               <MiniNewsList news={news} />
             </div>
           )}

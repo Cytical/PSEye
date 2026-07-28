@@ -39,9 +39,15 @@ function formatShortDate(iso: string): string {
 
 function formatCompactPeso(n: number): string {
   const abs = Math.abs(n);
+  if (abs >= 1e12) return `₱${(n / 1e12).toFixed(2)}T`;
   if (abs >= 1e9) return `₱${(n / 1e9).toFixed(2)}B`;
   if (abs >= 1e6) return `₱${(n / 1e6).toFixed(1)}M`;
   return `₱${Math.round(n).toLocaleString("en-PH")}`;
+}
+
+function formatIndexValue(n: number | null): string {
+  if (n == null) return "—";
+  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function pct2OrDash(n: number | null): string {
@@ -158,12 +164,25 @@ function MostActiveList({ rows }: { rows: DailyRecap["mostActive"] }) {
  * version this replaced used, just collapsed to the two totals. The single
  * biggest buyer/seller are called out below the bar (buys/sells arrive
  * ranked by |value| already, per getStockForeignFlowByDate's `orderBy(rank)`
- * — first row is the biggest) — the aggregate alone left this panel visibly
- * shorter than its row-mates (Sector Movers, Breadth Detail), and "who
- * actually moved the most money" is a real, specific detail worth surfacing
- * even after collapsing the rest to one number.
+ * — first row is the biggest).
+ *
+ * A market-overview stat grid sits above all of that — total tracked market
+ * cap plus the PSEi's own trailing 1-month/1-year average and 1-year
+ * high/low. Belongs here rather than its own panel: this was the one panel
+ * visibly shorter than its row-mates (Sector Movers, Breadth Detail) once
+ * the per-ticker flow list collapsed to an aggregate, and these are the same
+ * "index at a glance" family of stat as the flow numbers below them, just a
+ * longer time horizon.
  */
-function ForeignFlowSummary({ buys, sells }: { buys: DailyRecap["foreignBuys"]; sells: DailyRecap["foreignSells"] }) {
+function ForeignFlowSummary({
+  buys,
+  sells,
+  overview,
+}: {
+  buys: DailyRecap["foreignBuys"];
+  sells: DailyRecap["foreignSells"];
+  overview: DailyRecap["marketOverview"];
+}) {
   const buyTotal = buys.reduce((sum, r) => sum + r.netValue, 0);
   const sellTotal = sells.reduce((sum, r) => sum + r.netValue, 0); // already negative per-row
   const net = buyTotal + sellTotal;
@@ -175,6 +194,16 @@ function ForeignFlowSummary({ buys, sells }: { buys: DailyRecap["foreignBuys"]; 
 
   return (
     <div>
+      <div className="mb-3 grid grid-cols-2 gap-2 border-b border-panel-border pb-3">
+        <StatTile label="Total Market Cap" value={formatCompactPeso(overview.totalMarketCap)} />
+        <StatTile
+          label="PSEi 1Y High / Low"
+          value={`${formatIndexValue(overview.yearHighPsei)} / ${formatIndexValue(overview.yearLowPsei)}`}
+        />
+        <StatTile label="PSEi 1M Avg" value={formatIndexValue(overview.monthAvgPsei)} />
+        <StatTile label="PSEi 1Y Avg" value={formatIndexValue(overview.yearAvgPsei)} />
+      </div>
+
       <div className="flex items-baseline justify-between">
         <span className="text-xs text-panel-fg/65">Net</span>
         <span className="text-lg font-semibold tabular-nums" style={{ color: net >= 0 ? UP : DOWN }}>
@@ -357,7 +386,7 @@ export function DailyRecapView({
         )}
         {(recap.foreignBuys.length > 0 || recap.foreignSells.length > 0) && (
           <Panel title="Foreign Fund Flow" moreHref="/foreign-flow">
-            <ForeignFlowSummary buys={recap.foreignBuys} sells={recap.foreignSells} />
+            <ForeignFlowSummary buys={recap.foreignBuys} sells={recap.foreignSells} overview={recap.marketOverview} />
           </Panel>
         )}
         {recap.sectorMoves.length > 0 && (

@@ -200,8 +200,12 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
 
   const isPastView = viewDate !== null && pastView?.date === viewDate;
   const pastViewFailed = viewDate !== null && failedDate === viewDate && !isPastView;
-  /** What the map/filters/movers actually render — today's server-fetched quotes, or the fetched past day's. */
-  const baseStocks = isPastView ? pastView.stocks : stocks;
+  /** What the map/filters/movers actually render — today's server-fetched quotes, or the fetched
+   * past day's. SME Board excluded for now (removed from sector browsing generally — see
+   * sectorSlug.ts's VISIBLE_SECTORS) — filtered here rather than at the two upstream sources
+   * (app/page.tsx's SSR quotes, /api/market-map's time-machine fetch) so both paths stay
+   * consistent from one place instead of needing the same exclusion applied twice. */
+  const baseStocks = (isPastView ? pastView.stocks : stocks).filter((s) => s.sector !== "SME Board");
 
   // Viewing someone else's shared watchlist link, not the visitor's own —
   // takes priority over localStorage so opening a shared link never silently

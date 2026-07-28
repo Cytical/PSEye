@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PSE_SECTORS } from "@pseye/source-quotes";
 import { getRankings } from "@/lib/rankings";
 import { RankingsTable } from "@/components/RankingsTable";
+import { VISIBLE_SECTORS } from "@/lib/sectorSlug";
 
 export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as the screener/market map
 
@@ -18,7 +18,7 @@ const TOP_N = 100;
 export default async function RankingsPage() {
   const { rows, excludedCount } = await getRankings();
   const top100 = rows.slice(0, TOP_N);
-  const bySector = PSE_SECTORS.map((sector) => ({
+  const bySector = VISIBLE_SECTORS.map((sector) => ({
     sector,
     rows: rows.filter((r) => r.sector === sector),
   })).filter((group) => group.rows.length > 0);
