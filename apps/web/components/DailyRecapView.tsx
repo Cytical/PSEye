@@ -59,14 +59,30 @@ function pct2OrDash(n: number | null): string {
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <div className="text-[11px] text-panel-fg/68">{label}</div>
-      <div className="mt-0.5 text-lg font-semibold tabular-nums text-panel-fg">{value}</div>
+    <div className="rounded-lg bg-panel-raised p-2 ring-1 ring-panel-border">
+      <div className="text-[10px] text-panel-fg/68">{label}</div>
+      <div className="mt-0.5 text-sm font-semibold tabular-nums text-panel-fg">{value}</div>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+/**
+ * A dashboard tile. `scroll` caps the body at a fixed height with internal
+ * overflow instead of letting the list stretch the panel (and the page) —
+ * that's what lets the whole recap sit in a fixed-height grid without the
+ * page itself needing to scroll, only an individual overfull panel.
+ */
+function Panel({
+  title,
+  moreHref,
+  scroll,
+  children,
+}: {
+  title: string;
+  moreHref?: string;
+  scroll?: boolean;
+  children: ReactNode;
+}) {
   return (
     // min-w-0 because these are grid items, and a grid item's default
     // min-width: auto sizes the track to its content's min-content width. The
@@ -75,40 +91,29 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     // 58px. With the floor removed the track follows the container and the
     // links' existing `truncate` ellipsizes the names, which is what it was
     // always there to do.
-    <section className="min-w-0 rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <h2 className="kicker text-panel-fg/68">{title}</h2>
-      <div className="mt-3">{children}</div>
-    </section>
-  );
-}
-
-function MoverList({ movers }: { movers: DailyRecap["gainers"] }) {
-  return (
-    <ul className="flex flex-col gap-1.5">
-      {movers.map((m) => (
-        <li key={m.ticker} className="flex items-baseline justify-between gap-3 text-sm">
-          <Link href={`/stocks/${m.ticker}`} className="min-w-0 truncate hover:underline">
-            <span className="font-mono text-xs font-semibold text-panel-fg">{m.ticker}</span>
-            <span className="ml-2 text-panel-fg/72">{m.companyName}</span>
+    // flex-1 + a basis floor (rather than a grid track) so that when a row has
+    // fewer populated panels than the layout has room for — e.g. no foreign
+    // flow data that day — the panels that *do* exist stretch to fill the
+    // row's width instead of leaving a dead gap next to them.
+    <section className="flex min-w-0 flex-1 basis-[260px] flex-col rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="kicker text-panel-fg/68">{title}</h2>
+        {moreHref && (
+          <Link href={moreHref} className="shrink-0 text-[11px] text-panel-fg/65 hover:underline">
+            All →
           </Link>
-          <span
-            className="shrink-0 font-medium tabular-nums"
-            style={{ color: m.pctChange >= 0 ? UP : DOWN }}
-          >
-            {m.pctChange >= 0 ? "+" : ""}
-            {m.pctChange.toFixed(2)}%
-          </span>
-        </li>
-      ))}
-    </ul>
+        )}
+      </div>
+      <div className={scroll ? "mt-2 max-h-64 overflow-y-auto pr-1" : "mt-2"}>{children}</div>
+    </section>
   );
 }
 
 function FlowList({ rows }: { rows: DailyRecap["foreignBuys"] }) {
   return (
-    <ul className="flex flex-col gap-1.5">
+    <ul className="flex flex-col gap-1">
       {rows.slice(0, 5).map((r) => (
-        <li key={r.ticker} className="flex items-baseline justify-between gap-3 text-sm">
+        <li key={r.ticker} className="flex items-baseline justify-between gap-3 text-[13px]">
           <Link href={`/stocks/${r.ticker}`} className="min-w-0 truncate hover:underline">
             <span className="font-mono text-xs font-semibold text-panel-fg">{r.ticker}</span>
             <span className="ml-2 text-panel-fg/72">{r.companyName}</span>
@@ -132,11 +137,11 @@ export function DailyRecapView({
   const { snapshot, breadth } = recap;
 
   return (
-    <div className="mx-auto max-w-[1240px] px-4 py-8">
+    <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="kicker text-accent">Daily Recap</p>
-          <h1 className="mt-0.5 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">
+          <h1 className="mt-0.5 font-serif text-xl font-semibold tracking-tight text-panel-fg sm:text-2xl">
             {formatLongDate(recap.date)}
           </h1>
         </div>
@@ -174,24 +179,42 @@ export function DailyRecapView({
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4">
         <DailyRecapShareCard
           dateLabel={formatLongDate(recap.date)}
           snapshot={snapshot}
           breadth={breadth}
           pseiHistory={recap.pseiHistory}
+          gainers={recap.gainers}
+          losers={recap.losers}
         />
       </div>
 
-      <div className="mt-8 flex items-center gap-3">
-        <span className="kicker shrink-0 text-panel-fg/65">Full Recap</span>
-        <span className="h-px flex-1 bg-panel-border" />
+      {/* Two dashboard rows rather than the old full-width stacked sections —
+          each panel caps its list at a scrollable max height (see Panel's
+          `scroll` prop) so this layout's total height stays bounded
+          regardless of how many movers/disclosures/news items came in that
+          day, instead of the page growing with the data. flex-wrap (not a
+          fixed-column grid) so a row with fewer populated panels than usual
+          (e.g. no foreign flow that day) stretches the ones that do exist to
+          fill the row instead of leaving a dead gap. */}
+      <div className="mt-3 flex flex-wrap gap-3">
+        {recap.foreignBuys.length > 0 && (
+          <Panel title="Top Net Foreign Buying" scroll>
+            <FlowList rows={recap.foreignBuys} />
+          </Panel>
+        )}
+        {recap.foreignSells.length > 0 && (
+          <Panel title="Top Net Foreign Selling" scroll>
+            <FlowList rows={recap.foreignSells} />
+          </Panel>
+        )}
       </div>
 
-      {breadth && breadth.histogram.length > 1 && (
-        <div className="mt-3">
-          <Section title="Breadth Detail">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-3 flex flex-wrap gap-3">
+        {breadth && breadth.histogram.length > 1 && (
+          <Panel title="Breadth Detail">
+            <div className="grid grid-cols-2 gap-2">
               <StatTile label="Median move" value={pct2OrDash(breadth.medianMove)} />
               <StatTile label="Average move" value={pct2OrDash(breadth.meanMove)} />
               <StatTile
@@ -203,47 +226,21 @@ export function DailyRecapView({
                 value={breadth.positivePct == null ? "—" : `${breadth.positivePct.toFixed(0)}%`}
               />
             </div>
-            <div className="mt-3">
-              <p className="mb-1 text-xs text-panel-fg/68">Distribution of that day&apos;s % change</p>
+            <div className="mt-2">
               <MarketHistogram
                 bins={breadth.histogram}
                 colorSplit={0}
                 formatX={(x) => `${x >= 0 ? "+" : ""}${x.toFixed(1)}%`}
               />
             </div>
-          </Section>
-        </div>
-      )}
+          </Panel>
+        )}
 
-      <div className="mt-3 grid gap-3 lg:grid-cols-2">
-        {recap.gainers.length > 0 && (
-          <Section title="Top Gainers">
-            <MoverList movers={recap.gainers} />
-          </Section>
-        )}
-        {recap.losers.length > 0 && (
-          <Section title="Top Losers">
-            <MoverList movers={recap.losers} />
-          </Section>
-        )}
-        {recap.foreignBuys.length > 0 && (
-          <Section title="Top Net Foreign Buying">
-            <FlowList rows={recap.foreignBuys} />
-          </Section>
-        )}
-        {recap.foreignSells.length > 0 && (
-          <Section title="Top Net Foreign Selling">
-            <FlowList rows={recap.foreignSells} />
-          </Section>
-        )}
-      </div>
-
-      {recap.blockSales.length > 0 && (
-        <div className="mt-3">
-          <Section title={`Block Sales (${recap.blockSales.length})`}>
-            <ul className="flex flex-col gap-1.5">
-              {recap.blockSales.slice(0, 8).map((t, i) => (
-                <li key={`${t.ticker}-${i}`} className="flex items-baseline justify-between gap-3 text-sm">
+        {recap.blockSales.length > 0 && (
+          <Panel title={`Block Sales (${recap.blockSales.length})`} scroll moreHref="/block-sales">
+            <ul className="flex flex-col gap-1">
+              {recap.blockSales.map((t, i) => (
+                <li key={`${t.ticker}-${i}`} className="flex items-baseline justify-between gap-3 text-[13px]">
                   <Link href={`/stocks/${t.ticker}`} className="min-w-0 truncate hover:underline">
                     <span className="font-mono text-xs font-semibold text-panel-fg">{t.ticker}</span>
                     <span className="ml-2 text-panel-fg/72">
@@ -254,24 +251,15 @@ export function DailyRecapView({
                 </li>
               ))}
             </ul>
-            {recap.blockSales.length > 8 && (
-              <p className="mt-2 text-xs text-panel-fg/68">
-                <Link href="/block-sales" className="hover:underline">
-                  All recent block sales →
-                </Link>
-              </p>
-            )}
-          </Section>
-        </div>
-      )}
+          </Panel>
+        )}
 
-      {recap.disclosures.length > 0 && (
-        <div className="mt-3">
-          <Section title={`Disclosures Filed (${recap.disclosures.length})`}>
-            <ul className="flex flex-col gap-2">
-              {recap.disclosures.slice(0, 12).map((d, i) => (
-                <li key={i} className="flex items-baseline gap-3 text-sm">
-                  <span className="shrink-0 text-xs tabular-nums text-panel-fg/65">{formatManilaTime(d.filedAt)}</span>
+        {recap.disclosures.length > 0 && (
+          <Panel title={`Disclosures (${recap.disclosures.length})`} scroll moreHref="/disclosures">
+            <ul className="flex flex-col gap-1.5">
+              {recap.disclosures.map((d, i) => (
+                <li key={i} className="flex items-baseline gap-2 text-[13px]">
+                  <span className="shrink-0 text-[11px] tabular-nums text-panel-fg/65">{formatManilaTime(d.filedAt)}</span>
                   <Link href={`/stocks/${d.ticker}`} className="shrink-0 font-mono text-xs font-semibold text-panel-fg hover:underline">
                     {d.ticker}
                   </Link>
@@ -290,35 +278,26 @@ export function DailyRecapView({
                 </li>
               ))}
             </ul>
-            {recap.disclosures.length > 12 && (
-              <p className="mt-2 text-xs text-panel-fg/68">
-                <Link href="/disclosures" className="hover:underline">
-                  All disclosures →
-                </Link>
-              </p>
-            )}
-          </Section>
-        </div>
-      )}
+          </Panel>
+        )}
 
-      {recap.news.length > 0 && (
-        <div className="mt-3">
-          <Section title="In the News">
-            <ul className="flex flex-col gap-2">
+        {recap.news.length > 0 && (
+          <Panel title="In the News" scroll>
+            <ul className="flex flex-col gap-1.5">
               {recap.news.map((n) => (
-                <li key={n.url} className="text-sm">
+                <li key={n.url} className="text-[13px]">
                   <a href={n.url} target="_blank" rel="noopener noreferrer" className="text-panel-fg/80 hover:underline">
                     {n.title}
                   </a>
-                  <span className="ml-2 text-xs text-panel-fg/65">{n.source}</span>
+                  <span className="ml-2 text-[11px] text-panel-fg/65">{n.source}</span>
                 </li>
               ))}
             </ul>
-          </Section>
-        </div>
-      )}
+          </Panel>
+        )}
+      </div>
 
-      <p className="mt-6 text-xs text-panel-fg/68">
+      <p className="mt-3 text-xs text-panel-fg/68">
         Generated from data recorded by PSEye&apos;s own pipeline on this date — sections without
         recorded data are omitted rather than estimated.
       </p>

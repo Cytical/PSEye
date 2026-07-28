@@ -1,16 +1,25 @@
 name: Fetch block sales (daily, post-report)
 
 # Block sales are extracted from PSE's Daily Quotation Report PDF ("End of Day
-# Quotes" on pse.com.ph/market-report/), which PSE only publishes ~9:30pm PHT
-# — hours after the 3:30pm close and after the other daily sources (which run
-# in fetch-daily.yml at ~4:20pm PHT). So this runs on its own at 13:30 UTC
-# (~9:30pm PHT), weekdays. It still populates the SAME Manila-day recap: block
-# sales are keyed by the report's own trade date (parsed from the PDF
-# filename), not by when this job runs. Split out of fetch-daily.yml
-# 2026-07-21 so that job could move earlier without waiting on this PDF.
+# Quotes" on pse.com.ph/market-report/). This used to run at 13:30 UTC
+# (~9:30pm PHT) on the assumption PSE only publishes "hours after" the 3:30pm
+# close — that assumption was never actually checked and was wrong. 2026-07-28:
+# checked the PDF's own `Last-Modified` header across 5 separate trading days
+# and it lands at 07:30-07:45 UTC every time (3:30-3:45pm PHT) — i.e. within
+# ~15 minutes of the close, not hours after. Moved to 08:00 UTC, a 15-minute
+# buffer past the latest observed upload, which also means this can now land
+# in roughly the same evening window as fetch-daily.yml (~4:20pm PHT) instead
+# of ~5 hours later. If GitHub's documented scheduled-run delay for this
+# repo's daily crons (see fetch-daily.yml's own doc comment — observed
+# 1h40m-2h15m) shows up here too, compensate by shifting the cron earlier,
+# same fix applied there. Split out of fetch-daily.yml 2026-07-21 so that job
+# could move earlier without waiting on this PDF — still true, just less of a
+# gap now. Still populates the SAME Manila-day recap either way: block sales
+# are keyed by the report's own trade date (parsed from the PDF filename),
+# not by when this job runs.
 on:
   schedule:
-    - cron: "30 13 * * 1-5" # ~9:30pm PHT (UTC+8), weekdays
+    - cron: "0 8 * * 1-5" # ~4:00pm PHT (UTC+8), weekdays
   workflow_dispatch: {}
 
 jobs:

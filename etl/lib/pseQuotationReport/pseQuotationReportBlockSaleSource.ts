@@ -16,12 +16,10 @@ const USER_AGENT =
  */
 const REQUEST_HEADERS = { "User-Agent": USER_AGENT, Accept: "text/html,application/pdf,*/*" };
 
-const REPORT_PAGE_URL = "https://www.pse.com.ph/market-report/";
-
-const MONTHS: Record<string, number> = {
-  January: 0, February: 1, March: 2, April: 3, May: 4, June: 5,
-  July: 6, August: 7, September: 8, October: 9, November: 10, December: 11,
-};
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 export interface BlockSalesReport {
   tradeDate: string; // YYYY-MM-DD
@@ -36,15 +34,25 @@ export interface BlockSalesReport {
  * parseQuotationReportPdf.ts for why both need position-based PDF parsing,
  * and for why per-stock foreign flow lives in the same report). Both are
  * parsed from one PDF fetch — pse.com.ph's WAF is already flaky enough
- * without a second request for data that's sitting in the same file. The
- * report's own filename encodes the date (`Month D, YYYY-EOD.pdf`, e.g.
- * "June 30, 2026-EOD.pdf"), but that date isn't predictable in advance (PSE
- * doesn't publish on weekends/holidays, and publication can lag by a day) —
- * so this discovers the link from the market-report page's own HTML instead
- * of guessing a URL, same approach as PseMarketWatchForeignFlowSource.
+ * without a second request for data that's sitting in the same file.
  *
  * The report has no per-row trade date (one PDF = one trading day), so the
  * date comes from the filename, not the table itself.
+ *
+ * 2026-07-28: switched from scraping the market-report page's HTML for the
+ * link to constructing the PDF URL directly from the trade date. That page
+ * now populates its report table via a client-side AJAX call (WordPress
+ * "Posts Table Pro"), so a plain HTTP GET — no JS execution — sees an empty
+ * table shell and never finds a link; confirmed live (a bare fetch of the
+ * page has zero occurrences of "-EOD.pdf" in the response body, while a real
+ * browser resolves the row within ~3s of load). Unlike the weekly Market
+ * Watch PDF's unpredictable week number, this report's filename is fully
+ * determined by the trade date (`<Month> <DD>, <YYYY>-EOD.pdf`, day always
+ * zero-padded — confirmed live both ways, "July 1" 404s, "July 01" 200s), so
+ * there's nothing to discover: this builds the URL for Manila "today" and
+ * walks backward a few calendar days (skipping to the most recent day that
+ * exists) to cover weekends, holidays, and late publication without needing
+ * to know PSE's trading calendar.
  *
  * Only returns the single latest trading day (not a deep backfill). Meant
  * for a daily-cadence ETL job (etl/jobs/fetch-block-sales.ts); the DB
@@ -70,14 +78,40 @@ export class PseQuotationReportBlockSaleSource {
   }
 
   private async findLatestReportUrl(): Promise<{ url: string; tradeDate: string } | null> {
+    const manilaParts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Manila",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(new Date());
+    const get = (type: string) => Number(manilaParts.find((p) => p.type === type)?.value);
+    const todayUtcMidnight = Date.UTC(get("year"), get("month") - 1, get("day"));
+
+    // Walk back up to 7 calendar days — covers weekends and the rare holiday
+    // or late-publication day without needing PSE's trading calendar.
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(todayUtcMidnight - i * 86_400_000);
+      const candidate = quotationReportUrlForDate(d);
+      if (await this.reportExists(candidate.url)) return candidate;
+    }
+    return null;
+  }
+
+  /**
+   * A plain HEAD, not fetchWithRetry — a 404 here just means this candidate
+   * calendar day never had a report (weekend/holiday), which is the expected
+   * outcome for most of the backward walk, not the WAF flakiness
+   * fetchWithRetry exists to paper over. Retrying a real 404 four times per
+   * candidate day would needlessly hammer the server on every non-trading
+   * day in the lookback window.
+   */
+  private async reportExists(url: string): Promise<boolean> {
     try {
-      const res = await fetchWithRetry(REPORT_PAGE_URL, { headers: REQUEST_HEADERS });
-      if (!res) return null;
-      const html = await res.text();
-      return latestQuotationReportLink(html);
+      const res = await fetch(url, { method: "HEAD", headers: REQUEST_HEADERS });
+      return res.ok;
     } catch (err) {
-      console.error("PseQuotationReportBlockSaleSource: market-report page fetch failed", err);
-      return null;
+      console.error(`PseQuotationReportBlockSaleSource: HEAD check failed for ${url}`, err);
+      return false;
     }
   }
 
@@ -93,30 +127,12 @@ export class PseQuotationReportBlockSaleSource {
   }
 }
 
-/**
- * Picks the newest `.../market_report/<Month> <D>, <YYYY>-EOD.pdf` link on
- * the market-report page — the page lists many months of history, newest
- * and oldest mixed together (same reason latestMarketWatchLink can't just
- * take "the last link on the page").
- */
-export function latestQuotationReportLink(html: string): { url: string; tradeDate: string } | null {
-  const matches = [
-    ...html.matchAll(
-      /href="(https:\/\/documents\.pse\.com\.ph\/market_report\/([A-Za-z]+) (\d{1,2}), (\d{4})-EOD\.pdf)"/g
-    ),
-  ];
-  if (matches.length === 0) return null;
-
-  let best: { url: string; tradeDate: string; time: number } | null = null;
-  for (const m of matches) {
-    const month = MONTHS[m[2]];
-    if (month === undefined) continue;
-    const day = Number(m[3]);
-    const year = Number(m[4]);
-    const time = Date.UTC(year, month, day);
-    if (!best || time > best.time) {
-      best = { url: m[1], tradeDate: new Date(time).toISOString().slice(0, 10), time };
-    }
-  }
-  return best ? { url: best.url, tradeDate: best.tradeDate } : null;
+/** Builds the deterministic report URL/trade-date pair for one UTC-midnight-normalized date. */
+export function quotationReportUrlForDate(d: Date): { url: string; tradeDate: string } {
+  const monthName = MONTH_NAMES[d.getUTCMonth()];
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const year = d.getUTCFullYear();
+  const url = `https://documents.pse.com.ph/market_report/${monthName}%20${day},%20${year}-EOD.pdf`;
+  const tradeDate = `${year}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${day}`;
+  return { url, tradeDate };
 }

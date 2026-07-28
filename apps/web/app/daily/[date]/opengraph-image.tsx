@@ -59,7 +59,7 @@ export default async function Image({ params }: { params: Promise<{ date: string
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <LogoMark size={32} />
           <span style={{ fontSize: 28, fontWeight: 700, color: "#ffffff" }}>PSEye</span>
-          <span style={{ fontSize: 22, color: MUTED, marginLeft: 6 }}>PSE Daily Recap</span>
+          <span style={{ fontSize: 22, color: MUTED, marginLeft: 6 }}>Daily Recap</span>
         </div>
 
         <span style={{ fontSize: 40, fontWeight: 600, color: "#ffffff", marginTop: 28 }}>
