@@ -70,7 +70,7 @@ export function StockStatistics({
   const maxYears = Math.max(0, ...monthly.map((m) => m.years));
 
   return (
-    <div className="mt-8">
+    <div>
       <div className="flex items-baseline justify-between">
         <h2 className="kicker text-panel-fg/68">Statistical profile</h2>
         <span className="text-[11px] text-panel-fg/65">{returns.length + 1} daily closes</span>

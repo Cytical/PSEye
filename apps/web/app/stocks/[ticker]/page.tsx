@@ -219,7 +219,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
       <RecordStockView ticker={ticker} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
@@ -274,7 +274,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
         <Stat label="Price" value={quote?.price == null ? "N/A" : formatPeso(quote.price)} />
         <Stat
           label="Today"
@@ -304,8 +304,9 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         )}
       </div>
 
+      <div className="stock-detail-grid mt-6">
       {closes.length >= 2 && (
-        <div className="mt-6">
+        <div className="[grid-area:chart]">
           <h2 className="kicker text-panel-fg/68">Closing price, last {HISTORY_LOOKBACK_DAYS} days</h2>
           <div className="mt-2 rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
             <StockPriceChart closes={closes} />
@@ -313,12 +314,20 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         </div>
       )}
 
-      {yearCloses.length >= 21 && <StockAnalytics closes={yearCloses} />}
+      {yearCloses.length >= 21 && (
+        <div className="[grid-area:analytics]">
+          <StockAnalytics closes={yearCloses} />
+        </div>
+      )}
 
-      {yearCloses.length >= 31 && <StockStatistics closes={yearCloses} dividend={dividendSummary} />}
+      {yearCloses.length >= 31 && (
+        <div className="[grid-area:statistics]">
+          <StockStatistics closes={yearCloses} dividend={dividendSummary} />
+        </div>
+      )}
 
       {profile && (
-        <div className="mt-6">
+        <div className="[grid-area:about]">
           <h2 className="kicker text-panel-fg/68">About</h2>
           <div className="mt-2 flex flex-col gap-2.5">
             {profile.description.split("\n\n").map((paragraph, i) => (
@@ -332,7 +341,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       )}
 
       {sectorPeers.length > 0 && (
-        <div className="mt-8">
+        <div className="[grid-area:peers]">
           <h2 className="kicker text-panel-fg/68">Sector peers</h2>
           <ul className="mt-2 flex flex-col divide-y divide-panel-border rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
             {sectorPeers.map((peer) => (
@@ -374,7 +383,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         </div>
       )}
 
-      <div className="mt-8 grid gap-6 sm:grid-cols-2">
+      <div className="[grid-area:discl] grid gap-6 sm:grid-cols-2">
         <div>
           <h2 className="kicker text-panel-fg/68">Recent disclosures</h2>
           {companyDisclosures.length > 0 ? (
@@ -456,7 +465,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       </div>
 
       {news.length > 0 && (
-        <div className="mt-8">
+        <div className="[grid-area:news]">
           <h2 className="kicker text-panel-fg/68">In the news</h2>
           <ul className="mt-2 flex flex-col gap-2.5">
             {news.map((item) => (
@@ -473,7 +482,10 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         </div>
       )}
 
-      <RecentlyViewed excludeTicker={ticker} />
+      <div className="[grid-area:recent]">
+        <RecentlyViewed excludeTicker={ticker} />
+      </div>
+      </div>
 
       <p className="mt-8 text-xs text-panel-fg/72">
         Delayed/EOD data, not real-time. Not financial advice, a stock pick, or a

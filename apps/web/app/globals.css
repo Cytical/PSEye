@@ -212,3 +212,46 @@ label[for] {
     scroll-behavior: auto !important;
   }
 }
+
+/* /stocks/[ticker]'s main sections, named so each can be positioned
+ * independently of DOM order per breakpoint — a plain reordered flex-col
+ * can't do that (mobile order and desktop order are unrelated here: mobile
+ * stays exactly the single-column order the page always had, desktop packs
+ * a sidebar of Sector Peers + Recently Viewed alongside the chart/analytics/
+ * stats/about column). Assign a section's area via the matching
+ * `[grid-area:x]` Tailwind arbitrary class. Disclosures/corporate-actions and
+ * News stay full-width below both columns on desktop — they're already
+ * responsive multi-column sections in their own right. */
+.stock-detail-grid {
+  display: grid;
+  /* minmax(0, 1fr), not a bare 1fr: a grid item's default min-width is auto,
+     so any child with wide intrinsic content (the price chart's SVG, a long
+     company name in the sector-peers list) grows the track past the
+     container instead of wrapping/scrolling within it — the same class of
+     mobile-overflow bug ForeignFlowPage's FlowTable min-w-0 comment already
+     documents for flex. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "chart"
+    "analytics"
+    "statistics"
+    "about"
+    "peers"
+    "discl"
+    "news"
+    "recent";
+  gap: 1.75rem;
+}
+
+@media (min-width: 1024px) {
+  .stock-detail-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-areas:
+      "chart peers"
+      "analytics peers"
+      "statistics recent"
+      "about recent"
+      "discl discl"
+      "news news";
+  }
+}

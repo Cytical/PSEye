@@ -11,7 +11,7 @@ export function RecentlyViewed({ excludeTicker }: { excludeTicker?: string }) {
   if (tickers.length === 0) return null;
 
   return (
-    <div className="mt-8">
+    <div>
       <h2 className="text-sm font-medium text-panel-fg">Recently viewed</h2>
       <div className="mt-2 flex flex-wrap gap-2">
         {tickers.map((ticker) => (

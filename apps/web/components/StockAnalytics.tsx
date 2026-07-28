@@ -79,7 +79,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
   if (metrics.length === 0) return null;
 
   return (
-    <div className="mt-6">
+    <div>
       <div className="flex items-baseline justify-between">
         <h2 className="kicker text-panel-fg/68">Analytics</h2>
         <span className="text-[11px] text-panel-fg/65">derived from ~1yr of closing prices</span>
