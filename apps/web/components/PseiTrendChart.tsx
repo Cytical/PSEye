@@ -154,7 +154,11 @@ export function PseiTrendChart({ history, color }: { history: PseiHistoryPoint[]
       <svg
         ref={svgRef}
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        className="mt-1 w-full touch-none select-none"
+        // touch-pan-y, not touch-none: the drag-to-zoom gesture only reads
+        // horizontal movement (viewBoxXFromClientX), but touch-none would
+        // claim the vertical swipe too, trapping a mobile visitor's attempt
+        // to scroll the page past this chart the moment their thumb lands on it.
+        className="mt-1 w-full touch-pan-y select-none"
         role="img"
         aria-label={`PSEi trend from ${visible[0].date} to ${visible[visible.length - 1].date}, ranging from ${formatIndexValue(minV)} to ${formatIndexValue(maxV)}. Drag to zoom.`}
         onDoubleClick={resetZoom}
