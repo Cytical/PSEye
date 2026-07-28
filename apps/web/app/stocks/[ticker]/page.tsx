@@ -5,7 +5,7 @@ import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 import { DISCLOSURE_TYPE_LABELS, DISCLOSURE_TYPE_ACCENT } from "@pseye/source-disclosures";
 import { CORPORATE_ACTION_LABELS, CORPORATE_ACTION_TYPE_ACCENT } from "@pseye/source-corporate-actions";
 import { getDailyQuotes } from "@/lib/quotes";
-import { getCompanyProfiles } from "@/lib/companyProfiles";
+import { getCompanyProfiles, type CompanyProfile } from "@/lib/companyProfiles";
 import { getDisclosures } from "@/lib/disclosures";
 import { getCorporateActions } from "@/lib/corporateActions";
 import { manilaToday } from "@/lib/manilaDate";
@@ -78,6 +78,35 @@ function formatDate(iso: string): string {
     year: "numeric",
     timeZone: "UTC",
   });
+}
+
+/** Facts from the same PSE Edge company-info page's Security/Contact
+ * Information tables, alongside the SEC-sourced description — every field is
+ * independently optional, so this only lists whichever ones a given company
+ * actually has. No board member names: PSE Edge only ever publishes a
+ * headcount, never who they are, and there's no free source that does (SEC
+ * Philippines, which has the real filing, is bot-blocked). */
+function buildCompanyFacts(profile: CompanyProfile): { label: string; value: React.ReactNode }[] {
+  const facts: { label: string; value: React.ReactNode }[] = [];
+  if (profile.incorporationDate) facts.push({ label: "Incorporated", value: profile.incorporationDate });
+  if (profile.numberOfDirectors != null) {
+    facts.push({ label: "Board size", value: `${profile.numberOfDirectors} directors` });
+  }
+  if (profile.fiscalYearEnd) facts.push({ label: "Fiscal year end", value: profile.fiscalYearEnd });
+  if (profile.externalAuditor) facts.push({ label: "External auditor", value: profile.externalAuditor });
+  if (profile.businessAddress) facts.push({ label: "Headquarters", value: profile.businessAddress });
+  if (profile.website) {
+    const href = profile.website.startsWith("http") ? profile.website : `https://${profile.website}`;
+    facts.push({
+      label: "Website",
+      value: (
+        <a href={href} target="_blank" rel="noopener noreferrer" className="hover:underline">
+          {profile.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+        </a>
+      ),
+    });
+  }
+  return facts;
 }
 
 function formatRelative(iso: string): string {
@@ -195,10 +224,25 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         }
       : null;
 
+  const companyFacts = profile ? buildCompanyFacts(profile) : [];
+  // "Dec 20, 1967" parses fine via the Date constructor; anything PSE Edge
+  // phrases differently (rare, but seen as blank/placeholder on a handful of
+  // companies) just fails silently and omits foundingDate rather than
+  // emitting invalid structured data.
+  const foundingDateIso = (() => {
+    if (!profile?.incorporationDate) return null;
+    const d = new Date(profile.incorporationDate);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+  })();
+  const sameAs = [profile?.website, profile?.wikipediaUrl].filter((v): v is string => Boolean(v));
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   // @graph bundles the company identity with a BreadcrumbList — Google renders the
   // latter as a breadcrumb trail under the search result (instead of the raw URL),
-  // which is a free click-through-rate lever, not just cosmetic markup.
+  // which is a free click-through-rate lever, not just cosmetic markup. The
+  // profile-derived fields (address/foundingDate/sameAs) are exactly the kind
+  // of entity-disambiguation signal Google's docs point to sameAs for — omitted
+  // entirely (not emitted as null) when the profile hasn't backfilled them.
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -207,6 +251,9 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         name: company.companyName,
         tickerSymbol: company.ticker,
         url: `${siteUrl}/stocks/${company.ticker}`,
+        ...(profile?.businessAddress ? { address: profile.businessAddress } : {}),
+        ...(foundingDateIso ? { foundingDate: foundingDateIso } : {}),
+        ...(sameAs.length > 0 ? { sameAs } : {}),
       },
       {
         "@type": "BreadcrumbList",
@@ -337,6 +384,33 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             ))}
           </div>
           <p className="mt-1.5 text-[11px] text-panel-fg/72">{profile.source}</p>
+
+          {companyFacts.length > 0 && (
+            <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-2 border-t border-panel-border pt-3 sm:grid-cols-2">
+              {companyFacts.map((f) => (
+                <div key={f.label} className="flex items-baseline justify-between gap-3 text-sm sm:block">
+                  <dt className="text-[11px] text-panel-fg/68 sm:kicker sm:text-panel-fg/68">{f.label}</dt>
+                  <dd className="text-right text-panel-fg/85 sm:mt-0.5 sm:text-left">{f.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
+          {profile.wikipediaSummary && (
+            <div className="mt-4 rounded-lg bg-panel-raised p-3 ring-1 ring-panel-border">
+              <p className="text-sm leading-snug text-panel-fg/80">{profile.wikipediaSummary}</p>
+              {profile.wikipediaUrl && (
+                <a
+                  href={profile.wikipediaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1.5 inline-block text-[11px] text-panel-fg/68 hover:underline"
+                >
+                  {profile.wikipediaTitle} on Wikipedia →
+                </a>
+              )}
+            </div>
+          )}
         </div>
       )}
 

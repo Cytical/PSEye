@@ -4,6 +4,18 @@ export interface CompanyProfile {
   description: string;
   /** e.g. "Company profile — SEC Form 17-A (2024)". */
   source: string;
+  /** Everything below is best-effort — see the company_profiles schema
+   * doc comment for where each comes from. Absent, not fabricated, when
+   * unavailable. */
+  businessAddress: string | null;
+  website: string | null;
+  incorporationDate: string | null;
+  numberOfDirectors: number | null;
+  externalAuditor: string | null;
+  fiscalYearEnd: string | null;
+  wikipediaTitle: string | null;
+  wikipediaSummary: string | null;
+  wikipediaUrl: string | null;
 }
 
 /**
@@ -24,7 +36,19 @@ export async function getCompanyProfiles(): Promise<Record<string, CompanyProfil
 
     const byTicker: Record<string, CompanyProfile> = {};
     for (const row of rows) {
-      byTicker[row.ticker] = { description: row.description, source: row.source };
+      byTicker[row.ticker] = {
+        description: row.description,
+        source: row.source,
+        businessAddress: row.businessAddress,
+        website: row.website,
+        incorporationDate: row.incorporationDate,
+        numberOfDirectors: row.numberOfDirectors,
+        externalAuditor: row.externalAuditor,
+        fiscalYearEnd: row.fiscalYearEnd,
+        wikipediaTitle: row.wikipediaTitle,
+        wikipediaSummary: row.wikipediaSummary,
+        wikipediaUrl: row.wikipediaUrl,
+      };
     }
     return byTicker;
   } catch (err) {

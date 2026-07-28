@@ -90,6 +90,23 @@ export const companyProfiles = pgTable("company_profiles", {
   description: text("description").notNull(),
   source: varchar("source", { length: 128 }).notNull(),
   fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull(),
+  // Everything below is nullable: parsed from the same PSE Edge company info
+  // page's "Security Information"/"Contact Information" tables (see
+  // parseCompanyInfoHtml) or Wikipedia's summary API — both best-effort, so a
+  // company missing one shouldn't block storing the rest. See
+  // etl/jobs/backfill-company-profiles.ts and apps/web/lib/companyProfiles.ts.
+  businessAddress: text("business_address"),
+  website: varchar("website", { length: 256 }),
+  incorporationDate: varchar("incorporation_date", { length: 64 }),
+  numberOfDirectors: integer("number_of_directors"),
+  externalAuditor: varchar("external_auditor", { length: 256 }),
+  fiscalYearEnd: varchar("fiscal_year_end", { length: 32 }),
+  // High-confidence auto-matched Wikipedia summary only (see
+  // fetchWikipediaSummary's doc comment) — absent, not a guess, when no
+  // confident match was found.
+  wikipediaTitle: varchar("wikipedia_title", { length: 256 }),
+  wikipediaSummary: text("wikipedia_summary"),
+  wikipediaUrl: varchar("wikipedia_url", { length: 512 }),
 });
 
 // One row per calendar day, upserted on every hourly ETL run (see
