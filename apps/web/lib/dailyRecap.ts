@@ -88,7 +88,10 @@ function manilaDayWindow(date: string): { from: Date; to: Date } {
 }
 
 const MOVER_COUNT = 5;
-const PSEI_HISTORY_DAYS = 30;
+// 90 (vs. the original 30) gives the now-zoomable PseiTrendChart a
+// meaningful range to actually zoom into rather than just a slightly longer
+// sparkline — one row/day in market_snapshot, so still a cheap query.
+const PSEI_HISTORY_DAYS = 90;
 
 /**
  * Everything the site recorded for one trading day, joined from the tables the
@@ -209,6 +212,44 @@ export async function getRecentRecapDates(limit = 30): Promise<string[]> {
     return await getRecentSnapshotDates(db, limit);
   } catch (err) {
     console.error("getRecentRecapDates: DB read failed", err);
+    return [];
+  }
+}
+
+export interface RecapIndexEntry {
+  date: string;
+  pseiValue: number;
+  pseiChange: number;
+  pseiPctChange: number;
+}
+
+/** Recent trading days with their PSEi close, newest first — the `/daily` archive
+ * index. `/daily` used to `redirect()` to the newest date instead of listing
+ * anything, but a `redirect()` inside a prerendered route can't emit an HTTP 3xx,
+ * so Next bakes it into the HTML as a `<meta http-equiv="refresh">` — which Google
+ * reads as a redirect on a URL that is both sitemapped and self-canonical, and
+ * reports under "Redirect error". Listing the days for real keeps the route a
+ * genuine 200 and gives the per-day pages an internal-linking hub. */
+export async function getRecentRecapIndex(limit = 60): Promise<RecapIndexEntry[]> {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) return [];
+  try {
+    const db = createDb(databaseUrl);
+    const [latest] = await getRecentSnapshotDates(db, 1);
+    if (!latest) return [];
+    const rows = await getMarketSnapshotHistory(db, latest, limit);
+    // getMarketSnapshotHistory returns oldest-first (it feeds a chart); the
+    // archive reads newest-first.
+    return rows
+      .map((r) => ({
+        date: r.snapshotDate,
+        pseiValue: Number(r.pseiValue),
+        pseiChange: Number(r.pseiChange),
+        pseiPctChange: Number(r.pseiPctChange),
+      }))
+      .reverse();
+  } catch (err) {
+    console.error("getRecentRecapIndex: DB read failed", err);
     return [];
   }
 }
