@@ -38,7 +38,10 @@ const ROUTES: {
   // real source found after two investigations), not worth indexing.
   { path: "/foreign-flow", changeFrequency: "weekly", priority: 0.5 },
   { path: "/dca", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/daily", changeFrequency: "daily", priority: 0.7 },
+  // /daily deliberately excluded — it renders the same recap as
+  // /daily/<latest> and canonicals to that dated permalink, so the dated URL
+  // (already listed below, one per recap) is the one to submit. Still crawlable
+  // and still in the nav; just not advertised as a canonical URL of its own.
   { path: "/stocks", changeFrequency: "daily", priority: 0.7, quoteDated: true },
   { path: "/sectors", changeFrequency: "daily", priority: 0.6, quoteDated: true },
   { path: "/glossary", changeFrequency: "monthly", priority: 0.5 },
