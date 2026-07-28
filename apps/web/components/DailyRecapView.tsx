@@ -94,8 +94,15 @@ function Panel({
     // flex-1 + a basis floor (rather than a grid track) so that when a row has
     // fewer populated panels than the layout has room for — e.g. no foreign
     // flow data that day — the panels that *do* exist stretch to fill the
-    // row's width instead of leaving a dead gap next to them.
-    <section className="flex min-w-0 flex-1 basis-[260px] flex-col rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+    // row instead of leaving a dead gap next to them, capped with a max-width
+    // rather than left to stretch indefinitely. basis-[420px] targets 3 per
+    // row on a real desktop viewport (~1550px of content width) rather than
+    // the previous 260px floor, which packed 5 cramped, truncating panels
+    // into row one and left row two's lone survivor an isolated 440px box
+    // with most of the row empty beside it — still the "wasted space"
+    // complaint, just relocated. Wider panels also mean disclosure headlines
+    // and company names stop truncating as aggressively.
+    <section className="flex min-w-0 max-w-[560px] flex-1 basis-[420px] flex-col rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="kicker text-panel-fg/68">{title}</h2>
         {moreHref && (
@@ -190,14 +197,15 @@ export function DailyRecapView({
         />
       </div>
 
-      {/* Two dashboard rows rather than the old full-width stacked sections —
-          each panel caps its list at a scrollable max height (see Panel's
-          `scroll` prop) so this layout's total height stays bounded
-          regardless of how many movers/disclosures/news items came in that
-          day, instead of the page growing with the data. flex-wrap (not a
-          fixed-column grid) so a row with fewer populated panels than usual
-          (e.g. no foreign flow that day) stretches the ones that do exist to
-          fill the row instead of leaving a dead gap. */}
+      {/* One dashboard row (used to be two — foreign-flow split from
+          breadth/block-sales/disclosures/news) rather than the old full-width
+          stacked sections — each panel caps its list at a scrollable max
+          height (see Panel's `scroll` prop) so this layout's total height
+          stays bounded regardless of how many movers/disclosures/news items
+          came in that day, instead of the page growing with the data.
+          flex-wrap packs however many panels actually have data into as few
+          rows as fit, rather than a fixed split forcing e.g. just the 2
+          foreign-flow panels to occupy a whole row by themselves. */}
       <div className="mt-3 flex flex-wrap gap-3">
         {recap.foreignBuys.length > 0 && (
           <Panel title="Top Net Foreign Buying" scroll>
@@ -209,9 +217,6 @@ export function DailyRecapView({
             <FlowList rows={recap.foreignSells} />
           </Panel>
         )}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-3">
         {breadth && breadth.histogram.length > 1 && (
           <Panel title="Breadth Detail">
             <div className="grid grid-cols-2 gap-2">
