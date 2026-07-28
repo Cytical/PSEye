@@ -6,7 +6,6 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { MarketTicker } from "@/components/MarketTicker";
 import { DevToolsLink } from "@/components/DevToolsLink";
-import { InstallPrompt } from "@/components/InstallPrompt";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -135,7 +134,7 @@ export default function RootLayout({
         </main>
         <SiteFooter />
         <DevToolsLink />
-        <InstallPrompt />
+        {/* InstallPrompt disabled for now (2026-07-28) — component is still intact, just unmounted. */}
         <Analytics />
         <SpeedInsights />
       </body>

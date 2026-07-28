@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { TreemapChart, type TreemapStock } from "./TreemapChart";
-import { MarketSummaryBar } from "./MarketSummaryBar";
+import { MarketSummaryBar, changeColor } from "./MarketSummaryBar";
 import { TopMovers } from "./TopMovers";
 import { AddToWatchlistModal } from "./AddToWatchlistModal";
 import { ShareButton } from "./ShareButton";
@@ -256,21 +256,42 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        {availableDates.length > 0 ? (
-          <div className="flex items-center gap-2 text-xs font-medium text-panel-fg/72">
-            <span className="kicker">Time machine</span>
-            <CalendarDatePicker
-              value={viewDate}
-              availableDates={availableDates}
-              onSelect={(iso) => selectDateInUrl(iso)}
-              onClear={() => selectDateInUrl(null)}
-              clearLabel="Today"
-              triggerLabel={viewDate ? formatPickerDate(viewDate) : "Today"}
-            />
-          </div>
-        ) : (
-          <span />
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {availableDates.length > 0 ? (
+            <div className="flex items-center gap-2 text-xs font-medium text-panel-fg/72">
+              <span className="kicker">Time machine</span>
+              <CalendarDatePicker
+                value={viewDate}
+                availableDates={availableDates}
+                onSelect={(iso) => selectDateInUrl(iso)}
+                onClear={() => selectDateInUrl(null)}
+                clearLabel="Today"
+                triggerLabel={viewDate ? formatPickerDate(viewDate) : "Today"}
+              />
+            </div>
+          ) : (
+            <span />
+          )}
+          {/* Compact PSEi readout, beside the Today control — mobile only.
+              Desktop keeps the full MarketSummaryBar in the filter sidebar;
+              on mobile that sidebar now sits below the map (see nav's
+              order-2 below), so this keeps the index visible up top without
+              scrolling. */}
+          {!isPastView && (
+            <div className="flex items-center gap-1.5 text-xs sm:hidden">
+              <span className="font-semibold text-panel-fg/72">PSEi</span>
+              <span className="font-bold tabular-nums text-panel-fg">
+                {snapshot.pseiValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+              <span
+                className={`flex items-center gap-0.5 font-semibold tabular-nums ${changeColor(snapshot.pseiPctChange)}`}
+              >
+                {snapshot.pseiPctChange >= 0 ? "▲" : "▼"}
+                {Math.abs(snapshot.pseiPctChange).toFixed(2)}%
+              </span>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <FullscreenButton targetRef={mapAreaRef} />
           <ShareButton getShareUrl={getMarketMapShareUrl} />
@@ -314,7 +335,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
       )}
       <div className="flex flex-col gap-4 sm:flex-row">
         <nav
-          className="flex shrink-0 flex-col gap-2 overflow-x-auto rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:sticky sm:top-16 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
+          className="order-2 flex shrink-0 flex-col gap-2 overflow-x-auto rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:order-none sm:sticky sm:top-16 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
           aria-label="Market map filters"
         >
           <span className="kicker hidden border-b border-panel-border px-2 pb-2 text-panel-fg/68 sm:block">
@@ -366,7 +387,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
           {/* The summary bar is today's PSEi/forex snapshot — hidden in a past-date
               view rather than shown next to a different day's map. */}
           {!isPastView && (
-            <div className="border-t border-panel-border pt-2">
+            <div className="hidden border-t border-panel-border pt-2 sm:block">
               <MarketSummaryBar snapshot={snapshot} foreignFlow={foreignFlow} />
             </div>
           )}
@@ -387,7 +408,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
             its descendants. */}
         <div
           ref={mapAreaRef}
-          className={`min-w-0 flex-1 bg-background ${isFullscreen ? "flex flex-col items-center justify-center gap-3 overflow-auto p-4" : ""}`}
+          className={`order-1 min-w-0 flex-1 bg-background sm:order-none ${isFullscreen ? "flex flex-col items-center justify-center gap-3 overflow-auto p-4" : ""}`}
         >
           {isSharedWatchlistView && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-panel px-4 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border">

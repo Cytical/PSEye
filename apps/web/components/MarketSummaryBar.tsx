@@ -6,7 +6,7 @@ interface MarketSummaryBarProps {
   foreignFlow: LatestForeignFlow;
 }
 
-function changeColor(n: number): string {
+export function changeColor(n: number): string {
   return n >= 0 ? "text-up" : "text-down";
 }
 

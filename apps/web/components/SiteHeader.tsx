@@ -39,6 +39,24 @@ export function SiteHeader() {
         </div>
 
         <div className="ml-auto flex items-center gap-3 sm:hidden">
+          {/* Quick link to Daily Recap, mobile only — on desktop it's already
+              an inline nav link (see NavLinks' PRIMARY), but the mobile nav
+              collapses everything behind the hamburger, which buried the
+              site's second-highest-traffic page behind a tap. This puts it
+              back one tap away without touching the "/" homepage's SEO
+              standing (no redirect, no route change). */}
+          <Link
+            href="/daily"
+            aria-label="Today's daily recap"
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-foreground/15 transition-colors hover:bg-panel-raised"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+            </svg>
+          </Link>
           <ThemeToggle />
           <button
             type="button"
