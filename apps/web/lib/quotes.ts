@@ -14,7 +14,22 @@ export async function getDailyQuotes(): Promise<Quote[]> {
   try {
     const db = createDb(databaseUrl);
     const rows = await getLatestDailyQuotes(db);
-    if (rows.length === 0) return new MockQuoteSource().getDailyQuotes();
+    if (rows.length === 0) {
+      // Loud on purpose. A DATABASE_URL pointing at the *wrong* Postgres is
+      // still a reachable one, so nothing throws and the site just quietly
+      // renders mock prices — indistinguishable from real data at a glance.
+      // This is the canary for that; see next.config.ts for the cause it
+      // caught. getDailyQuotes is the right place for it: every page depends
+      // on quotes, so one warning here covers the whole site without adding
+      // the same log to all nineteen lib/*.ts readers.
+      // ASCII only: this is read in a Windows console that renders the repo's
+      // usual em dash as mojibake.
+      console.warn(
+        `getDailyQuotes: DATABASE_URL is set (${dbHost(databaseUrl)}) but daily_quotes is empty - ` +
+          `serving mock data. Check that it points at the populated database and that fetch-quotes has run.`,
+      );
+      return new MockQuoteSource().getDailyQuotes();
+    }
 
     return rows.map((r) => ({
       ticker: r.ticker,
@@ -30,5 +45,14 @@ export async function getDailyQuotes(): Promise<Quote[]> {
   } catch (err) {
     console.error("getDailyQuotes: DB read failed, falling back to mock data", err);
     return new MockQuoteSource().getDailyQuotes();
+  }
+}
+
+/** Host only, so a connection string never lands in a log or CI transcript. */
+function dbHost(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return "unparseable URL";
   }
 }
