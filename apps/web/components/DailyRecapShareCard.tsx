@@ -1,31 +1,37 @@
 import { LogoMark } from "./LogoMark";
 import { PseiTrendChart } from "./PseiTrendChart";
+import { MiniNewsThumb } from "./MiniNewsThumb";
 import type { DailyRecap, PseiHistoryPoint } from "@/lib/dailyRecap";
 
 const UP = "var(--up)";
 const DOWN = "var(--down)";
 const MUTED = "var(--panel-fg)";
 
-function MiniNewsList({ news }: { news: DailyRecap["news"] }) {
+/**
+ * Image-first, not a text list — at 2 items there's room for each story to
+ * actually show its picture rather than compete for a line of text, and a
+ * photo reads faster than a headline in a glanceable/shareable card. The
+ * image fills most of each card's height (aspect-[4/3], only a two-line
+ * caption below it) rather than sitting beside the text as a small thumbnail.
+ */
+function MiniNewsCard({ item }: { item: DailyRecap["news"][number] }) {
   return (
-    <div className="min-w-0 flex-1">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-panel-fg/55">In the News</p>
-      <ul className="mt-1.5 flex flex-col gap-1.5">
-        {news.slice(0, 4).map((n) => (
-          <li key={n.url} className="text-[12px]">
-            <a
-              href={n.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="line-clamp-1 text-panel-fg/85 hover:underline"
-            >
-              {n.title}
-            </a>
-            <span className="text-[10px] text-panel-fg/55">{n.source}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <a
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg bg-panel ring-1 ring-panel-border"
+    >
+      <div className="aspect-[4/3] w-full overflow-hidden bg-panel-active">
+        <MiniNewsThumb imageUrl={item.imageUrl} source={item.source} />
+      </div>
+      <div className="flex flex-1 flex-col gap-1 p-2">
+        <p className="line-clamp-2 text-[12px] font-medium leading-snug text-panel-fg group-hover:underline">
+          {item.title}
+        </p>
+        <p className="mt-auto text-[10px] text-panel-fg/55">{item.source}</p>
+      </div>
+    </a>
   );
 }
 
@@ -42,10 +48,10 @@ function MiniNewsList({ news }: { news: DailyRecap["news"] }) {
  *
  * Chart stacked below the PSEi value (not beside it) so the (much shorter)
  * value block doesn't leave dead space under itself once the chart sets the
- * card's height. The right column shows a mini news list rather than top
- * movers — movers already get their own panels in the dashboard row below,
- * and news doesn't appear anywhere else on this page, so it's the one thing
- * worth surfacing here that isn't duplicated.
+ * card's height. The right column shows 2 image-led news cards rather than
+ * top movers — movers already get their own panels in the dashboard row
+ * below, and news doesn't appear anywhere else on this page, so it's the one
+ * thing worth surfacing here that isn't duplicated.
  */
 export function DailyRecapShareCard({
   dateLabel,
@@ -110,8 +116,13 @@ export function DailyRecapShareCard({
           </div>
 
           {news.length > 0 && (
-            <div className="flex min-w-0 flex-1 basis-[220px]">
-              <MiniNewsList news={news} />
+            <div className="flex min-w-0 flex-1 basis-[260px] flex-col">
+              <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-panel-fg/55">In the News</p>
+              <div className="flex flex-1 gap-2">
+                {news.map((n) => (
+                  <MiniNewsCard key={n.url} item={n} />
+                ))}
+              </div>
             </div>
           )}
         </div>

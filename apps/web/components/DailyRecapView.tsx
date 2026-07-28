@@ -150,41 +150,68 @@ function MostActiveList({ rows }: { rows: DailyRecap["mostActive"] }) {
 }
 
 /**
- * Diverging horizontal bars, not a plain +/- number list — net buying grows
- * left from a center zero-line, net selling grows right, each bar's length
- * scaled against the largest mover in the combined set so the size
- * differences between tickers actually read at a glance. Buys and sells were
- * two separate ranked lists (top 5 net buying, top 5 net selling — different
- * tickers, not the same list split by sign), interleaved here by |value| so
- * the biggest movers land at the top regardless of direction. A leading
- * +/- sign on the value (not just the bar's color/direction) so buy vs. sell
- * doesn't rely on color alone.
+ * One aggregate bar, not a per-ticker breakdown — `stock_foreign_flow` only
+ * stores the top 10 net buyers and top 10 net sellers each day (see that
+ * table's own doc comment), not the full ~380-ticker board, so "all stocks"
+ * here really means "all of what's tracked". Net buying grows left from a
+ * center zero-line, net selling grows right, same convention the per-ticker
+ * version this replaced used, just collapsed to the two totals.
  */
-function ForeignFlowBars({ buys, sells }: { buys: DailyRecap["foreignBuys"]; sells: DailyRecap["foreignSells"] }) {
-  const rows = [...buys.map((r) => ({ ...r, isBuy: true })), ...sells.map((r) => ({ ...r, isBuy: false }))].sort(
-    (a, b) => Math.abs(b.netValue) - Math.abs(a.netValue)
-  );
-  const maxAbs = Math.max(1, ...rows.map((r) => Math.abs(r.netValue)));
+function ForeignFlowSummary({ buys, sells }: { buys: DailyRecap["foreignBuys"]; sells: DailyRecap["foreignSells"] }) {
+  const buyTotal = buys.reduce((sum, r) => sum + r.netValue, 0);
+  const sellTotal = sells.reduce((sum, r) => sum + r.netValue, 0); // already negative per-row
+  const net = buyTotal + sellTotal;
+  const maxAbs = Math.max(1, buyTotal, Math.abs(sellTotal));
+  const buyPct = (buyTotal / maxAbs) * 50;
+  const sellPct = (Math.abs(sellTotal) / maxAbs) * 50;
 
   return (
-    <ul className="flex flex-col gap-2.5">
-      {rows.map((r) => {
-        const halfWidthPct = (Math.abs(r.netValue) / maxAbs) * 50;
+    <div>
+      <div className="flex items-baseline justify-between">
+        <span className="text-xs text-panel-fg/65">Net</span>
+        <span className="text-lg font-semibold tabular-nums" style={{ color: net >= 0 ? UP : DOWN }}>
+          {net >= 0 ? "+" : "−"}
+          {formatCompactPeso(Math.abs(net))}
+        </span>
+      </div>
+      <div className="relative mt-2 h-2 rounded-full bg-panel-border/60">
+        <div className="absolute inset-y-0 left-1/2 w-px bg-panel-border" />
+        <div className="absolute inset-y-0 rounded-l-full" style={{ right: "50%", width: `${buyPct}%`, background: UP }} />
+        <div className="absolute inset-y-0 rounded-r-full" style={{ left: "50%", width: `${sellPct}%`, background: DOWN }} />
+      </div>
+      <div className="mt-1.5 flex items-center justify-between text-[11px]">
+        <span style={{ color: UP }}>Buying {formatCompactPeso(buyTotal)}</span>
+        <span style={{ color: DOWN }}>Selling {formatCompactPeso(Math.abs(sellTotal))}</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Breadth Detail cuts the whole market's move distribution one way; this
+ * cuts the same day's traded stocks by sector instead — a diverging bar per
+ * sector (same left/right-from-center convention as the foreign-flow
+ * summary), ranked best to worst since `sectorMoves` already arrives sorted.
+ */
+function SectorMoversList({ sectors }: { sectors: DailyRecap["sectorMoves"] }) {
+  const maxAbs = Math.max(1, ...sectors.map((s) => Math.abs(s.avgPctChange)));
+  return (
+    <ul className="flex flex-col gap-1.5">
+      {sectors.map((s) => {
+        const isUp = s.avgPctChange >= 0;
+        const halfWidthPct = (Math.abs(s.avgPctChange) / maxAbs) * 50;
         return (
-          <li key={r.ticker} className="text-[13px]">
+          <li key={s.sector} className="text-[12px]">
             <div className="flex items-baseline justify-between gap-2">
-              <Link href={`/stocks/${r.ticker}`} className="min-w-0 truncate hover:underline">
-                <span className="font-mono text-xs font-semibold text-panel-fg">{r.ticker}</span>
-                <span className="ml-2 text-panel-fg/72">{r.companyName}</span>
-              </Link>
-              <span className="shrink-0 font-medium tabular-nums" style={{ color: r.isBuy ? UP : DOWN }}>
-                {r.isBuy ? "+" : "−"}
-                {formatCompactPeso(Math.abs(r.netValue))}
+              <span className="min-w-0 truncate text-panel-fg/80">{s.sector}</span>
+              <span className="shrink-0 font-medium tabular-nums" style={{ color: isUp ? UP : DOWN }}>
+                {isUp ? "+" : ""}
+                {s.avgPctChange.toFixed(2)}%
               </span>
             </div>
-            <div className="relative mt-1 h-1.5 rounded-full bg-panel-border/60">
+            <div className="relative mt-0.5 h-1 rounded-full bg-panel-border/60">
               <div className="absolute inset-y-0 left-1/2 w-px bg-panel-border" />
-              {r.isBuy ? (
+              {isUp ? (
                 <div
                   className="absolute inset-y-0 rounded-l-full"
                   style={{ right: "50%", width: `${halfWidthPct}%`, background: UP }}
@@ -292,8 +319,13 @@ export function DailyRecapView({
           </Panel>
         )}
         {(recap.foreignBuys.length > 0 || recap.foreignSells.length > 0) && (
-          <Panel title="Foreign Fund Flow" scroll moreHref="/foreign-flow">
-            <ForeignFlowBars buys={recap.foreignBuys} sells={recap.foreignSells} />
+          <Panel title="Foreign Fund Flow" moreHref="/foreign-flow">
+            <ForeignFlowSummary buys={recap.foreignBuys} sells={recap.foreignSells} />
+          </Panel>
+        )}
+        {recap.sectorMoves.length > 0 && (
+          <Panel title="Sector Movers" moreHref="/sectors">
+            <SectorMoversList sectors={recap.sectorMoves} />
           </Panel>
         )}
         {breadth && breadth.histogram.length > 1 && (

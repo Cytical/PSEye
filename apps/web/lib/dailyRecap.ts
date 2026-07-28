@@ -9,7 +9,10 @@ import {
   getRecentSnapshotDates,
   getStockForeignFlowByDate,
 } from "@pseye/db";
+import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 import { histogram, mean, percentile, stdev, type HistogramBin } from "./analytics";
+
+const SECTOR_BY_TICKER = new Map(PSE_EDGE_COMPANIES.map((c) => [c.ticker, c.sector]));
 
 export interface RecapMover {
   ticker: string;
@@ -44,6 +47,7 @@ export interface RecapNewsItem {
   title: string;
   url: string;
   source: string;
+  imageUrl: string | null;
 }
 
 export interface RecapActiveRow {
@@ -51,6 +55,12 @@ export interface RecapActiveRow {
   companyName: string;
   pctChange: number;
   value: number;
+}
+
+export interface RecapSectorMove {
+  sector: string;
+  avgPctChange: number;
+  count: number;
 }
 
 export interface PseiHistoryPoint {
@@ -82,6 +92,9 @@ export interface DailyRecap {
    * same convention as volumeLeaders.ts's rank: comparable across stocks
    * regardless of share price, unlike raw share volume. */
   mostActive: RecapActiveRow[];
+  /** Average % move per sector that traded — the market-wide breadth stat,
+   * cut by sector instead of collapsed into one number. */
+  sectorMoves: RecapSectorMove[];
   foreignBuys: RecapFlowRow[];
   foreignSells: RecapFlowRow[];
   blockSales: RecapBlockSale[];
@@ -98,11 +111,35 @@ function manilaDayWindow(date: string): { from: Date; to: Date } {
   return { from, to };
 }
 
+function previousDateString(date: string): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
 const MOVER_COUNT = 5;
 // 90 (vs. the original 30) gives the now-zoomable PseiTrendChart a
 // meaningful range to actually zoom into rather than just a slightly longer
 // sparkline — one row/day in market_snapshot, so still a cheap query.
 const PSEI_HISTORY_DAYS = 90;
+const NEWS_COUNT = 2;
+
+/**
+ * Same relevance rule /news's front page ranks by (see lib/news.ts's
+ * rankByRelevance) — ticker-tagged stories (actually about a listed company)
+ * lead, generic business news follows, each tier newest-first. Duplicated
+ * rather than imported: that function isn't exported, and it's five lines
+ * over a different row shape (NewsItem vs. this file's raw query rows).
+ * Applied here so the share card's "top" 2 stories are the same ones a
+ * visitor would see leading /news, not just whatever happened to publish
+ * first in the day's date window.
+ */
+function rankNewsByRelevance<T extends { tickers: string[]; publishedAt: Date }>(items: T[]): T[] {
+  const byDateDesc = [...items].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
+  const tagged = byDateDesc.filter((item) => item.tickers.length > 0);
+  const untagged = byDateDesc.filter((item) => item.tickers.length === 0);
+  return [...tagged, ...untagged];
+}
 
 /**
  * Everything the site recorded for one trading day, joined from the tables the
@@ -119,7 +156,7 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
   try {
     const db = createDb(databaseUrl);
     const { from, to } = manilaDayWindow(date);
-    const [snapshotRow, quoteRows, flowRows, blockRows, disclosureRows, newsRows, snapshotDates, historyRows] =
+    const [snapshotRow, quoteRows, flowRows, blockRows, disclosureRows, newsRowsToday, snapshotDates, historyRows] =
       await Promise.all([
         getMarketSnapshotByDate(db, date),
         getDailyQuotesByDate(db, date),
@@ -133,6 +170,17 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
 
     if (!snapshotRow && quoteRows.length === 0 && disclosureRows.length === 0 && blockRows.length === 0) {
       return null;
+    }
+
+    // Falls back to the previous calendar day when this date's own window
+    // hasn't published anything yet — an empty "In the News" slot reads as
+    // broken, not as "nothing happened", and news doesn't run on the same
+    // clock as quotes/index data (a fresh trading day can be minutes old
+    // with zero headlines filed against it yet).
+    let newsRows = newsRowsToday;
+    if (newsRows.length === 0) {
+      const prevWindow = manilaDayWindow(previousDateString(date));
+      newsRows = await getNewsBetween(db, prevWindow.from, prevWindow.to);
     }
 
     const traded = quoteRows
@@ -155,6 +203,19 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
       }))
       .sort((a, b) => b.value - a.value)
       .slice(0, MOVER_COUNT);
+
+    const sectorTotals = new Map<string, { total: number; count: number }>();
+    for (const r of traded) {
+      const sector = SECTOR_BY_TICKER.get(r.ticker);
+      if (!sector) continue;
+      const cur = sectorTotals.get(sector) ?? { total: 0, count: 0 };
+      cur.total += r.pctChange;
+      cur.count += 1;
+      sectorTotals.set(sector, cur);
+    }
+    const sectorMoves = [...sectorTotals.entries()]
+      .map(([sector, { total, count }]) => ({ sector, avgPctChange: total / count, count }))
+      .sort((a, b) => b.avgPctChange - a.avgPctChange);
 
     const todayPct = traded.map((r) => r.pctChange);
     const breadth =
@@ -196,6 +257,7 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
         .slice(-MOVER_COUNT)
         .reverse(),
       mostActive,
+      sectorMoves,
       foreignBuys: flowRows
         .filter((r) => r.netValue > 0)
         .map((r) => ({ ticker: r.ticker, companyName: r.companyName, netValue: r.netValue })),
@@ -216,7 +278,9 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
         filedAt: r.filedAt.toISOString(),
         url: r.url,
       })),
-      news: newsRows.slice(0, 6).map((r) => ({ title: r.title, url: r.url, source: r.source })),
+      news: rankNewsByRelevance(newsRows)
+        .slice(0, NEWS_COUNT)
+        .map((r) => ({ title: r.title, url: r.url, source: r.source, imageUrl: r.imageUrl })),
       prevDate,
       nextDate,
     };
