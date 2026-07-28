@@ -107,6 +107,20 @@ body {
   }
 }
 
+/* iOS Safari zooms the whole page in when a focused form control's computed
+ * font-size is under 16px — several inputs/selects across the site (ticker
+ * search, screener filters, portfolio add-holding form) use text-xs/text-sm
+ * (12-14px) to match their surrounding UI. Forcing 16px only below the `sm`
+ * breakpoint fixes the zoom without touching how those controls look on
+ * larger, non-zooming screens. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 /* Custom pointer: a light-green arrow (a lighter tint of LogoMark's
  * #30cc5a iris) with a dark outline for contrast on any theme. The hotspot
  * (4 4) lines up with the arrow's tip so clicks land where they visually

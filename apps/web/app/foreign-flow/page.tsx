@@ -74,36 +74,38 @@ export default async function ForeignFlowPage() {
 
 function IndexFlowTable({ periods }: { periods: IndexForeignFlow[] }) {
   return (
-    <table className="mt-2 w-full text-xs">
-      <thead>
-        <tr className="border-b border-panel-border text-left text-panel-fg/68">
-          <th className="py-1.5 pr-4 font-medium">Week ending</th>
-          <th className="py-1.5 pr-4 text-right font-medium">Foreign buy</th>
-          <th className="py-1.5 pr-4 text-right font-medium">Foreign sell</th>
-          <th className="py-1.5 text-right font-medium">Net</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-panel-border">
-        {periods.map((p) => (
-          <tr key={p.periodEnd}>
-            <td className="py-1.5 pr-4 text-panel-fg">
-              {new Date(p.periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", {
-                month: "short",
-                day: "numeric",
-                timeZone: "UTC",
-              })}
-            </td>
-            <td className="py-1.5 pr-4 text-right tabular-nums text-panel-fg">{formatPeso(p.foreignBuyValue)}</td>
-            <td className="py-1.5 pr-4 text-right tabular-nums text-panel-fg">{formatPeso(p.foreignSellValue)}</td>
-            <td
-              className={`py-1.5 text-right font-medium tabular-nums ${p.netValue >= 0 ? "text-up" : "text-down"}`}
-            >
-              {formatPeso(p.netValue)}
-            </td>
+    <div className="mt-2 overflow-x-auto">
+      <table className="w-full min-w-[420px] text-xs">
+        <thead>
+          <tr className="border-b border-panel-border text-left text-panel-fg/68">
+            <th className="py-1.5 pr-4 font-medium">Week ending</th>
+            <th className="py-1.5 pr-4 text-right font-medium">Foreign buy</th>
+            <th className="py-1.5 pr-4 text-right font-medium">Foreign sell</th>
+            <th className="py-1.5 text-right font-medium">Net</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody className="divide-y divide-panel-border">
+          {periods.map((p) => (
+            <tr key={p.periodEnd}>
+              <td className="py-1.5 pr-4 text-panel-fg">
+                {new Date(p.periodEnd + "T00:00:00Z").toLocaleDateString("en-PH", {
+                  month: "short",
+                  day: "numeric",
+                  timeZone: "UTC",
+                })}
+              </td>
+              <td className="py-1.5 pr-4 text-right tabular-nums text-panel-fg">{formatPeso(p.foreignBuyValue)}</td>
+              <td className="py-1.5 pr-4 text-right tabular-nums text-panel-fg">{formatPeso(p.foreignSellValue)}</td>
+              <td
+                className={`py-1.5 text-right font-medium tabular-nums ${p.netValue >= 0 ? "text-up" : "text-down"}`}
+              >
+                {formatPeso(p.netValue)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

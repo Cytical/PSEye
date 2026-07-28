@@ -20,7 +20,7 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className="flex shrink-0 items-center gap-1.5" role="group" aria-label="Theme">
+    <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Theme">
       {THEMES.map(({ value, label, swatch }) => (
         <button
           key={value}
@@ -34,13 +34,21 @@ export function ThemeToggle() {
           // server's "light" default (e.g. system dark mode) — expected
           // per Next's inline-script theming pattern, not a real mismatch.
           suppressHydrationWarning
-          className={`h-5 w-5 shrink-0 rounded-full border transition ${
-            active === value
-              ? "border-foreground/60 ring-2 ring-offset-2 ring-offset-background ring-foreground/50"
-              : "border-foreground/20 hover:scale-110"
-          }`}
-          style={{ backgroundColor: swatch }}
-        />
+          // The button is 24px (meets the 24x24 minimum touch-target size)
+          // even though the visible swatch inside stays a small 16px dot —
+          // padding grows the hit area without the toggle reading as a
+          // suddenly-bigger circle.
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition hover:scale-110"
+        >
+          <span
+            className={`h-4 w-4 rounded-full border transition ${
+              active === value
+                ? "border-foreground/60 ring-2 ring-offset-2 ring-offset-background ring-foreground/50"
+                : "border-foreground/20"
+            }`}
+            style={{ backgroundColor: swatch }}
+          />
+        </button>
       ))}
     </div>
   );
