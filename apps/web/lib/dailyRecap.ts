@@ -46,6 +46,13 @@ export interface RecapNewsItem {
   source: string;
 }
 
+export interface RecapActiveRow {
+  ticker: string;
+  companyName: string;
+  pctChange: number;
+  value: number;
+}
+
 export interface PseiHistoryPoint {
   date: string;
   pseiValue: number;
@@ -71,6 +78,10 @@ export interface DailyRecap {
   } | null;
   gainers: RecapMover[];
   losers: RecapMover[];
+  /** Top by traded ₱ value (turnover) — the standard "most active" measure,
+   * same convention as volumeLeaders.ts's rank: comparable across stocks
+   * regardless of share price, unlike raw share volume. */
+  mostActive: RecapActiveRow[];
   foreignBuys: RecapFlowRow[];
   foreignSells: RecapFlowRow[];
   blockSales: RecapBlockSale[];
@@ -134,6 +145,17 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
       }));
     const byPctDesc = [...traded].sort((a, b) => b.pctChange - a.pctChange);
 
+    const mostActive = quoteRows
+      .filter((r) => r.pctChange != null && Number(r.value ?? 0) > 0)
+      .map((r) => ({
+        ticker: r.ticker,
+        companyName: r.companyName,
+        pctChange: Number(r.pctChange),
+        value: Number(r.value),
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, MOVER_COUNT);
+
     const todayPct = traded.map((r) => r.pctChange);
     const breadth =
       quoteRows.length > 0
@@ -173,6 +195,7 @@ export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
         .filter((r) => r.pctChange < 0)
         .slice(-MOVER_COUNT)
         .reverse(),
+      mostActive,
       foreignBuys: flowRows
         .filter((r) => r.netValue > 0)
         .map((r) => ({ ticker: r.ticker, companyName: r.companyName, netValue: r.netValue })),

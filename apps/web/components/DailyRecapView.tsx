@@ -44,14 +44,6 @@ function formatCompactPeso(n: number): string {
   return `₱${Math.round(n).toLocaleString("en-PH")}`;
 }
 
-function formatManilaTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-PH", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "Asia/Manila",
-  });
-}
-
 function pct2OrDash(n: number | null): string {
   if (n == null) return "—";
   return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
@@ -116,20 +108,97 @@ function Panel({
   );
 }
 
-function FlowList({ rows }: { rows: DailyRecap["foreignBuys"] }) {
+function MoverList({ movers }: { movers: DailyRecap["gainers"] }) {
   return (
     <ul className="flex flex-col gap-1">
-      {rows.slice(0, 5).map((r) => (
+      {movers.map((m) => (
+        <li key={m.ticker} className="flex items-baseline justify-between gap-3 text-[13px]">
+          <Link href={`/stocks/${m.ticker}`} className="min-w-0 truncate hover:underline">
+            <span className="font-mono text-xs font-semibold text-panel-fg">{m.ticker}</span>
+            <span className="ml-2 text-panel-fg/72">{m.companyName}</span>
+          </Link>
+          <span className="shrink-0 font-medium tabular-nums" style={{ color: m.pctChange >= 0 ? UP : DOWN }}>
+            {m.pctChange >= 0 ? "+" : ""}
+            {m.pctChange.toFixed(2)}%
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function MostActiveList({ rows }: { rows: DailyRecap["mostActive"] }) {
+  return (
+    <ul className="flex flex-col gap-1">
+      {rows.map((r) => (
         <li key={r.ticker} className="flex items-baseline justify-between gap-3 text-[13px]">
           <Link href={`/stocks/${r.ticker}`} className="min-w-0 truncate hover:underline">
             <span className="font-mono text-xs font-semibold text-panel-fg">{r.ticker}</span>
             <span className="ml-2 text-panel-fg/72">{r.companyName}</span>
           </Link>
-          <span className="shrink-0 font-medium tabular-nums" style={{ color: r.netValue >= 0 ? UP : DOWN }}>
-            {formatCompactPeso(r.netValue)}
+          <span className="flex shrink-0 items-baseline gap-2">
+            <span className="font-medium tabular-nums text-panel-fg">{formatCompactPeso(r.value)}</span>
+            <span className="text-[11px] tabular-nums" style={{ color: r.pctChange >= 0 ? UP : DOWN }}>
+              {r.pctChange >= 0 ? "+" : ""}
+              {r.pctChange.toFixed(2)}%
+            </span>
           </span>
         </li>
       ))}
+    </ul>
+  );
+}
+
+/**
+ * Diverging horizontal bars, not a plain +/- number list — net buying grows
+ * left from a center zero-line, net selling grows right, each bar's length
+ * scaled against the largest mover in the combined set so the size
+ * differences between tickers actually read at a glance. Buys and sells were
+ * two separate ranked lists (top 5 net buying, top 5 net selling — different
+ * tickers, not the same list split by sign), interleaved here by |value| so
+ * the biggest movers land at the top regardless of direction. A leading
+ * +/- sign on the value (not just the bar's color/direction) so buy vs. sell
+ * doesn't rely on color alone.
+ */
+function ForeignFlowBars({ buys, sells }: { buys: DailyRecap["foreignBuys"]; sells: DailyRecap["foreignSells"] }) {
+  const rows = [...buys.map((r) => ({ ...r, isBuy: true })), ...sells.map((r) => ({ ...r, isBuy: false }))].sort(
+    (a, b) => Math.abs(b.netValue) - Math.abs(a.netValue)
+  );
+  const maxAbs = Math.max(1, ...rows.map((r) => Math.abs(r.netValue)));
+
+  return (
+    <ul className="flex flex-col gap-2.5">
+      {rows.map((r) => {
+        const halfWidthPct = (Math.abs(r.netValue) / maxAbs) * 50;
+        return (
+          <li key={r.ticker} className="text-[13px]">
+            <div className="flex items-baseline justify-between gap-2">
+              <Link href={`/stocks/${r.ticker}`} className="min-w-0 truncate hover:underline">
+                <span className="font-mono text-xs font-semibold text-panel-fg">{r.ticker}</span>
+                <span className="ml-2 text-panel-fg/72">{r.companyName}</span>
+              </Link>
+              <span className="shrink-0 font-medium tabular-nums" style={{ color: r.isBuy ? UP : DOWN }}>
+                {r.isBuy ? "+" : "−"}
+                {formatCompactPeso(Math.abs(r.netValue))}
+              </span>
+            </div>
+            <div className="relative mt-1 h-1.5 rounded-full bg-panel-border/60">
+              <div className="absolute inset-y-0 left-1/2 w-px bg-panel-border" />
+              {r.isBuy ? (
+                <div
+                  className="absolute inset-y-0 rounded-l-full"
+                  style={{ right: "50%", width: `${halfWidthPct}%`, background: UP }}
+                />
+              ) : (
+                <div
+                  className="absolute inset-y-0 rounded-r-full"
+                  style={{ left: "50%", width: `${halfWidthPct}%`, background: DOWN }}
+                />
+              )}
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -192,29 +261,39 @@ export function DailyRecapView({
           snapshot={snapshot}
           breadth={breadth}
           pseiHistory={recap.pseiHistory}
-          gainers={recap.gainers}
-          losers={recap.losers}
+          news={recap.news}
         />
       </div>
 
-      {/* One dashboard row (used to be two — foreign-flow split from
-          breadth/block-sales/disclosures/news) rather than the old full-width
-          stacked sections — each panel caps its list at a scrollable max
-          height (see Panel's `scroll` prop) so this layout's total height
-          stays bounded regardless of how many movers/disclosures/news items
-          came in that day, instead of the page growing with the data.
-          flex-wrap packs however many panels actually have data into as few
-          rows as fit, rather than a fixed split forcing e.g. just the 2
-          foreign-flow panels to occupy a whole row by themselves. */}
+      {/* One dashboard row rather than the old full-width stacked sections —
+          each panel caps its list at a scrollable max height (see Panel's
+          `scroll` prop) so this layout's total height stays bounded
+          regardless of how many movers/news items came in that day, instead
+          of the page growing with the data. flex-wrap packs however many
+          panels actually have data into as few rows as fit. Disclosures and
+          Block Sales dropped from this row entirely — both have their own
+          full pages (/disclosures, /block-sales) and duplicating them here
+          crowded out the stats specific to a day's session with content
+          that's really a filtered view of a different, longer-running feed. */}
       <div className="mt-3 flex flex-wrap gap-3">
-        {recap.foreignBuys.length > 0 && (
-          <Panel title="Top Net Foreign Buying" scroll>
-            <FlowList rows={recap.foreignBuys} />
+        {recap.gainers.length > 0 && (
+          <Panel title="Top Gainers">
+            <MoverList movers={recap.gainers} />
           </Panel>
         )}
-        {recap.foreignSells.length > 0 && (
-          <Panel title="Top Net Foreign Selling" scroll>
-            <FlowList rows={recap.foreignSells} />
+        {recap.losers.length > 0 && (
+          <Panel title="Top Losers">
+            <MoverList movers={recap.losers} />
+          </Panel>
+        )}
+        {recap.mostActive.length > 0 && (
+          <Panel title="Most Active" moreHref="/most-active">
+            <MostActiveList rows={recap.mostActive} />
+          </Panel>
+        )}
+        {(recap.foreignBuys.length > 0 || recap.foreignSells.length > 0) && (
+          <Panel title="Foreign Fund Flow" scroll moreHref="/foreign-flow">
+            <ForeignFlowBars buys={recap.foreignBuys} sells={recap.foreignSells} />
           </Panel>
         )}
         {breadth && breadth.histogram.length > 1 && (
@@ -238,66 +317,6 @@ export function DailyRecapView({
                 formatX={(x) => `${x >= 0 ? "+" : ""}${x.toFixed(1)}%`}
               />
             </div>
-          </Panel>
-        )}
-
-        {recap.blockSales.length > 0 && (
-          <Panel title={`Block Sales (${recap.blockSales.length})`} scroll moreHref="/block-sales">
-            <ul className="flex flex-col gap-1">
-              {recap.blockSales.map((t, i) => (
-                <li key={`${t.ticker}-${i}`} className="flex items-baseline justify-between gap-3 text-[13px]">
-                  <Link href={`/stocks/${t.ticker}`} className="min-w-0 truncate hover:underline">
-                    <span className="font-mono text-xs font-semibold text-panel-fg">{t.ticker}</span>
-                    <span className="ml-2 text-panel-fg/72">
-                      {t.volume.toLocaleString("en-PH")} sh @ ₱{t.price.toFixed(2)}
-                    </span>
-                  </Link>
-                  <span className="shrink-0 font-medium tabular-nums text-panel-fg">{formatCompactPeso(t.value)}</span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        )}
-
-        {recap.disclosures.length > 0 && (
-          <Panel title={`Disclosures (${recap.disclosures.length})`} scroll moreHref="/disclosures">
-            <ul className="flex flex-col gap-1.5">
-              {recap.disclosures.map((d, i) => (
-                <li key={i} className="flex items-baseline gap-2 text-[13px]">
-                  <span className="shrink-0 text-[11px] tabular-nums text-panel-fg/65">{formatManilaTime(d.filedAt)}</span>
-                  <Link href={`/stocks/${d.ticker}`} className="shrink-0 font-mono text-xs font-semibold text-panel-fg hover:underline">
-                    {d.ticker}
-                  </Link>
-                  {d.url ? (
-                    <a
-                      href={d.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="min-w-0 truncate text-panel-fg/80 hover:underline"
-                    >
-                      {d.headline}
-                    </a>
-                  ) : (
-                    <span className="min-w-0 truncate text-panel-fg/80">{d.headline}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        )}
-
-        {recap.news.length > 0 && (
-          <Panel title="In the News" scroll>
-            <ul className="flex flex-col gap-1.5">
-              {recap.news.map((n) => (
-                <li key={n.url} className="text-[13px]">
-                  <a href={n.url} target="_blank" rel="noopener noreferrer" className="text-panel-fg/80 hover:underline">
-                    {n.title}
-                  </a>
-                  <span className="ml-2 text-[11px] text-panel-fg/65">{n.source}</span>
-                </li>
-              ))}
-            </ul>
           </Panel>
         )}
       </div>

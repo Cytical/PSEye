@@ -34,9 +34,10 @@ function formatShortDate(iso: string): string {
  * while already zoomed narrows further rather than resetting first, so you
  * can drill down in more than one step). Client component (the rest of
  * DailyRecapShareCard stays a server component) since zoom/hover state and
- * pointer events need the browser — this doesn't conflict with the card's
- * "always renders identically" screenshot intent, since a screenshot just
- * captures the default, unzoomed state the same as before.
+ * pointer events need the browser. Colors follow the card's theme-aware
+ * `--panel-fg`/`--panel-canvas` tokens rather than a fixed dark palette, so
+ * this matches whichever theme the visitor — or a screenshot taken in that
+ * theme — is actually in.
  */
 export function PseiTrendChart({ history, color }: { history: PseiHistoryPoint[]; color: string }) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -138,15 +139,12 @@ export function PseiTrendChart({ history, color }: { history: PseiHistoryPoint[]
   return (
     <div className="w-full">
       <div className="flex items-center justify-between gap-2">
-        {/* /55 (not a lighter tier) — same AA-contrast floor as the rest of
-            this card's small type against its fixed #0d0f14 background, see
-            DailyRecapShareCard.tsx's own contrast comments. */}
-        <span className="text-[11px] font-medium uppercase tracking-wide text-white/55">PSEi trend</span>
+        <span className="text-[11px] font-medium uppercase tracking-wide text-panel-fg/55">PSEi trend</span>
         {isZoomed && (
           <button
             type="button"
             onClick={resetZoom}
-            className="text-[11px] font-medium text-white/55 underline decoration-dotted underline-offset-2 hover:text-white/80"
+            className="text-[11px] font-medium text-panel-fg/55 underline decoration-dotted underline-offset-2 hover:text-panel-fg/80"
           >
             Reset zoom
           </button>
@@ -170,8 +168,23 @@ export function PseiTrendChart({ history, color }: { history: PseiHistoryPoint[]
 
         {yTicks.map((t) => (
           <g key={t}>
-            <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={yFor(t)} y2={yFor(t)} stroke="#ffffff" strokeOpacity={0.08} />
-            <text x={WIDTH - PAD_RIGHT} y={yFor(t) - 3} textAnchor="end" fontSize={9} fill="#ffffff" fillOpacity={0.55} className="font-mono">
+            <line
+              x1={PAD_LEFT}
+              x2={WIDTH - PAD_RIGHT}
+              y1={yFor(t)}
+              y2={yFor(t)}
+              stroke="var(--panel-fg)"
+              strokeOpacity={0.08}
+            />
+            <text
+              x={WIDTH - PAD_RIGHT}
+              y={yFor(t) - 3}
+              textAnchor="end"
+              fontSize={9}
+              fill="var(--panel-fg)"
+              fillOpacity={0.55}
+              className="font-mono"
+            >
               {formatIndexValue(t)}
             </text>
           </g>
@@ -181,7 +194,7 @@ export function PseiTrendChart({ history, color }: { history: PseiHistoryPoint[]
         <polyline points={points} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
 
         {labelIndices.map((i) => (
-          <text key={i} x={xFor(i)} y={HEIGHT - 8} textAnchor="middle" fontSize={9} fill="#ffffff" fillOpacity={0.55}>
+          <text key={i} x={xFor(i)} y={HEIGHT - 8} textAnchor="middle" fontSize={9} fill="var(--panel-fg)" fillOpacity={0.55}>
             {formatShortDate(visible[i].date)}
           </text>
         ))}
@@ -193,16 +206,30 @@ export function PseiTrendChart({ history, color }: { history: PseiHistoryPoint[]
               x2={xFor(hoverIndex)}
               y1={PAD_TOP}
               y2={floorY}
-              stroke="#ffffff"
+              stroke="var(--panel-fg)"
               strokeOpacity={0.25}
               strokeDasharray="2,2"
             />
-            <circle cx={xFor(hoverIndex)} cy={yFor(hover.pseiValue)} r={3.5} fill={color} stroke="#0d0f14" strokeWidth={1.5} />
+            <circle
+              cx={xFor(hoverIndex)}
+              cy={yFor(hover.pseiValue)}
+              r={3.5}
+              fill={color}
+              stroke="var(--panel-canvas)"
+              strokeWidth={1.5}
+            />
           </>
         )}
 
         {selection && (
-          <rect x={selection.x} y={PAD_TOP} width={selection.width} height={floorY - PAD_TOP} fill="#ffffff" fillOpacity={0.12} />
+          <rect
+            x={selection.x}
+            y={PAD_TOP}
+            width={selection.width}
+            height={floorY - PAD_TOP}
+            fill="var(--panel-fg)"
+            fillOpacity={0.12}
+          />
         )}
 
         <rect
@@ -219,7 +246,7 @@ export function PseiTrendChart({ history, color }: { history: PseiHistoryPoint[]
         />
       </svg>
 
-      <p className="mt-1 text-[10px] text-white/55">
+      <p className="mt-1 text-[10px] text-panel-fg/55">
         {hover
           ? `${formatShortDate(hover.date)} · ${formatIndexValue(hover.pseiValue)}`
           : "Drag to zoom · double-click to reset"}
