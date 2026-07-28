@@ -107,7 +107,16 @@ export function CalendarDatePicker({
   ];
 
   return (
-    <div ref={containerRef} className={`relative inline-block ${className}`}>
+    <div
+      ref={containerRef}
+      className={`relative inline-block ${className}`}
+      // Matches NavLinks' NavDropdown: tabbing past the popover's last focusable
+      // control should close it the same way clicking outside does — without
+      // this, Tab could carry focus into the page behind an still-open popover.
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
       <button
         type="button"
         aria-haspopup="dialog"

@@ -146,7 +146,10 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
               value={`${result.returnPct >= 0 ? "+" : ""}${result.returnPct.toFixed(1)}%`}
               tone={result.returnPct >= 0 ? "up" : "down"}
             />
-            <Stat label="Shares/units accumulated" value={result.totalShares.toFixed(2)} />
+            <Stat
+              label="Shares/units accumulated"
+              value={result.totalShares.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            />
           </div>
           <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
             <DcaChart timeline={result.timeline} />

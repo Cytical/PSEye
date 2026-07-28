@@ -56,9 +56,13 @@ export default function GlossaryPage() {
         this site actually computes or displays, not a generic finance dictionary.
       </p>
 
-      <nav aria-label="Jump to term" className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+      <nav aria-label="Jump to term" className="mt-3 flex flex-wrap gap-x-2 gap-y-0.5 text-xs">
         {GLOSSARY_TERMS.map((t) => (
-          <a key={t.id} href={`#${t.id}`} className="text-panel-fg/72 hover:text-panel-fg hover:underline">
+          <a
+            key={t.id}
+            href={`#${t.id}`}
+            className="rounded px-1.5 py-1 text-panel-fg/72 hover:text-panel-fg hover:underline"
+          >
             {t.term}
           </a>
         ))}
