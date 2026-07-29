@@ -20,6 +20,8 @@ import { RecordStockView } from "@/components/RecordStockView";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { ShareButton } from "@/components/ShareButton";
 import { sectorToSlug } from "@/lib/sectorSlug";
+import { MiniSparkline } from "@/components/MiniSparkline";
+import { Kpi } from "@/components/Kpi";
 
 export const revalidate = 3600; // hourly; matches the quotes ETL cadence
 
@@ -310,34 +312,55 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
-        <Stat label="Price" value={quote?.price == null ? "N/A" : formatPeso(quote.price)} />
-        <Stat
-          label="Today"
-          value={quote?.pctChange == null ? "N/A" : `${quote.pctChange >= 0 ? "+" : ""}${quote.pctChange.toFixed(2)}%`}
-          tone={quote?.pctChange == null ? undefined : quote.pctChange >= 0 ? "up" : "down"}
-        />
-        <Stat label="Market cap" value={quote ? formatMarketCap(quote.marketCap) : "N/A"} />
-        <Stat label="Sector" value={sector} />
-        {yearStats && (
-          <>
-            <Stat
-              label={yearStats.sinceLabel ? `High since ${yearStats.sinceLabel}` : "52-wk high"}
-              value={formatPeso(yearStats.high)}
-            />
-            <Stat
-              label={yearStats.sinceLabel ? `Low since ${yearStats.sinceLabel}` : "52-wk low"}
-              value={formatPeso(yearStats.low)}
-            />
-            {yearStats.pctFromHigh != null && (
-              <Stat
-                label={yearStats.sinceLabel ? "vs that high" : "vs 52-wk high"}
-                value={`${yearStats.pctFromHigh >= 0 ? "+" : ""}${yearStats.pctFromHigh.toFixed(1)}%`}
-                tone={yearStats.pctFromHigh >= -1 ? "up" : yearStats.pctFromHigh <= -20 ? "down" : undefined}
-              />
+      {/* Hero price card + a borderless KPI strip, replacing what used to be
+          7 identical bordered "Stat" boxes in a row — the price is the one
+          number on this page that deserves to look different from the rest,
+          and a wall of same-sized cards for everything else read as
+          repetitive rather than dense. */}
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2.2fr)]">
+        <div className="rounded-2xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+          <div className="text-[11px] text-panel-fg/60">Price</div>
+          <div className="mt-1 flex items-baseline gap-2.5">
+            <span className="text-3xl font-bold tabular-nums text-panel-fg">
+              {quote?.price == null ? "N/A" : formatPeso(quote.price)}
+            </span>
+            {quote?.pctChange != null && (
+              <span
+                className={`text-sm font-semibold tabular-nums ${quote.pctChange >= 0 ? "text-up" : "text-down"}`}
+              >
+                {quote.pctChange >= 0 ? "+" : ""}
+                {quote.pctChange.toFixed(2)}%
+              </span>
             )}
-          </>
-        )}
+          </div>
+          {closes.length >= 2 && (
+            <MiniSparkline values={closes.map((c) => c.close)} className="mt-3 h-9 w-full" />
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-start gap-x-7 gap-y-3 rounded-2xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+          <Kpi label="Market cap" value={quote ? formatMarketCap(quote.marketCap) : "N/A"} />
+          <Kpi label="Sector" value={sector} />
+          {yearStats && (
+            <>
+              <Kpi
+                label={yearStats.sinceLabel ? `High since ${yearStats.sinceLabel}` : "52-wk high"}
+                value={formatPeso(yearStats.high)}
+              />
+              <Kpi
+                label={yearStats.sinceLabel ? `Low since ${yearStats.sinceLabel}` : "52-wk low"}
+                value={formatPeso(yearStats.low)}
+              />
+              {yearStats.pctFromHigh != null && (
+                <Kpi
+                  label={yearStats.sinceLabel ? "vs that high" : "vs 52-wk high"}
+                  value={`${yearStats.pctFromHigh >= 0 ? "+" : ""}${yearStats.pctFromHigh.toFixed(1)}%`}
+                  tone={yearStats.pctFromHigh >= -1 ? "up" : yearStats.pctFromHigh <= -20 ? "down" : undefined}
+                />
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       <div className="stock-detail-grid mt-6">
@@ -559,17 +582,6 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         Delayed/EOD data, not real-time. Not financial advice, a stock pick, or a
         buy/sell signal.
       </p>
-    </div>
-  );
-}
-
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "up" | "down" }) {
-  const toneClass =
-    tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-panel-fg";
-  return (
-    <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <div className="text-[11px] text-panel-fg/68">{label}</div>
-      <div className={`mt-0.5 text-lg font-semibold tabular-nums ${toneClass}`}>{value}</div>
     </div>
   );
 }

@@ -16,7 +16,7 @@ import {
   TRADING_DAYS_PER_YEAR,
 } from "@/lib/analytics";
 import { ReturnHistogram } from "./ReturnHistogram";
-import { InfoTip } from "./InfoTip";
+import { Kpi } from "./Kpi";
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -71,7 +71,7 @@ export function StockStatistics({
   const maxYears = Math.max(0, ...monthly.map((m) => m.years));
 
   return (
-    <div>
+    <div className="rounded-xl bg-panel p-3.5 shadow-sm shadow-black/5 ring-1 ring-panel-border">
       <div className="flex items-baseline justify-between">
         <h2 className="kicker text-panel-fg/68">Statistical profile</h2>
         <span className="text-[11px] text-panel-fg/65">{returns.length + 1} daily closes</span>
@@ -79,28 +79,28 @@ export function StockStatistics({
 
       {/* Risk-adjusted return */}
       <h3 className="mt-3 text-xs font-semibold text-panel-fg/70">Risk-adjusted return</h3>
-      <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Tile
+      <div className="mt-2 flex flex-wrap gap-x-6 gap-y-3">
+        <Kpi
           label="Annualized return"
           value={annReturn == null ? "—" : pct(annReturn)}
           tone={toneOf(annReturn)}
           info="Compound annual growth rate implied by the closing-price series over this window."
         />
-        <Tile
+        <Kpi
           label="Sharpe ratio"
           value={sharpe == null ? "—" : sharpe.toFixed(2)}
           tone={toneOf(sharpe)}
           hint="return per unit of risk"
           info="Excess return over the risk-free rate, divided by total volatility. Higher is better; above 1 is generally considered good, above 2 very good."
         />
-        <Tile
+        <Kpi
           label="Sortino ratio"
           value={sortino == null ? "—" : sortino.toFixed(2)}
           tone={toneOf(sortino)}
           hint="return per unit of downside risk"
           info="Like the Sharpe ratio, but only penalizes downside volatility (losses), not upside swings — a stock that only ever surprises to the upside scores better here than on Sharpe."
         />
-        <Tile
+        <Kpi
           label="Downside deviation"
           value={downDevAnnPct == null ? "—" : `${downDevAnnPct.toFixed(1)}%`}
           hint="annualized, losses only"
@@ -108,59 +108,61 @@ export function StockStatistics({
         />
       </div>
 
-      {/* Return distribution */}
+      {/* Return distribution + histogram, side by side so the panel reads as
+          numbers-plus-picture rather than another stack of tiles. */}
       <h3 className="mt-5 text-xs font-semibold text-panel-fg/70">Daily return distribution</h3>
-      <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Tile label="Avg daily return" value={pct2(avgDaily)} tone={toneOf(avgDaily)} />
-        <Tile label="Positive days" value={posDays == null ? "—" : `${posDays.toFixed(0)}%`} />
-        <Tile
-          label="Skewness"
-          value={skew == null ? "—" : skew.toFixed(2)}
-          hint={skew == null ? undefined : skew > 0.1 ? "right tail" : skew < -0.1 ? "left tail" : "symmetric"}
-          info="Asymmetry of the daily-return distribution. Positive means occasional large up days pull the tail right; negative means occasional large down days pull it left."
-        />
-        <Tile
-          label="Excess kurtosis"
-          value={kurt == null ? "—" : kurt.toFixed(2)}
-          hint={kurt == null ? undefined : kurt > 1 ? "fat tails" : "near-normal"}
-          info={
-            'How much more often extreme daily moves happen versus a normal distribution. Higher means more "fat tail" surprise days than a bell curve would predict.'
-          }
-        />
-        <Tile label="Best day" value={pct(best)} tone="up" />
-        <Tile label="Worst day" value={pct(worst)} tone="down" />
-        <Tile
-          label="Value-at-Risk (95%)"
-          value={var95 == null ? "—" : `−${var95.toFixed(1)}%`}
-          tone="down"
-          hint="worst 5% of days"
-          info="Historical VaR: read directly off the actual return distribution, not a normal-model estimate. On the worst 5% of days in this window, the loss was at least this large."
-        />
-        <Tile
-          label="Value-at-Risk (99%)"
-          value={var99 == null ? "—" : `−${var99.toFixed(1)}%`}
-          tone="down"
-          hint="worst 1% of days"
-          info="Same as VaR (95%), but for the worst 1% of days — a rarer, larger loss threshold."
-        />
-      </div>
-
-      <div className="mt-3 rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-        <ReturnHistogram returns={returns} />
+      <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div className="flex flex-wrap content-start gap-x-6 gap-y-3">
+          <Kpi label="Avg daily return" value={pct2(avgDaily)} tone={toneOf(avgDaily)} />
+          <Kpi label="Positive days" value={posDays == null ? "—" : `${posDays.toFixed(0)}%`} />
+          <Kpi
+            label="Skewness"
+            value={skew == null ? "—" : skew.toFixed(2)}
+            hint={skew == null ? undefined : skew > 0.1 ? "right tail" : skew < -0.1 ? "left tail" : "symmetric"}
+            info="Asymmetry of the daily-return distribution. Positive means occasional large up days pull the tail right; negative means occasional large down days pull it left."
+          />
+          <Kpi
+            label="Excess kurtosis"
+            value={kurt == null ? "—" : kurt.toFixed(2)}
+            hint={kurt == null ? undefined : kurt > 1 ? "fat tails" : "near-normal"}
+            info={
+              'How much more often extreme daily moves happen versus a normal distribution. Higher means more "fat tail" surprise days than a bell curve would predict.'
+            }
+          />
+          <Kpi label="Best day" value={pct(best)} tone="up" />
+          <Kpi label="Worst day" value={pct(worst)} tone="down" />
+          <Kpi
+            label="VaR (95%)"
+            value={var95 == null ? "—" : `−${var95.toFixed(1)}%`}
+            tone="down"
+            hint="worst 5% of days"
+            info="Historical VaR: read directly off the actual return distribution, not a normal-model estimate. On the worst 5% of days in this window, the loss was at least this large."
+          />
+          <Kpi
+            label="VaR (99%)"
+            value={var99 == null ? "—" : `−${var99.toFixed(1)}%`}
+            tone="down"
+            hint="worst 1% of days"
+            info="Same as VaR (95%), but for the worst 1% of days — a rarer, larger loss threshold."
+          />
+        </div>
+        <div className="rounded-lg bg-panel-raised p-3 ring-1 ring-panel-border">
+          <ReturnHistogram returns={returns} />
+        </div>
       </div>
 
       {/* Income */}
       {dividend && (dividend.yieldPct != null || dividend.payoutCount > 0) && (
         <>
           <h3 className="mt-5 text-xs font-semibold text-panel-fg/70">Income</h3>
-          <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Tile
+          <div className="mt-2 flex flex-wrap gap-x-6 gap-y-3">
+            <Kpi
               label="Dividend yield (TTM)"
               value={dividend.yieldPct == null ? "—" : `${dividend.yieldPct.toFixed(2)}%`}
               tone={dividend.yieldPct != null && dividend.yieldPct > 0 ? "up" : undefined}
             />
-            <Tile label="Dividends (TTM)" value={`₱${dividend.ttm.toFixed(4).replace(/\.?0+$/, "")}`} />
-            <Tile label="Payouts (TTM)" value={String(dividend.payoutCount)} />
+            <Kpi label="Dividends (TTM)" value={`₱${dividend.ttm.toFixed(4).replace(/\.?0+$/, "")}`} />
+            <Kpi label="Payouts (TTM)" value={String(dividend.payoutCount)} />
           </div>
         </>
       )}
@@ -239,35 +241,4 @@ function seasonColor(avg: number | null): string {
   const intensity = Math.min(0.5, Math.abs(avg) / 8); // ~8% avg monthly return saturates
   const pctMix = Math.round((0.06 + intensity) * 100);
   return `color-mix(in srgb, var(${avg >= 0 ? "--up" : "--down"}) ${pctMix}%, transparent)`;
-}
-
-function Tile({
-  label,
-  value,
-  tone,
-  hint,
-  info,
-}: {
-  label: string;
-  value: string;
-  tone?: "up" | "down";
-  hint?: string;
-  info?: string;
-}) {
-  return (
-    <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <div className="text-[11px] text-panel-fg/68">
-        {label}
-        {info && <InfoTip text={info} />}
-      </div>
-      <div
-        className={`mt-0.5 text-lg font-semibold tabular-nums ${
-          tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-panel-fg"
-        }`}
-      >
-        {value}
-      </div>
-      {hint && <div className="mt-0.5 text-[10px] text-panel-fg/65">{hint}</div>}
-    </div>
-  );
 }

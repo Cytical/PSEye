@@ -219,14 +219,13 @@ label[for] {
  * stays exactly the single-column order the page always had). Assign a
  * section's area via the matching `[grid-area:x]` Tailwind arbitrary class.
  *
- * Desktop is 3 columns grouped by purpose rather than reading order: price
- * action (chart+analytics) on the left, the quant `statistics` panel (by far
- * the tallest single section) alone in the center with Recently Viewed
- * filling the space below it, and everything company-reference (sector
- * peers, news, About incl. company facts, disclosures & dividend history) in
- * the rightmost column. "." cells are intentionally empty — e.g. column 1
- * has nothing across from `recent`/`about`/`discl` since it only has two
- * short sections. */
+ * Desktop is a literal 3-row × 3-column bento, not a few tall columns with
+ * dead space beside them: every area spans exactly one row (the chart is the
+ * only one wider than one column), so no section's height forces a gap in a
+ * sibling column two rows down the way a multi-row span did in an earlier
+ * version of this layout. Row 1 is the wide price chart beside sector peers;
+ * row 2 is Analytics / Statistics / News; row 3 is About / Recently Viewed /
+ * Disclosures & dividend history. */
 .stock-detail-grid {
   display: grid;
   /* minmax(0, 1fr), not a bare 1fr: a grid item's default min-width is auto,
@@ -250,11 +249,10 @@ label[for] {
 
 @media (min-width: 1024px) {
   .stock-detail-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-areas:
-      "chart statistics peers"
-      "analytics statistics news"
-      ".     recent     about"
-      ".     .          discl";
+      "chart      chart      peers"
+      "analytics  statistics news"
+      "about      recent     discl";
   }
 }

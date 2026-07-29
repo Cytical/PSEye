@@ -7,6 +7,8 @@ import {
   sma,
   trailingReturn,
 } from "@/lib/analytics";
+import { Kpi } from "./Kpi";
+import { RadialGauge } from "./RadialGauge";
 import { InfoTip } from "./InfoTip";
 
 /**
@@ -63,17 +65,6 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       info: "Simple moving average of the last 200 closing prices — a longer-term trend line.",
     });
 
-  if (rsiValue != null) {
-    const label = rsiLabel(rsiValue);
-    metrics.push({
-      label: "RSI (14)",
-      value: rsiValue.toFixed(0),
-      tone: label === "overbought" ? "down" : label === "oversold" ? "up" : undefined,
-      hint: label,
-      info: "Relative Strength Index, Wilder's 14-day smoothing. Runs 0–100: readings above 70 are typically read as \"overbought,\" below 30 as \"oversold.\" A momentum reading, not a buy/sell signal.",
-    });
-  }
-
   if (dd != null)
     metrics.push({
       label: "Max drawdown (1y)",
@@ -82,38 +73,35 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       info: "The worst peak-to-trough decline over the past year — how far the price fell from its highest point before recovering.",
     });
 
-  if (metrics.length === 0) return null;
+  if (metrics.length === 0 && rsiValue == null) return null;
+
+  const rsiTone: "up" | "down" | undefined =
+    rsiValue == null ? undefined : rsiValue >= 70 ? "down" : rsiValue <= 30 ? "up" : undefined;
 
   return (
-    <div>
+    <div className="rounded-xl bg-panel p-3.5 shadow-sm shadow-black/5 ring-1 ring-panel-border">
       <div className="flex items-baseline justify-between">
         <h2 className="kicker text-panel-fg/68">Analytics</h2>
-        <span className="text-[11px] text-panel-fg/65">derived from ~1yr of closing prices</span>
+        <span className="text-[11px] text-panel-fg/65">~1yr of closing prices</span>
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {metrics.map((m) => (
-          <div
-            key={m.label}
-            className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border"
-          >
-            <div className="text-[11px] text-panel-fg/68">
-              {m.label}
-              {m.info && <InfoTip text={m.info} />}
+      <div className="mt-3 flex flex-wrap items-start gap-x-6 gap-y-3">
+        {rsiValue != null && (
+          <div className="flex items-center gap-2">
+            <RadialGauge value={rsiValue} tone={rsiTone} />
+            <div>
+              <div className="flex items-center whitespace-nowrap text-[10.5px] text-panel-fg/60">
+                RSI (14)
+                <InfoTip text='Relative Strength Index, Wilder&apos;s 14-day smoothing. Runs 0–100: readings above 70 are typically read as "overbought," below 30 as "oversold." A momentum reading, not a buy/sell signal.' />
+              </div>
+              <div className="mt-0.5 text-[10px] text-panel-fg/55">{rsiLabel(rsiValue)}</div>
             </div>
-            <div
-              className={`mt-0.5 text-lg font-semibold tabular-nums ${
-                m.tone === "up" ? "text-up" : m.tone === "down" ? "text-down" : "text-panel-fg"
-              }`}
-            >
-              {m.value}
-            </div>
-            {m.hint && <div className="mt-0.5 text-[10px] text-panel-fg/65">{m.hint}</div>}
           </div>
+        )}
+        {metrics.map((m) => (
+          <Kpi key={m.label} label={m.label} value={m.value} tone={m.tone} hint={m.hint} info={m.info} />
         ))}
       </div>
-      <p className="mt-2 text-[11px] text-panel-fg/68">
-        Descriptive statistics, not a forecast or a signal.
-      </p>
+      <p className="mt-3 text-[11px] text-panel-fg/68">Descriptive statistics, not a forecast or a signal.</p>
     </div>
   );
 }
