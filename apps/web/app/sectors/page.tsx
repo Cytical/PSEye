@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getRankings } from "@/lib/rankings";
+import { SectorSwitcher } from "@/components/SectorSwitcher";
 import { sectorToSlug, VISIBLE_SECTORS } from "@/lib/sectorSlug";
 
 export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as /rankings
 
 export const metadata: Metadata = {
-  title: "PSE Sectors — Browse Philippine Stocks by Industry",
+  title: "PSE Sectors: Browse Philippine Stocks by Industry",
   description:
-    "Every PSE-listed company grouped by sector — Financials, Industrial, Holding Firms, Property, Services, Mining & Oil, and ETFs — ranked by market cap. Free, no login.",
+    "Every PSE-listed company grouped by sector (Financials, Industrial, Holding Firms, Property, Services, Mining & Oil, and ETFs), ranked by market cap. Free, no login.",
   alternates: { canonical: "/sectors" },
 };
 
@@ -42,10 +43,14 @@ export default async function SectorsPage() {
         <span>Sectors</span>
       </nav>
 
-      <h1 className="mt-2 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Sectors</h1>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Sectors</h1>
+        <SectorSwitcher />
+      </div>
       <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/72">
-        Every tracked PSE-listed company grouped by sector. Pick one to see its full ranking by
-        market capitalization, or see all sectors together on the{" "}
+        Every tracked PSE-listed company grouped by sector. Pick one below (or from the dropdown
+        above) to see its full ranking by market capitalization, or see all sectors together on
+        the{" "}
         <Link href="/rankings" className="underline hover:text-panel-fg">
           rankings page
         </Link>

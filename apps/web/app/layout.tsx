@@ -56,11 +56,11 @@ const GOOGLE_SITE_VERIFICATION =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "PSEye — Philippine Stock Exchange (PSE) Tracker",
+    default: "PSEye: Philippine Stock Exchange (PSE) Tracker",
     template: "%s | PSEye",
   },
   description:
-    "Free Philippine Stock Exchange tracker: live PSEi heatmap, PSE stock prices, dividend yields, foreign flow, and daily market recaps — no login, no paywall.",
+    "Free Philippine Stock Exchange tracker: live PSEi heatmap, PSE stock prices, dividend yields, foreign flow, and daily market recaps. No login, no paywall.",
   openGraph: {
     siteName: "PSEye",
     type: "website",

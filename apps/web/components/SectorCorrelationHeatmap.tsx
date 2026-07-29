@@ -48,7 +48,7 @@ export function SectorCorrelationHeatmap({ data }: { data: SectorCorrelation }) 
                   style={{ backgroundColor: cellColor(c) }}
                   title={`${rowSec} × ${sectors[j]}: ${c == null ? "n/a" : c.toFixed(2)}`}
                 >
-                  {c == null ? "—" : c.toFixed(2)}
+                  {c == null ? "N/A" : c.toFixed(2)}
                 </td>
               ))}
             </tr>

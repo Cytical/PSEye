@@ -5,9 +5,9 @@ import { PortfolioTracker } from "@/components/PortfolioTracker";
 export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as the market map
 
 export const metadata: Metadata = {
-  title: "PSE Portfolio Tracker — Track Your Holdings' Gain/Loss",
+  title: "PSE Portfolio Tracker: Track Your Holdings' Gain/Loss",
   description:
-    "Track shares and average cost for any PSE-listed stock and see live gain/loss against real quotes. Free, no login — your holdings never leave your browser.",
+    "Track shares and average cost for any PSE-listed stock and see live gain/loss against real quotes. Free, no login: your holdings never leave your browser.",
   alternates: { canonical: "/portfolio" },
 };
 
@@ -19,11 +19,10 @@ export default async function PortfolioPage() {
       <p className="kicker text-accent">Tools</p>
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Portfolio Tracker</h1>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/65">
-        Add the PSE stocks you hold — shares and average cost per share — and see live cost basis,
-        market value, and gain/loss against real end-of-day / delayed quotes. Nothing you enter is
-        sent anywhere: holdings are stored only in this browser (localStorage), the same way the
-        watchlist star works, so there&apos;s no account and nothing to lose if you clear cookies on
-        a device you don&apos;t plan to return to.
+        Add the PSE stocks you hold (shares and average cost per share) to see live cost basis,
+        market value, and gain/loss against real end-of-day / delayed quotes. Nothing you enter
+        leaves your browser: holdings are stored only in localStorage, the same way the watchlist
+        star works. No account, nothing to lose if you clear cookies.
       </p>
 
       <div className="mt-6">
@@ -32,7 +31,7 @@ export default async function PortfolioPage() {
 
       <p className="mt-8 text-xs text-panel-fg/72">
         Not financial advice. Prices are end-of-day / delayed quotes, refreshed
-        hourly during trading hours — not real-time.
+        hourly during trading hours, not real-time.
       </p>
     </div>
   );

@@ -23,17 +23,23 @@ export function applyTheme(theme: Theme) {
  * plain string (not imported) since that script runs before any bundle
  * loads. Must be kept in sync with the logic above by hand.
  *
- * Dark is the unconditional default for a first-time visitor — not gated on
- * `prefers-color-scheme`, so a visitor on a light-themed OS still lands on
- * dark rather than only the ones whose system already prefers it. An
- * explicit stored choice (light or dark) always wins over this default. */
+ * A first-time visitor (no stored choice yet) gets whatever their OS/browser
+ * already prefers, via `prefers-color-scheme` — not a hardcoded default in
+ * either direction. An explicit stored choice (light or dark, set by
+ * ThemeToggle) always wins over the system preference. `classList.toggle`
+ * (not a one-directional `add`) so a light system preference actually
+ * removes the `dark` class the server-rendered <html> ships with by
+ * default — a plain `if (theme === "dark") add("dark")` would leave that
+ * class stuck on for light-themed visitors instead of clearing it. */
 export const THEME_INIT_SCRIPT = `
 (function () {
   try {
     var stored = localStorage.getItem("${THEME_STORAGE_KEY}");
-    var theme = stored === "light" || stored === "dark" ? stored : "dark";
+    var theme = stored === "light" || stored === "dark"
+      ? stored
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
     document.documentElement.dataset.theme = theme;
-    if (theme === "dark") document.documentElement.classList.add("dark");
+    document.documentElement.classList.toggle("dark", theme === "dark");
   } catch (e) {}
 })();
 `;

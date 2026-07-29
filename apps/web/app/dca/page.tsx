@@ -5,7 +5,7 @@ import { DcaCalculator } from "@/components/DcaCalculator";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "PSE DCA Calculator — Peso Cost Averaging",
+  title: "PSE DCA Calculator: Peso Cost Averaging",
   description: "Simulate dollar-cost-averaging into a PSE stock or an equal-weighted market proxy.",
   alternates: { canonical: "/dca" },
 };
@@ -19,7 +19,7 @@ export default async function DcaPage() {
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">DCA Calculator</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
         See what cost-averaging a fixed amount into a stock (or the market as a whole) would
-        have grown to. Not financial advice — past patterns don&apos;t predict future returns.
+        be worth today. Not financial advice: past patterns don&apos;t predict future returns.
       </p>
 
       <div className="mt-6">

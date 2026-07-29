@@ -6,9 +6,9 @@ import { ClusterScatter, CLUSTER_COLORS, type ScatterPoint } from "@/components/
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "PSE Stock Clusters — Grouped by Return Behavior (k-means)",
+  title: "PSE Stock Clusters: Grouped by Return Behavior (k-means)",
   description:
-    "Philippine Stock Exchange stocks grouped by how they actually behave — volatility, beta, momentum, and correlation to the market — using k-means clustering. See which stocks move alike, beyond their sector labels. Free, no login.",
+    "Philippine Stock Exchange stocks grouped by how they actually behave (volatility, beta, momentum, and correlation to the market) using k-means clustering. See which stocks move alike, beyond their sector labels. Free, no login.",
   alternates: { canonical: "/clusters" },
 };
 
@@ -56,8 +56,8 @@ export default async function ClustersPage() {
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/72">
         Sectors tell you what a company <em>does</em>; this groups stocks by how they actually{" "}
         <em>trade</em>. A k-means model clusters the largest PSE names on four standardized features
-        — volatility, beta, 1-year momentum, and correlation to the market — surfacing which stocks
-        move alike regardless of industry. Unsupervised, descriptive — not a recommendation.
+        (volatility, beta, 1-year momentum, and correlation to the market), surfacing which stocks
+        move alike regardless of industry. Unsupervised and descriptive, not a recommendation.
       </p>
 
       {result.source !== "real" || result.clusters.length === 0 ? (
@@ -121,7 +121,7 @@ export default async function ClustersPage() {
 
       <p className="mt-8 max-w-3xl text-xs text-panel-fg/68">
         Computed over the largest ~100 PSE stocks with sufficient history. Delayed / end-of-day data,
-        recomputed by PSEye. Descriptive statistics and unsupervised grouping — not
+        recomputed by PSEye. Descriptive statistics and unsupervised grouping, not
         financial advice, a stock pick, or a buy/sell signal.
       </p>
     </div>

@@ -9,7 +9,9 @@ import { TopMovers } from "./TopMovers";
 import { AddToWatchlistModal } from "./AddToWatchlistModal";
 import { ShareButton } from "./ShareButton";
 import { FullscreenButton } from "./FullscreenButton";
+import { MarketStatusBadge } from "./MarketStatusBadge";
 import { CalendarDatePicker } from "@/components/CalendarDatePicker";
+import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 import {
   MARKET_MAP_FILTERS,
   NARROW_DEFAULT_FILTER,
@@ -23,6 +25,7 @@ import { useNarrowViewport } from "@/lib/useNarrowViewport";
 import type { CompanyProfile } from "@/lib/companyProfiles";
 import type { MarketSnapshot } from "@/lib/marketSnapshot";
 import type { LatestForeignFlow } from "@/lib/latestForeignFlow";
+import type { MarketStatus } from "@/lib/marketStatus";
 
 interface MarketMapProps {
   stocks: TreemapStock[];
@@ -34,6 +37,8 @@ interface MarketMapProps {
   sparklineByTicker?: Record<string, number[]>;
   /** Most recent session that has a `/daily/[date]` recap, for MobileMarketSummary's link out. */
   latestRecapDate: string;
+  /** Server's reading of market open/closed, for the headline badge — see MarketStatusBadge. */
+  status: MarketStatus;
 }
 
 const FILTER_KEYS = new Set(MARKET_MAP_FILTERS.map((f) => f.key));
@@ -146,6 +151,7 @@ export function MarketMap({
   foreignFlow,
   sparklineByTicker,
   latestRecapDate,
+  status,
 }: MarketMapProps) {
   const filter = useSyncExternalStore(subscribeToFilterUrl, getFilterFromUrl, (): MarketMapFilter => "all");
   const filterIsExplicit = useSyncExternalStore(subscribeToFilterUrl, hasFilterParamInUrl, (): boolean => false);
@@ -251,7 +257,7 @@ export function MarketMap({
   function selectFilter(next: MarketMapFilter) {
     const url = new URL(window.location.href);
     // On a phone an absent `?filter=` means NARROW_DEFAULT_FILTER, so deleting
-    // the param on "All PSE" would bounce the visitor straight back to Top 30
+    // the param on "All PSE" would bounce the visitor straight back to PSEi
     // instead of showing them everything. Write it explicitly there.
     if (next === "all" && !isNarrow) url.searchParams.delete("filter");
     else url.searchParams.set("filter", next);
@@ -276,11 +282,19 @@ export function MarketMap({
     return filterMarketMapStocks(baseStocks, effectiveFilter);
   }, [baseStocks, effectiveFilter, watchedTickers, isSharedWatchlistView, sharedTickers]);
 
-  /** Stock count per filter, shown as a badge so the choice between e.g. "Top 50" and "Top 100" is informed rather than a guess. */
+  /** Stock count per filter, shown as a badge so the choice between e.g. "Top 50" and "Top 100" is informed rather than a guess.
+   * "All PSE" is the one exception: it shows the full tracked-company roster
+   * size (PSE_EDGE_COMPANIES.length) rather than what the map actually
+   * renders for it. The map itself still excludes the 9 SME Board names
+   * (see baseStocks above), so the rendered box count is really 9 short of
+   * this badge — deliberate, so the badge reads as "PSEye tracks this many
+   * companies" rather than "this filter draws this many boxes," which the
+   * other filters' badges do mean literally. */
   const countByFilter = useMemo((): Record<MarketMapFilter, number> => {
     const counts = {} as Record<MarketMapFilter, number>;
     for (const { key } of MARKET_MAP_FILTERS) {
-      if (key === "nasdaq100") counts[key] = NASDAQ_100_STOCKS.length;
+      if (key === "all") counts[key] = PSE_EDGE_COMPANIES.length;
+      else if (key === "nasdaq100") counts[key] = NASDAQ_100_STOCKS.length;
       else if (key === "watchlist") counts[key] = baseStocks.filter((s) => watchedTickers.includes(s.ticker)).length;
       else counts[key] = filterMarketMapStocks(baseStocks, key).length;
     }
@@ -308,6 +322,36 @@ export function MarketMap({
   // first tile on every desktop load.
   return (
     <div className="flex flex-col gap-4">
+      {/* Headline row: kicker/status badge/h1 on the left, Fullscreen/Share back
+          at the top and pinned furthest-right on this same row — moved up from
+          the strip below the canvas so they read as actions on the page, not
+          something a visitor has to scroll past the whole map to find. */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <p className="kicker text-accent">Market Map</p>
+            {/* Seeded with the server's reading so SSR and the first client
+                render agree, then kept honest in the browser — this route is
+                cached for an hour, so a render-time value would go stale. */}
+            <MarketStatusBadge initial={status} />
+          </div>
+          {/* nowrap only from sm up. Below that the vw term bottoms out at the
+              clamp minimum, so the line stops scaling with the viewport and
+              simply overflowed it: measured on a 390px phone, "Visualized."
+              ended 42px past the right edge and gave the whole homepage a
+              horizontal scrollbar. Wrapping to two lines breaks naturally after
+              the comma, which also lets the minimum size go up from 1.35rem to
+              1.75rem — the headline is bigger on phones now, not smaller. */}
+          <h1 className="mt-2 font-serif text-[clamp(1.75rem,4.6vw,3.25rem)] font-semibold leading-[1.05] tracking-tight sm:whitespace-nowrap">
+            The Philippine Stock Market, <span className="italic text-accent">Visualized.</span>
+          </h1>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 pt-1">
+          <FullscreenButton targetRef={mapAreaRef} />
+          <ShareButton getShareUrl={getMarketMapShareUrl} />
+        </div>
+      </div>
+
       {/* Phone-only "today at a glance" card. Above the map deliberately: it's
           the readable-on-a-phone content, and the map below it is the thing
           worth scrolling to. Desktop gets the same numbers from the sidebar. */}
@@ -345,7 +389,7 @@ export function MarketMap({
 
       {pastViewFailed && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-panel px-4 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border">
-          <span className="text-panel-fg/70">No market data recorded for {viewDate} — showing today instead.</span>
+          <span className="text-panel-fg/70">No market data recorded for {viewDate}. Showing today instead.</span>
           <button
             type="button"
             onClick={() => selectDateInUrl(null)}
@@ -455,7 +499,7 @@ export function MarketMap({
           {isSharedWatchlistView && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-panel px-4 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <span className="text-panel-fg/70">
-                Viewing a shared watchlist — {sharedTickers.length} stock{sharedTickers.length === 1 ? "" : "s"}
+                Viewing a shared watchlist: {sharedTickers.length} stock{sharedTickers.length === 1 ? "" : "s"}
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -515,16 +559,16 @@ export function MarketMap({
             />
           )}
 
-          {/* Map controls, below the canvas rather than above it — they're
-              actions on the view, not context for reading it, so they don't
-              earn a band between the headline and the first tile. Inside the
-              fullscreen target (mapAreaRef) on purpose: "Exit fullscreen" is
-              otherwise unreachable except via the Esc key, since the Fullscreen
-              API only paints the fullscreened element's own subtree. */}
-          <div className="mt-3 flex items-center justify-end gap-2">
-            <FullscreenButton targetRef={mapAreaRef} />
-            <ShareButton getShareUrl={getMarketMapShareUrl} />
-          </div>
+          {/* Exit-fullscreen affordance duplicated inside the fullscreen target
+              itself — the top-of-page Fullscreen button above is otherwise
+              unreachable once fullscreen is active, since the Fullscreen API
+              only paints the fullscreened element's own subtree, and Esc
+              shouldn't be the only way out. */}
+          {isFullscreen && (
+            <div className="flex items-center justify-end gap-2">
+              <FullscreenButton targetRef={mapAreaRef} />
+            </div>
+          )}
 
           {addModalOpen && <AddToWatchlistModal onClose={() => setAddModalOpen(false)} />}
         </div>

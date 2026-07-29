@@ -17,6 +17,7 @@ export function Kpi({
   tone,
   hint,
   info,
+  glossaryId,
   size = "sm",
 }: {
   label: string;
@@ -24,24 +25,34 @@ export function Kpi({
   tone?: "up" | "down";
   hint?: string;
   info?: string;
-  /** `md` for the hero rail's headline figures; `sm` everywhere else. */
-  size?: "sm" | "md";
+  /** Forwarded to `InfoTip` — see its own doc comment. Only meaningful alongside `info`. */
+  glossaryId?: string;
+  /** `lg` for a hero rail with room to spare; `md` for the usual hero rail headline figures; `sm` everywhere else. */
+  size?: "sm" | "md" | "lg";
 }) {
   const toneClass = tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-panel-fg";
   return (
     <div className="min-w-0">
-      <div className="flex items-center gap-0.5 text-[10.5px] leading-tight text-panel-fg/60">
+      <div
+        className={`flex items-center gap-0.5 leading-tight text-panel-fg/60 ${size === "lg" ? "text-[12px]" : "text-[10.5px]"}`}
+      >
         <span className="truncate" title={label}>
           {label}
         </span>
-        {info && <InfoTip text={info} />}
+        {info && <InfoTip text={info} glossaryId={glossaryId} />}
       </div>
       <div
-        className={`mt-0.5 font-semibold tabular-nums ${size === "md" ? "text-[15px]" : "text-[13.5px]"} ${toneClass}`}
+        className={`mt-0.5 font-semibold tabular-nums ${
+          size === "lg" ? "text-[22px]" : size === "md" ? "text-[15px]" : "text-[13.5px]"
+        } ${toneClass}`}
       >
         {value}
       </div>
-      {hint && <div className="truncate text-[10px] leading-tight text-panel-fg/55">{hint}</div>}
+      {hint && (
+        <div className={`truncate leading-tight text-panel-fg/55 ${size === "lg" ? "text-[11px]" : "text-[10px]"}`}>
+          {hint}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,19 +1,24 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import {
   computeTreemapLayout,
   pctChangeToColor,
   getContrastText,
   shouldShowLabel,
+  bandFor,
+  findAdjacentBox,
   SECTOR_HEADER_HEIGHT,
   LEGEND_BANDS,
   type TreemapInput,
+  type Direction,
 } from "@pseye/treemap-layout";
 import type { CompanyProfile } from "@/lib/companyProfiles";
 import { useColorTheme } from "@/lib/useColorTheme";
 import { useColorblindMode } from "@/lib/colorblindMode";
 import { byInvestableCapDesc } from "@/lib/floatAdjustedCap";
+import { sectorToSlug } from "@/lib/sectorSlug";
 import { CompanyDetailPanel } from "./CompanyDetailPanel";
 
 export interface TreemapStock extends TreemapInput {
@@ -63,6 +68,23 @@ const CANVAS_BG = "var(--panel-canvas)";
 const HEADER_BG = "var(--treemap-header-bg)";
 const GRID_LINE = "var(--panel-grid)";
 
+/** Applied to every sector header and stock tile's inline style so a filter
+ * switch, a sort-order change, or a container resize glides boxes to their
+ * new left/top/width/height instead of snapping — the map is read by
+ * tracking where a specific stock's box went, and a hard cut breaks that.
+ * Kept out of the hover/press transitions below (those stay fast and
+ * separate) so glide speed and interaction feedback speed can differ.
+ * `prefers-reduced-motion` still wins: the global `*` rule in globals.css
+ * forces every transition-duration near-zero regardless of what's set here. */
+const BOX_GLIDE_TRANSITION = "left 200ms cubic-bezier(0.22, 1, 0.36, 1), top 200ms cubic-bezier(0.22, 1, 0.36, 1), width 200ms cubic-bezier(0.22, 1, 0.36, 1), height 200ms cubic-bezier(0.22, 1, 0.36, 1)";
+/** Stock tile only: the glide above, plus the fast hover/press feedback that
+ * used to live in the Tailwind `transition-[filter,box-shadow]` utility —
+ * moved to inline style because a single element can't carry two different
+ * `transition-property`/`duration` declarations across a class + inline style
+ * without the inline one clobbering the class's (inline `transition` is a
+ * shorthand that wins over the individual longhands Tailwind emits). */
+const TILE_TRANSITION = `${BOX_GLIDE_TRANSITION}, filter 100ms ease, box-shadow 100ms ease, transform 75ms ease-out, opacity 150ms ease`;
+
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
 /** How much a wheel tick changes zoom — tuned so a normal scroll gesture feels
@@ -90,7 +112,10 @@ function tickerFontSize(width: number, height: number): number {
 }
 
 /** Fired after history.replaceState so useSyncExternalStore knows to re-read the URL
- * (replaceState doesn't dispatch popstate on its own) — same pattern as MarketMap.tsx's filter sync. */
+ * (replaceState doesn't dispatch popstate on its own) — same pattern as MarketMap.tsx's
+ * filter sync. Shared by both of this component's own URL params (`?ticker=` and
+ * `?band=`) rather than one event each — same "this component's own view state changed"
+ * bucket, same as MarketMap.tsx sharing one FILTER_CHANGE_EVENT across filter/tickers/date. */
 const TICKER_CHANGE_EVENT = "pseye:tickerchange";
 
 function subscribeToTickerUrl(callback: () => void) {
@@ -110,6 +135,24 @@ function selectTickerInUrl(next: string | null) {
   const url = new URL(window.location.href);
   if (next) url.searchParams.set("ticker", next);
   else url.searchParams.delete("ticker");
+  window.history.replaceState(null, "", url);
+  window.dispatchEvent(new Event(TICKER_CHANGE_EVENT));
+}
+
+/** `?band=` — the interactive legend. A visitor can highlight one of the seven
+ * LEGEND_BANDS swatches to dim every tile that doesn't belong to it, and the
+ * choice is shareable/refreshable the same way the selected ticker is. */
+function getBandFromUrl(): number | null {
+  const param = new URLSearchParams(window.location.search).get("band");
+  if (param === null) return null;
+  const parsed = Number(param);
+  return LEGEND_BANDS.includes(parsed) ? parsed : null;
+}
+
+function selectBandInUrl(next: number | null) {
+  const url = new URL(window.location.href);
+  if (next !== null) url.searchParams.set("band", String(next));
+  else url.searchParams.delete("band");
   window.history.replaceState(null, "", url);
   window.dispatchEvent(new Event(TICKER_CHANGE_EVENT));
 }
@@ -137,6 +180,13 @@ export function TreemapChart({
   // Synced to the `?ticker=` URL param (server snapshot null so hydration never mismatches
   // a client that might land on a deep-linked ticker) — makes "look at this stock" shareable.
   const selectedTicker = useSyncExternalStore(subscribeToTickerUrl, getTickerFromUrl, (): string | null => null);
+  // Synced to `?band=` the same way — which legend swatch (if any) is currently isolating the map.
+  const activeBand = useSyncExternalStore(subscribeToTickerUrl, getBandFromUrl, (): number | null => null);
+  // Populated via each stock tile's ref callback below — lets the keyboard
+  // handler move focus to a *specific* adjacent tile (found by
+  // findAdjacentBox) rather than only being able to affect the currently
+  // focused element the way native Tab order can.
+  const tileRefs = useRef(new Map<string, HTMLButtonElement>());
   const containerRef = useRef<HTMLDivElement>(null);
   const [measuredWidth, setMeasuredWidth] = useState(widthProp ?? 1000);
   /**
@@ -188,6 +238,14 @@ export function TreemapChart({
   // boxes) on every hover — the component's most frequent re-render trigger —
   // was pure waste, since layout only actually depends on layoutInput/width/height.
   const layout = useMemo(() => computeTreemapLayout(layoutInput, width, height), [layoutInput, width, height]);
+  // Sector headers link out to /sectors/[slug] — but that route only knows
+  // real PSE sectors (see lib/sectorSlug.ts), and this same component also
+  // renders the Nasdaq 100 mock map (NASDAQ_100_STOCKS, currency "USD"),
+  // whose sector strings are US GICS sectors. A blanket per-instance flag
+  // rather than validating each sector name individually: some GICS names
+  // (e.g. "Financials") coincidentally collide with a real PSE sector, which
+  // would link a Nasdaq tile's header to an unrelated PSE sector page.
+  const isPseMap = stocks[0]?.currency !== "USD";
   const byTicker = useMemo(() => new Map(stocks.map((s) => [s.ticker, s])), [stocks]);
   const selected = selectedTicker ? (byTicker.get(selectedTicker) ?? null) : null;
 
@@ -359,6 +417,32 @@ export function TreemapChart({
     selectTickerInUrl(ticker);
   }
 
+  const ARROW_KEY_DIRECTION: Record<string, Direction> = {
+    ArrowUp: "up",
+    ArrowDown: "down",
+    ArrowLeft: "left",
+    ArrowRight: "right",
+  };
+
+  /**
+   * Tab order visits tiles in whatever order d3's squarify layout emits them
+   * (sector, then size descending) — not a spatial order, so it can't answer
+   * "the tile above this one." Arrow keys move focus by actual on-screen
+   * adjacency instead, via findAdjacentBox over the current layout's rects.
+   * Native Tab/Shift+Tab (DOM order) and Enter/Space (native <button>
+   * activation) are untouched — this only adds the four arrow keys.
+   */
+  function onTileKeyDown(e: React.KeyboardEvent, ticker: string) {
+    const direction = ARROW_KEY_DIRECTION[e.key];
+    if (!direction) return;
+    const current = layout.stocks.find((b) => b.ticker === ticker);
+    if (!current) return;
+    e.preventDefault();
+    const candidates = layout.stocks.filter((b) => b.ticker !== ticker && b.ticker !== ADD_TILE_TICKER);
+    const next = findAdjacentBox(current, direction, candidates);
+    if (next) tileRefs.current.get(next.ticker)?.focus();
+  }
+
   return (
     <div ref={containerRef} className="flex w-full flex-col items-center gap-3">
       {/* role="group", NOT role="img" — an img role tells assistive tech to
@@ -374,7 +458,7 @@ export function TreemapChart({
         }`}
         style={{ width: widthProp, height, background: CANVAS_BG }}
         role="group"
-        aria-label="PSE market map: box size is market cap, color is today's percent change. Scroll to zoom, drag to pan."
+        aria-label="PSE market map: box size is market cap, color is today's percent change. Scroll to zoom, drag to pan, arrow keys to move between stocks."
       >
         {/* Zoom/pan transform layer — scaling/translating this instead of the
             canvas box above keeps the box's own footprint (and the width
@@ -396,22 +480,62 @@ export function TreemapChart({
         >
         {layout.sectors
           .filter((sector) => sector.sector !== ADD_TILE_SECTOR)
-          .map((sector) => (
-          <div
-            key={sector.sector}
-            className="absolute flex items-center overflow-hidden whitespace-nowrap px-2.5 text-xs font-semibold uppercase tracking-wide text-panel-fg/80"
-            style={{
+          .map((sector) => {
+            const headerStyle = {
               left: sector.x0,
               top: sector.y0,
               width: sector.x1 - sector.x0,
               height: SECTOR_HEADER_HEIGHT,
               background: HEADER_BG,
               borderBottom: `1px solid ${GRID_LINE}`,
-            }}
-          >
-            {sector.sector}
-          </div>
-        ))}
+              transition: BOX_GLIDE_TRANSITION,
+            };
+
+            if (!isPseMap) {
+              return (
+                <div
+                  key={sector.sector}
+                  className="absolute flex items-center overflow-hidden whitespace-nowrap px-2.5 text-xs font-semibold uppercase tracking-wide text-panel-fg/80"
+                  style={headerStyle}
+                >
+                  {sector.sector}
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={sector.sector}
+                href={`/sectors/${sectorToSlug(sector.sector as Parameters<typeof sectorToSlug>[0])}`}
+                // Sits inside the same pan/drag layer as the stock tiles (see
+                // onPointerDown above) — without stopping propagation here, a
+                // zoomed-in drag that starts on a header would still fire this
+                // link's navigation on pointerup instead of being treated as a
+                // pan, since headers never opted into the drag-threshold logic
+                // tiles get via selectTickerUnlessDragged.
+                onPointerDown={(e) => e.stopPropagation()}
+                className="absolute flex items-center gap-1 overflow-hidden whitespace-nowrap px-2.5 text-xs font-semibold uppercase tracking-wide text-panel-fg/80 transition-colors hover:bg-panel-active hover:text-panel-fg"
+                style={headerStyle}
+                title={`Browse the ${sector.sector} sector`}
+              >
+                <span className="truncate">{sector.sector}</span>
+                <svg
+                  aria-hidden="true"
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="shrink-0 opacity-60"
+                >
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </Link>
+            );
+          })}
 
         {layout.stocks.map((box) => {
           const w = box.x1 - box.x0;
@@ -429,7 +553,7 @@ export function TreemapChart({
                 aria-label="Add a stock to your watchlist"
                 title="Add a stock to your watchlist"
                 className="absolute flex flex-col items-center justify-center gap-1 overflow-hidden rounded-sm border-2 border-dashed border-panel-border text-panel-fg/65 transition-colors hover:border-panel-fg/50 hover:bg-panel-raised hover:text-panel-fg/80"
-                style={{ left: box.x0, top: box.y0, width: w, height: h }}
+                style={{ left: box.x0, top: box.y0, width: w, height: h, transition: BOX_GLIDE_TRANSITION }}
               >
                 <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19" />
@@ -442,6 +566,13 @@ export function TreemapChart({
 
           const fill = pctChangeToColor(box.pctChange, colorTheme, colorblind);
           const ink = getContrastText(fill);
+          // Dimmed, not hidden/removed, when a legend band is active and this
+          // tile isn't in it — the map's shape (sector layout, box sizes)
+          // stays intact as a reference, and the tile is still reachable by
+          // click/keyboard, just visually de-emphasized. Uses the exact same
+          // snapping pctChangeToColor used to paint `fill`, so "which tiles
+          // light up" always agrees with "which legend swatch you clicked."
+          const isDimmedByBand = activeBand !== null && bandFor(box.pctChange ?? 0) !== activeBand;
           // Evaluated against the on-screen (zoomed) size, not the raw layout
           // size — so a small-cap box too tiny to label at 1x reveals its
           // ticker once zooming in has made it big enough to read, instead of
@@ -465,6 +596,10 @@ export function TreemapChart({
           return (
             <button
               key={box.ticker}
+              ref={(el) => {
+                if (el) tileRefs.current.set(box.ticker, el);
+                else tileRefs.current.delete(box.ticker);
+              }}
               type="button"
               // Hover feedback has to move *away* from the page's own
               // background to register: brightening works on the dark map's
@@ -473,7 +608,7 @@ export function TreemapChart({
               // of exactly the tile being pointed at. Light mode deepens
               // instead, and outlines with ink rather than the white ring
               // that was near-invisible on a pale tile.
-              className={`absolute flex flex-col items-center justify-center overflow-hidden text-center transition-[filter,box-shadow] duration-100 hover:z-10 ${
+              className={`absolute flex flex-col items-center justify-center overflow-hidden text-center hover:z-10 active:scale-[0.97] ${
                 colorTheme === "light" ? "hover:brightness-90" : "hover:brightness-125"
               }`}
               style={{
@@ -484,16 +619,19 @@ export function TreemapChart({
                 backgroundColor: fill,
                 color: ink,
                 border: `1px solid ${GRID_LINE}`,
+                opacity: isDimmedByBand ? 0.32 : 1,
                 boxShadow: isHovered
                   ? `inset 0 0 0 2px ${colorTheme === "light" ? "rgba(11,11,11,0.55)" : "rgba(255,255,255,0.85)"}`
                   : undefined,
+                transition: TILE_TRANSITION,
               }}
               onMouseEnter={() => stock && setHovered(stock)}
               onMouseLeave={() => setHovered(null)}
               onFocus={() => stock && setHovered(stock)}
               onBlur={() => setHovered(null)}
               onClick={() => stock && selectTickerUnlessDragged(stock.ticker)}
-              title={`${box.ticker} ${formatPctChange(box.pctChange)} — click for details`}
+              onKeyDown={(e) => onTileKeyDown(e, box.ticker)}
+              title={`${box.ticker} ${formatPctChange(box.pctChange)}: click for details`}
               aria-label={`${box.ticker}${stock ? `, ${stock.companyName}` : ""}, ${formatPctChange(box.pctChange)} today`}
             >
               {showLabel && (
@@ -520,29 +658,6 @@ export function TreemapChart({
         })}
         </div>
 
-        {/* Zoom controls — siblings of the transform layer above, not children
-            of it, so they stay fixed-size and fixed-position regardless of
-            zoom/pan. */}
-        <div className="absolute bottom-3 right-3 flex flex-col overflow-hidden rounded-lg ring-1 ring-panel-border shadow-sm shadow-black/10">
-          <button
-            type="button"
-            onClick={() => zoomBy(1.4)}
-            disabled={zoom >= MAX_ZOOM}
-            aria-label="Zoom in"
-            className="flex h-7 w-7 items-center justify-center bg-panel text-sm font-semibold text-panel-fg/70 transition-colors hover:bg-panel-raised hover:text-panel-fg disabled:opacity-40"
-          >
-            +
-          </button>
-          <button
-            type="button"
-            onClick={() => zoomBy(1 / 1.4)}
-            disabled={zoom <= MIN_ZOOM}
-            aria-label="Zoom out"
-            className="flex h-7 w-7 items-center justify-center border-t border-panel-border bg-panel text-sm font-semibold text-panel-fg/70 transition-colors hover:bg-panel-raised hover:text-panel-fg disabled:opacity-40"
-          >
-            −
-          </button>
-        </div>
         {zoom > 1 && (
           <button
             type="button"
@@ -556,7 +671,7 @@ export function TreemapChart({
         )}
 
         {hovered && !selected && (
-          <div className="pointer-events-none absolute bottom-3 left-3 min-w-[190px] rounded-xl border border-panel-border bg-panel/95 px-3.5 py-3 text-xs text-panel-fg shadow-xl shadow-black/20 backdrop-blur-sm">
+          <div className="pointer-events-none absolute bottom-3 left-3 min-w-[190px] animate-tooltip-in rounded-xl border border-panel-border bg-panel/95 px-3.5 py-3 text-xs text-panel-fg shadow-xl shadow-black/20 backdrop-blur-sm">
             <div className="flex items-baseline justify-between gap-3">
               <span className="text-sm font-bold tracking-tight">{hovered.ticker}</span>
               <span className={`text-sm font-semibold ${(hovered.pctChange ?? 0) >= 0 ? "text-up" : "text-down"}`}>
@@ -591,33 +706,100 @@ export function TreemapChart({
         />
       )}
 
-      <div className="flex w-full max-w-xs flex-col items-center gap-1.5">
-        <span className="kicker text-foreground/68">Day change</span>
-        <div className="w-full">
+      {/* Full-width row: the Day change legend keeps its own centered max-w-xs
+          column, and the zoom controls — moved out of the canvas overlay
+          above — sit pinned to the far right of this same row instead. */}
+      <div className="flex w-full items-end justify-between gap-3">
+        <div className="flex flex-1 flex-col items-center gap-1.5">
+          <div className="flex w-full max-w-xs items-center justify-between">
+            <span className="kicker text-foreground/68">Day change</span>
+            {/* Only present once a band is active — an always-visible "Clear"
+                would just be dead space for the common case of no filter. */}
+            {activeBand !== null && (
+              <button
+                type="button"
+                onClick={() => selectBandInUrl(null)}
+                className="text-[10px] font-medium text-foreground/68 transition-colors hover:text-foreground"
+              >
+                Clear
+              </button>
+            )}
+          </div>
           {/* finviz-style discrete bands, not a gradient — matches what the
               map's boxes actually render (see LEGEND_BANDS/bandFor in
-              @pseye/treemap-layout). */}
-          <div className="flex w-full overflow-hidden rounded-md ring-1 ring-inset ring-foreground/10">
-            {LEGEND_BANDS.map((band) => (
-              <div
-                key={band}
-                className="h-2.5 flex-1"
-                style={{ background: pctChangeToColor(band, colorTheme, colorblind) }}
-              />
-            ))}
+              @pseye/treemap-layout). Each swatch doubles as a filter button:
+              click one to dim every tile outside that band (isDimmedByBand
+              above), click again (or "Clear") to go back to showing everything
+              at full strength. */}
+          <div className="flex w-full max-w-xs overflow-hidden rounded-md ring-1 ring-inset ring-foreground/10">
+            {LEGEND_BANDS.map((band) => {
+              const isActive = activeBand === band;
+              const isDimmed = activeBand !== null && !isActive;
+              return (
+                <button
+                  key={band}
+                  type="button"
+                  onClick={() => selectBandInUrl(isActive ? null : band)}
+                  aria-pressed={isActive}
+                  aria-label={`Highlight stocks ${bandDescription(band)} today`}
+                  title={`Highlight stocks ${bandDescription(band)} today`}
+                  className={`flex flex-1 flex-col items-center gap-1.5 py-2 transition-colors ${
+                    isActive ? "bg-foreground/10" : "hover:bg-foreground/5"
+                  }`}
+                >
+                  <span
+                    className="h-2.5 w-full transition-opacity"
+                    style={{ background: pctChangeToColor(band, colorTheme, colorblind), opacity: isDimmed ? 0.4 : 1 }}
+                  />
+                  <span
+                    className={`text-[10px] font-medium transition-opacity ${
+                      isDimmed ? "text-foreground/40" : "text-foreground/68"
+                    }`}
+                  >
+                    {band > 0 ? "+" : ""}
+                    {band}%
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          <div className="flex w-full justify-between text-[10px] font-medium text-foreground/68">
-            {LEGEND_BANDS.map((band) => (
-              <span key={band}>
-                {band > 0 ? "+" : ""}
-                {band}%
-              </span>
-            ))}
-          </div>
+        </div>
+
+        {/* Zoom controls — moved here from an absolute overlay inside the
+            canvas so they no longer float on top of tiles near the bottom-right
+            corner of the map. */}
+        <div className="flex shrink-0 items-center overflow-hidden rounded-lg ring-1 ring-panel-border shadow-sm shadow-black/10">
+          <button
+            type="button"
+            onClick={() => zoomBy(1 / 1.4)}
+            disabled={zoom <= MIN_ZOOM}
+            aria-label="Zoom out"
+            className="flex h-7 w-7 items-center justify-center bg-panel text-sm font-semibold text-panel-fg/70 transition-colors hover:bg-panel-raised hover:text-panel-fg disabled:opacity-40"
+          >
+            −
+          </button>
+          <button
+            type="button"
+            onClick={() => zoomBy(1.4)}
+            disabled={zoom >= MAX_ZOOM}
+            aria-label="Zoom in"
+            className="flex h-7 w-7 items-center justify-center border-l border-panel-border bg-panel text-sm font-semibold text-panel-fg/70 transition-colors hover:bg-panel-raised hover:text-panel-fg disabled:opacity-40"
+          >
+            +
+          </button>
         </div>
       </div>
     </div>
   );
+}
+
+/** Legend swatch copy for the two clamped ends vs. the five exact bands — see
+ * `bandFor` in @pseye/treemap-layout for why -3/+3 mean "or beyond" rather
+ * than "exactly". */
+function bandDescription(band: number): string {
+  if (band === LEGEND_BANDS[0]) return `down ${Math.abs(band)}% or more`;
+  if (band === LEGEND_BANDS[LEGEND_BANDS.length - 1]) return `up ${band}% or more`;
+  return `around ${band > 0 ? "+" : ""}${band}%`;
 }
 
 const SPARKLINE_WIDTH = 110;

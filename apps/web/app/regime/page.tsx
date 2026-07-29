@@ -6,7 +6,7 @@ import { RegimeChart } from "@/components/RegimeChart";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "PSE Market Regime — Risk-On / Risk-Off Detection",
+  title: "PSE Market Regime: Risk-On / Risk-Off Detection",
   description:
     "Is the Philippine Stock Exchange in a risk-on or risk-off regime? A transparent, rule-based classifier labels market history from trend, drawdown, and volatility of a reconstructed composite index. Free, no login.",
   alternates: { canonical: "/regime" },
@@ -68,9 +68,10 @@ export default async function RegimePage() {
       </h1>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/72">
         Markets alternate between calm uptrends (&ldquo;risk-on&rdquo;) and stressed downtrends
-        (&ldquo;risk-off&rdquo;). This labels the PSE&apos;s history from three transparent signals of
-        a reconstructed composite index — trend vs. its 200-day average, drawdown from the peak, and
-        30-day volatility. A descriptive read of where the market <em>has been</em>, not a forecast.
+        (&ldquo;risk-off&rdquo;). This labels the PSE&apos;s history using three transparent
+        signals from a reconstructed composite index: trend vs. its 200-day average, drawdown
+        from the peak, and 30-day volatility. A descriptive read of where the market{" "}
+        <em>has been</em>, not a forecast.
       </p>
 
       {result.source !== "real" || !result.current ? (
@@ -101,8 +102,8 @@ export default async function RegimePage() {
             <div className="mt-3 rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <RegimeChart points={result.points} />
               <p className="mt-1 text-[11px] text-panel-fg/65">
-                Reconstructed cap-weighted composite (indexed to 100 at the series start) — a PSEi-like
-                proxy, not the official index. Background shading is the detected regime.
+                Reconstructed cap-weighted composite (indexed to 100 at the series start): a
+                PSEi-like proxy, not the official index. Background shading is the detected regime.
               </p>
             </div>
           </section>
@@ -113,9 +114,9 @@ export default async function RegimePage() {
             </h2>
             <p className="mt-1 max-w-3xl text-sm text-panel-fg/72">
               How much of the tracked history sat in each regime, and the composite&apos;s average
-              daily move while there. Over this window the market was largely in a recovery uptrend,
-              so the regimes separate more by trend and volatility than by the sign of returns — but
-              risk-on still shows the strongest daily drift.
+              daily move during it. Over this window the market was largely in a recovery uptrend,
+              so regimes separate more by trend and volatility than by return sign. Risk-on still
+              shows the strongest daily drift.
             </p>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               {result.stats.map((s) => (
@@ -136,8 +137,8 @@ export default async function RegimePage() {
               </p>
               <p>
                 Labels are 5-day majority-smoothed to avoid single-day flip-flops. Rule-based and
-                fully inspectable — no machine-learning black box — so every classification traces to
-                the three signals above.
+                fully inspectable (no machine-learning black box), so every classification traces
+                back to the three signals above.
               </p>
             </div>
           </details>
@@ -146,7 +147,7 @@ export default async function RegimePage() {
 
       <p className="mt-8 max-w-3xl text-xs text-panel-fg/68">
         Delayed / end-of-day data, recomputed by PSEye. A descriptive classification of
-        past market conditions — not a forecast, market-timing signal, or financial advice.
+        past market conditions, not a forecast, market-timing signal, or financial advice.
       </p>
     </div>
   );

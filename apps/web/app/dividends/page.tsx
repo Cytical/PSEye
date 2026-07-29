@@ -6,9 +6,9 @@ import { DividendScreenerTable } from "@/components/DividendScreenerTable";
 export const revalidate = 3600; // dividends move daily at most, but keep price-based yields fresh-ish
 
 export const metadata: Metadata = {
-  title: "PSE Dividend Stocks — Highest Yield Screener",
+  title: "PSE Dividend Stocks: Highest Yield Screener",
   description:
-    "PSE dividend yields, ranked — trailing-12-month cash dividends per share, payout counts, and upcoming ex-dates for every tracked company.",
+    "PSE dividend yields, ranked by trailing-12-month cash dividends per share, with payout counts and upcoming ex-dates for every tracked company.",
   alternates: { canonical: "/dividends" },
 };
 
@@ -40,7 +40,7 @@ export default async function DividendsPage() {
         <Link href="/glossary#dividend-yield" className="underline hover:text-panel-fg">
           dividend yield
         </Link>
-        ). Sort any column — or check the{" "}
+        ). Sort any column, or check the{" "}
         <Link href="/calendar" className="underline hover:text-panel-fg">
           calendar
         </Link>{" "}
@@ -64,20 +64,20 @@ export default async function DividendsPage() {
       <div className="mt-6 flex flex-col gap-1.5 text-xs text-panel-fg/72">
         {source === "mock" && (
           <p>
-            Sample data — no real dividend declarations are on record yet. Figures here are
-            illustrative, not actual payouts.
+            Sample data: no real dividend declarations yet. Figures here are illustrative, not
+            actual payouts.
           </p>
         )}
         {partialCoverage && (
           <p>
-            Dividend history is tracked{coverageStart ? ` since ${formatDate(coverageStart)}` : " only recently"} —
-            trailing-12-month totals may understate a company&apos;s true payout until a full year of
+            Dividend history is tracked{coverageStart ? ` since ${formatDate(coverageStart)}` : " only recently"},
+            so trailing-12-month totals may understate a company&apos;s true payout until a full year of
             history accumulates.
           </p>
         )}
         <p>
-          Preferred-share series, USD-denominated, and percent-of-par payouts are excluded — the
-          yield is per <em>common</em> share against its peso price.
+          Preferred-share series, USD-denominated, and percent-of-par payouts are excluded. Yield
+          is per <em>common</em> share against its peso price.
         </p>
       </div>
     </div>

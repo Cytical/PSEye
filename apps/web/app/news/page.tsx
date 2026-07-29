@@ -12,7 +12,7 @@ import { newsSerif, newsSans } from "./fonts";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "PSE Stock Market News — PH Business Headlines",
+  title: "PSE Stock Market News: PH Business Headlines",
   description: "The most relevant PH business headlines, auto-tagged by PSE ticker.",
   alternates: { canonical: "/news" },
 };
@@ -126,8 +126,8 @@ async function FrontPage({ itemsPromise }: { itemsPromise: Promise<NewsItem[]> }
   if (items.length === 0) {
     return (
       <p className="font-news-sans text-sm text-[#1A1210]/65 dark:text-[#F2E9E2]/65">
-        No items fetched yet — outlet feeds may be unreachable from this environment, or none
-        matched. See packages/sources/news/src/outlets.ts.
+        No items yet. Feeds may be unreachable from this environment, or nothing matched. See
+        packages/sources/news/src/outlets.ts.
       </p>
     );
   }

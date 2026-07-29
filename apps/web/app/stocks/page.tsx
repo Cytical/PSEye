@@ -6,7 +6,7 @@ import { getDailyQuotes } from "@/lib/quotes";
 export const revalidate = 3600; // hourly; matches the quotes ETL cadence
 
 export const metadata: Metadata = {
-  title: "All PSE-Listed Stocks — Prices by Sector",
+  title: "All PSE-Listed Stocks: Prices by Sector",
   description: `Directory of all ${PSE_EDGE_COMPANIES.length} PSE-listed companies tracked on PSEye, grouped by sector, with live price and today's % change.`,
   alternates: { canonical: "/stocks" },
 };
@@ -46,7 +46,7 @@ export default async function StocksIndexPage() {
         itemListElement: PSE_EDGE_COMPANIES.map((c, i) => ({
           "@type": "ListItem",
           position: i + 1,
-          name: `${c.ticker} — ${c.companyName}`,
+          name: `${c.ticker}: ${c.companyName}`,
           url: `${siteUrl}/stocks/${c.ticker}`,
         })),
       },

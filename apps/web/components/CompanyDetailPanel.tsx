@@ -80,7 +80,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-overlay-backdrop"
       onClick={onClose}
       role="presentation"
     >
@@ -91,7 +91,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
         aria-labelledby="company-detail-heading"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-xl bg-panel text-panel-fg ring-1 ring-panel-border shadow-2xl outline-none"
+        className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-xl bg-panel text-panel-fg ring-1 ring-panel-border shadow-2xl outline-none animate-overlay-panel"
       >
         <div className="flex items-start justify-between gap-3 border-b border-panel-border p-5">
           <div>

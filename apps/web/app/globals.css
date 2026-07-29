@@ -223,6 +223,55 @@ label[for] {
   }
 }
 
+/* Shared enter animations for the market map's transient overlays
+ * (CompanyDetailPanel's backdrop/dialog, TreemapChart's hover tooltip). Each
+ * plays once on mount — both overlays are conditionally rendered, so mounting
+ * *is* the "open" moment, no separate open/closed state to track. Respects
+ * prefers-reduced-motion for free via the existing `*` rule above. */
+@keyframes overlay-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes overlay-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.animate-overlay-backdrop {
+  animation: overlay-backdrop-in 150ms ease-out;
+}
+
+.animate-overlay-panel {
+  animation: overlay-panel-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-tooltip-in {
+  animation: tooltip-in 120ms ease-out;
+}
+
+/* RadialGauge's ring sweeps from empty to its reading on mount instead of
+ * appearing pre-filled — the one chart on the stock page shaped enough to
+ * read as a "gauge filling up" rather than decoration. The from/to values are
+ * per-instance data (circumference and target offset both depend on `value`
+ * and `size`), so they're injected as custom properties from the component
+ * rather than hardcoded here — a static keyframe can't know either number. */
+@keyframes gauge-fill {
+  from {
+    stroke-dashoffset: var(--gauge-from);
+  }
+}
+
 /* Thin, theme-aware scrollbar for a Panel's internal scroll area (see
  * components/Panel.tsx). A platform scrollbar at its default width inside a
  * ~300px dashboard panel eats visible content width and reads as a rendering

@@ -6,7 +6,7 @@ import { getDisclosures } from "@/lib/disclosures";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "PSE Disclosures — Filings Digest",
+  title: "PSE Disclosures: Filings Digest",
   description: "PSE filings distilled into a per-company digest.",
   alternates: { canonical: "/disclosures" },
 };
@@ -47,25 +47,52 @@ export default async function DisclosuresPage() {
       <p className="kicker text-accent">Market Data</p>
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">Insider Disclosure Digest</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
-        PSE filings, grouped by company — who&apos;s filing what, without the raw
-        real-time stream.
+        PSE filings, grouped by company. Who&apos;s filing what, without the raw real-time
+        stream.
       </p>
 
-      <div className="mt-8 flex flex-col gap-4">
-        {groups.map((group) => (
-          <div key={group.ticker} className="overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
-            <div className="flex items-center justify-between gap-2 border-b border-panel-border px-4 py-3">
-              <Link href={`/stocks/${group.ticker}`} className="flex items-center gap-2 hover:underline">
+      <div className="mt-8 flex flex-col gap-3">
+        {groups.map((group) => {
+          const hasRecent = group.filings.some((f) => isRecent(f.filedAt));
+          return (
+          <details key={group.ticker} className="group overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 marker:content-none hover:bg-panel-raised/60">
+              <span className="flex items-center gap-2">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="shrink-0 text-panel-fg/50 transition-transform group-open:rotate-90"
+                  aria-hidden="true"
+                >
+                  <polyline points="9 6 15 12 9 18" />
+                </svg>
                 <span className="rounded bg-panel-raised px-1.5 py-0.5 font-mono text-[10px] text-panel-fg/80">
                   {group.ticker}
                 </span>
                 <span className="font-medium text-panel-fg">{group.companyName}</span>
-              </Link>
+                {hasRecent && (
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-panel-fg/68">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-up" />
+                    New
+                  </span>
+                )}
+              </span>
               <span className="shrink-0 text-[11px] text-panel-fg/72">
                 {group.filings.length} filing{group.filings.length === 1 ? "" : "s"}
               </span>
+            </summary>
+            <div className="border-t border-panel-border px-4 py-2">
+              <Link href={`/stocks/${group.ticker}`} className="text-[11px] text-panel-fg/72 hover:text-panel-fg hover:underline">
+                View company page →
+              </Link>
             </div>
-            <ul className="flex flex-col divide-y divide-panel-border">
+            <ul className="flex flex-col divide-y divide-panel-border border-t border-panel-border">
               {group.filings.map((f) => {
                 const accent = DISCLOSURE_TYPE_ACCENT[f.type];
                 const recent = isRecent(f.filedAt);
@@ -102,8 +129,9 @@ export default async function DisclosuresPage() {
                 );
               })}
             </ul>
-          </div>
-        ))}
+          </details>
+          );
+        })}
       </div>
 
       {groups.length === 0 && (

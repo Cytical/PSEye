@@ -32,8 +32,12 @@ export const LEGEND_BANDS = [-3, -2, -1, 0, 1, 2, 3];
 
 /** Snaps a raw pctChange to the nearest whole-percent band, clamped to
  * +/-3% — this is what turns the underlying continuous scale into finviz's
- * discrete steps. */
-function bandFor(pctChange: number): number {
+ * discrete steps. Exported so TreemapChart.tsx's interactive legend can test
+ * "does this tile belong to the currently highlighted band" with the exact
+ * same snapping `pctChangeToColor` uses to paint it — a tile highlighted
+ * because its color visually matches a legend swatch has to agree with the
+ * band math that produced that swatch. */
+export function bandFor(pctChange: number): number {
   return Math.max(-3, Math.min(3, Math.round(pctChange)));
 }
 

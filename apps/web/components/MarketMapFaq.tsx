@@ -1,6 +1,13 @@
+import Link from "next/link";
+
 interface FaqItem {
   q: string;
   a: string;
+  /** Optional call-to-action appended after the answer — kept separate from
+   * `a` (rather than making `a` a ReactNode) so `a` stays a plain string the
+   * page's FAQPage JSON-LD can use verbatim. */
+  href?: string;
+  hrefLabel?: string;
 }
 
 /**
@@ -47,7 +54,17 @@ export function MarketMapFaq({ items }: { items: FaqItem[] }) {
               </svg>
             </summary>
 
-            <p className="mt-2.5 pl-7 text-sm leading-relaxed text-foreground/65">{item.a}</p>
+            <p className="mt-2.5 pl-7 text-sm leading-relaxed text-foreground/65">
+              {item.a}
+              {item.href && (
+                <>
+                  {" "}
+                  <Link href={item.href} className="whitespace-nowrap underline hover:text-foreground">
+                    {item.hrefLabel ?? "Learn more →"}
+                  </Link>
+                </>
+              )}
+            </p>
           </details>
         ))}
       </div>

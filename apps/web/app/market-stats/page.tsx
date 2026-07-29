@@ -6,14 +6,14 @@ import { MarketHistogram } from "@/components/MarketHistogram";
 export const revalidate = 3600; // matches the quotes/historical ETL cadence
 
 export const metadata: Metadata = {
-  title: "PSE Market Statistics — Breadth & Return Distributions",
+  title: "PSE Market Statistics: Breadth & Return Distributions",
   description:
     "Cross-sectional statistics for the Philippine Stock Exchange: market breadth (advancers vs decliners), share of stocks above their moving averages, and the distribution of returns, volatility, and beta across the market. Free, no login.",
   alternates: { canonical: "/market-stats" },
 };
 
 function pct1(n: number | null): string {
-  if (n == null) return "—";
+  if (n == null) return "N/A";
   return `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 }
 
@@ -54,12 +54,12 @@ export default async function MarketStatsPage() {
         Market-wide Statistics
       </h1>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/72">
-        How the whole exchange looks in aggregate — breadth, trend participation, and the spread of
+        How the whole exchange looks in aggregate: breadth, trend participation, and the spread of
         returns, volatility, and beta across stocks. The cross-sectional companion to the per-stock{" "}
         <Link href="/analytics" className="underline hover:text-panel-fg">
           analytics
         </Link>{" "}
-        rankings. Descriptive statistics on delayed / end-of-day PSE data — never a forecast or signal.
+        rankings. Descriptive statistics on delayed / end-of-day PSE data, never a forecast or signal.
       </p>
 
       {/* Breadth — always available from today's quotes */}
@@ -81,8 +81,8 @@ export default async function MarketStatsPage() {
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Tile label="Median move" value={pct2OrDash(b.todayMedian)} tone={toneOf(b.todayMedian)} />
           <Tile label="Average move" value={pct2OrDash(b.todayMean)} tone={toneOf(b.todayMean)} />
-          <Tile label="Dispersion (σ)" value={b.todayStdev == null ? "—" : `${b.todayStdev.toFixed(2)}%`} hint="spread of moves" />
-          <Tile label="% advancing" value={b.todayPositivePct == null ? "—" : `${b.todayPositivePct.toFixed(0)}%`} />
+          <Tile label="Dispersion (σ)" value={b.todayStdev == null ? "N/A" : `${b.todayStdev.toFixed(2)}%`} hint="spread of moves" />
+          <Tile label="% advancing" value={b.todayPositivePct == null ? "N/A" : `${b.todayPositivePct.toFixed(0)}%`} />
         </div>
         {b.todayHistogram.length > 1 && (
           <div className="mt-3 rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
@@ -96,8 +96,8 @@ export default async function MarketStatsPage() {
         <div className="mt-8 rounded-xl bg-panel px-5 py-8 text-center shadow-sm shadow-black/5 ring-1 ring-panel-border">
           <p className="text-sm text-panel-fg/70">
             The trend-breadth and distribution sections need a populated history of daily closes,
-            which isn&apos;t available in this environment yet. They stay hidden rather than show
-            statistics computed from placeholder data.
+            which isn&apos;t available yet. They stay hidden rather than show statistics computed
+            from placeholder data.
           </p>
         </div>
       ) : (
@@ -112,14 +112,14 @@ export default async function MarketStatsPage() {
             </div>
             <p className="mt-1 max-w-3xl text-sm text-panel-fg/72">
               Share of the {stats.universeSize} largest stocks trading above their own moving
-              averages — a classic gauge of how many names are in an uptrend, not just the index.
+              averages: a classic gauge of how many names are in an uptrend, not just the index.
             </p>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Tile label="Above 50-day avg" value={stats.above50Pct == null ? "—" : `${stats.above50Pct.toFixed(0)}%`} tone={trendTone(stats.above50Pct)} hint="short-term trend" />
-              <Tile label="Above 200-day avg" value={stats.above200Pct == null ? "—" : `${stats.above200Pct.toFixed(0)}%`} tone={trendTone(stats.above200Pct)} hint="long-term trend" />
+              <Tile label="Above 50-day avg" value={stats.above50Pct == null ? "N/A" : `${stats.above50Pct.toFixed(0)}%`} tone={trendTone(stats.above50Pct)} hint="short-term trend" />
+              <Tile label="Above 200-day avg" value={stats.above200Pct == null ? "N/A" : `${stats.above200Pct.toFixed(0)}%`} tone={trendTone(stats.above200Pct)} hint="long-term trend" />
               <Tile
                 label="Avg correlation to market"
-                value={stats.avgCorrelationToMarket == null ? "—" : stats.avgCorrelationToMarket.toFixed(2)}
+                value={stats.avgCorrelationToMarket == null ? "N/A" : stats.avgCorrelationToMarket.toFixed(2)}
                 hint={cohesionHint(stats.avgCorrelationToMarket)}
               />
               <Tile label="Universe" value={String(stats.universeSize)} hint="largest by market cap" />
@@ -169,7 +169,7 @@ export default async function MarketStatsPage() {
         Breadth covers all {stats.totalTracked} tracked stocks; trend and distribution stats use the
         largest ~{stats.universeSize || 100} by market cap (small, thinly-traded tickers have noisy
         history that distorts a market-wide distribution). Delayed / end-of-day data,
-        recomputed by PSEye — descriptive statistics, not financial advice or a signal.
+        recomputed by PSEye. Descriptive statistics, not financial advice or a signal.
       </p>
     </div>
   );
@@ -210,7 +210,7 @@ function sharePct(n: number, total: number): string {
   return `${((n / total) * 100).toFixed(0)}% of traded`;
 }
 function pct2OrDash(n: number | null): string {
-  if (n == null) return "—";
+  if (n == null) return "N/A";
   return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 }
 function toneOf(n: number | null): "up" | "down" | undefined {

@@ -5,9 +5,9 @@ import { GLOSSARY_TERMS } from "@/lib/glossary";
 export const revalidate = 86400; // definitions don't change daily — same cadence as /dca
 
 export const metadata: Metadata = {
-  title: "PSE Investing Glossary — Terms Explained",
+  title: "PSE Investing Glossary: Terms Explained",
   description:
-    "Plain-English definitions for the Philippine Stock Exchange terms PSEye actually uses — market cap, dividend yield, free float, foreign flow, board lot, and more.",
+    "Plain-English definitions for the Philippine Stock Exchange terms PSEye uses: market cap, dividend yield, free float, foreign flow, board lot, and more.",
   alternates: { canonical: "/glossary" },
 };
 
@@ -52,8 +52,8 @@ export default function GlossaryPage() {
       <p className="kicker mt-2 text-accent">Reference</p>
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">PSE Investing Glossary</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
-        Plain-English definitions for the terms used across PSEye — every entry here is something
-        this site actually computes or displays, not a generic finance dictionary.
+        Plain-English definitions for the terms used across PSEye. Every entry here is something
+        this site computes or displays, not a generic finance dictionary.
       </p>
 
       <nav aria-label="Jump to term" className="mt-3 flex flex-wrap gap-x-2 gap-y-0.5 text-xs">

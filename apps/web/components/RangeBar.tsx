@@ -15,12 +15,15 @@ export function RangeBar({
   current,
   lowLabel,
   highLabel,
+  size = "sm",
 }: {
   low: number;
   high: number;
   current: number | null;
   lowLabel: string;
   highLabel: string;
+  /** `lg` for a hero rail with room to spare; `sm` everywhere else. */
+  size?: "sm" | "lg";
 }) {
   const span = high - low;
   // Clamped: a price can sit fractionally outside the window when the latest
@@ -29,7 +32,7 @@ export function RangeBar({
 
   return (
     <div>
-      <div className="relative h-1.5 rounded-full bg-panel-fg/12">
+      <div className={`relative rounded-full bg-panel-fg/12 ${size === "lg" ? "h-2.5" : "h-1.5"}`}>
         {pos != null && (
           <>
             <div
@@ -37,13 +40,19 @@ export function RangeBar({
               style={{ width: `${pos}%` }}
             />
             <div
-              className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent ring-2 ring-panel"
+              className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent ring-2 ring-panel ${
+                size === "lg" ? "size-4" : "size-2.5"
+              }`}
               style={{ left: `${pos}%` }}
             />
           </>
         )}
       </div>
-      <div className="mt-1.5 flex items-baseline justify-between gap-2 text-[11px] tabular-nums text-panel-fg/72">
+      <div
+        className={`mt-1.5 flex items-baseline justify-between gap-2 tabular-nums text-panel-fg/72 ${
+          size === "lg" ? "text-[13px]" : "text-[11px]"
+        }`}
+      >
         <span>{lowLabel}</span>
         <span>{highLabel}</span>
       </div>

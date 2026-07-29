@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRankings } from "@/lib/rankings";
 import { RankingsTable } from "@/components/RankingsTable";
+import { SectorSwitcher } from "@/components/SectorSwitcher";
 import { sectorToSlug, slugToSector, VISIBLE_SECTORS } from "@/lib/sectorSlug";
 
 export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as /rankings
@@ -29,7 +30,7 @@ export async function generateMetadata({
   if (!sector) return {};
 
   return {
-    title: `${sector} Sector — PSE Stocks Ranked by Market Cap`,
+    title: `${sector} Sector: PSE Stocks Ranked by Market Cap`,
     description: `Every PSE-listed ${sector} company ranked by market capitalization, with today's price and change. Free, no login.`,
     alternates: { canonical: `/sectors/${slug}` },
   };
@@ -62,11 +63,11 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
       },
       {
         "@type": "ItemList",
-        name: `${sector} — PSE Stocks by Market Cap`,
+        name: `${sector}: PSE Stocks by Market Cap`,
         itemListElement: sectorRows.map((r) => ({
           "@type": "ListItem",
           position: r.sectorRank,
-          name: `${r.ticker} — ${r.companyName}`,
+          name: `${r.ticker}: ${r.companyName}`,
           url: `${siteUrl}/stocks/${r.ticker}`,
         })),
       },
@@ -89,7 +90,10 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
         <span>{sector}</span>
       </nav>
 
-      <h1 className="mt-2 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">{sector}</h1>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">{sector}</h1>
+        <SectorSwitcher currentSector={slug} />
+      </div>
       <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/72">
         {sectorRows.length} PSE-listed {sectorRows.length === 1 ? "company" : "companies"} in{" "}
         {sector}, ranked by float-adjusted market capitalization. Combined float-adjusted market

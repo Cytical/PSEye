@@ -43,13 +43,21 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
   if (ret3m != null) returns.push({ label: "3 months", value: pct(ret3m), tone: signTone(ret3m) });
   if (ret1y != null) returns.push({ label: "1 year", value: pct(ret1y), tone: signTone(ret1y) });
 
-  const risk: { label: string; value: string; tone?: "up" | "down"; hint?: string; info?: string }[] = [];
+  const risk: {
+    label: string;
+    value: string;
+    tone?: "up" | "down";
+    hint?: string;
+    info?: string;
+    glossaryId?: string;
+  }[] = [];
   if (vol != null)
     risk.push({
       label: "Volatility",
       value: `${vol.toFixed(1)}%`,
       hint: `annualized · ${volHint(vol)}`,
-      info: "Annualized standard deviation of daily log returns — how much the price swings day to day, scaled to a yearly figure. Higher means bigger, more frequent moves in either direction.",
+      info: "Annualized standard deviation of daily log returns: how much the price swings day to day, scaled to a year. Higher means bigger, more frequent moves in either direction.",
+      glossaryId: "volatility",
     });
   if (dd != null)
     risk.push({
@@ -57,7 +65,8 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       value: pct(dd),
       tone: dd <= -20 ? "down" : undefined,
       hint: "past year",
-      info: "The worst peak-to-trough decline over the past year — how far the price fell from its highest point before recovering.",
+      info: "The worst peak-to-trough decline over the past year: how far the price fell from its high before recovering.",
+      glossaryId: "max-drawdown",
     });
   if (ma50 != null)
     risk.push({
@@ -65,7 +74,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       value: `₱${ma50.toFixed(2)}`,
       tone: price >= ma50 ? "up" : "down",
       hint: price >= ma50 ? "price above" : "price below",
-      info: "Simple moving average of the last 50 closing prices — a short-term trend line.",
+      info: "Simple moving average of the last 50 closing prices: a short-term trend line.",
     });
   if (ma200 != null)
     risk.push({
@@ -73,7 +82,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       value: `₱${ma200.toFixed(2)}`,
       tone: price >= ma200 ? "up" : "down",
       hint: price >= ma200 ? "price above" : "price below",
-      info: "Simple moving average of the last 200 closing prices — a longer-term trend line.",
+      info: "Simple moving average of the last 200 closing prices: a longer-term trend line.",
     });
 
   if (returns.length === 0 && risk.length === 0 && rsiValue == null) return null;
@@ -89,7 +98,10 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
           <div className="min-w-0">
             <div className="flex items-center gap-0.5 text-[10.5px] leading-tight text-panel-fg/60">
               RSI (14)
-              <InfoTip text='Relative Strength Index, Wilder&apos;s 14-day smoothing. Runs 0–100: readings above 70 are typically read as "overbought," below 30 as "oversold." A momentum reading, not a buy/sell signal.' />
+              <InfoTip
+                text='Relative Strength Index, Wilder&apos;s 14-day smoothing. Runs 0–100: readings above 70 are typically read as "overbought," below 30 as "oversold." A momentum reading, not a buy/sell signal.'
+                glossaryId="rsi"
+              />
             </div>
             <div className="text-[13.5px] font-semibold text-panel-fg">{rsiLabel(rsiValue)}</div>
           </div>
@@ -112,7 +124,15 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
           <SubHead>Risk &amp; trend</SubHead>
           <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-2.5">
             {risk.map((m) => (
-              <Kpi key={m.label} label={m.label} value={m.value} tone={m.tone} hint={m.hint} info={m.info} />
+              <Kpi
+                key={m.label}
+                label={m.label}
+                value={m.value}
+                tone={m.tone}
+                hint={m.hint}
+                info={m.info}
+                glossaryId={m.glossaryId}
+              />
             ))}
           </div>
         </div>

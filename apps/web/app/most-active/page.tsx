@@ -6,7 +6,7 @@ import { VolumeLeadersTable } from "@/components/VolumeLeadersTable";
 export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as /rankings
 
 export const metadata: Metadata = {
-  title: "Most Active PSE Stocks — Ranked by Trading Value",
+  title: "Most Active PSE Stocks by Trading Value",
   description:
     "PSE stocks ranked by today's traded ₱ value (turnover), with share volume, price, and change. Free, no login.",
   alternates: { canonical: "/most-active" },
@@ -35,7 +35,7 @@ export default async function MostActivePage() {
         <Link href="/glossary#trading-value-volume" className="underline hover:text-panel-fg">
           value
         </Link>{" "}
-        (turnover), not raw share volume — a low-priced stock trading millions of shares and a
+        (turnover), not raw share volume. A low-priced stock trading millions of shares and a
         high-priced stock trading a few hundred both move real money, but only value puts them on
         the same scale. Prices are end-of-day / delayed quotes.
         {excludedCount > 0
@@ -49,8 +49,8 @@ export default async function MostActivePage() {
         </div>
       ) : (
         <p className="mt-8 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/68 ring-1 ring-panel-border">
-          No trading-volume data on record yet — this is a newly added metric and needs at least
-          one quotes run to populate.
+          No trading-volume data on record yet. This metric is new and needs at least one quotes
+          run to populate.
         </p>
       )}
 

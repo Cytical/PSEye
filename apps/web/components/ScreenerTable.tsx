@@ -52,7 +52,7 @@ const COLUMNS: { key: SortKey; label: string; numeric: boolean; hideOnMobile?: b
 
 /** Peso market cap, abbreviated — PSE caps run to the trillions, so a raw number is unreadable. */
 function formatMarketCap(value: number): string {
-  if (value <= 0) return "—";
+  if (value <= 0) return "N/A";
   if (value >= 1e12) return `₱${(value / 1e12).toFixed(2)}T`;
   if (value >= 1e9) return `₱${(value / 1e9).toFixed(1)}B`;
   if (value >= 1e6) return `₱${(value / 1e6).toFixed(1)}M`;
@@ -226,7 +226,7 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
                   </td>
                   <td className="hidden py-2.5 pr-4 text-right tabular-nums sm:table-cell">
                     {row.yieldPct == null ? (
-                      <span className="text-panel-fg/65">—</span>
+                      <span className="text-panel-fg/65">N/A</span>
                     ) : (
                       <span className={row.yieldPct >= 4 ? "text-up" : "text-panel-fg"}>
                         {row.yieldPct.toFixed(2)}%
@@ -243,7 +243,7 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
       {sorted.length === 0 && (
         <p className="mt-6 rounded-lg bg-panel p-6 text-center text-sm text-panel-fg/68 ring-1 ring-panel-border">
           {watchedOnly && watched.length === 0
-            ? "Your watchlist is empty — tap a ★ to add stocks."
+            ? "Your watchlist is empty. Tap a ★ to add stocks."
             : "No stocks match your filters."}
         </p>
       )}

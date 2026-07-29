@@ -60,7 +60,7 @@ export default async function Image({ params }: { params: Promise<{ ticker: stri
           <span style={{ fontSize: 40, fontWeight: 600, color: changeColor }}>{changeText}</span>
         </div>
         <span style={{ fontSize: 20, color: MUTED, marginTop: 40 }}>
-          {company?.sector ?? ""} &middot; Delayed/EOD data — not for trading decisions
+          {company?.sector ?? ""} &middot; Delayed/EOD data, not for trading decisions
         </span>
       </div>
     ),

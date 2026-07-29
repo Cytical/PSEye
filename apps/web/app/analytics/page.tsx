@@ -7,9 +7,9 @@ import { SectorCorrelationHeatmap } from "@/components/SectorCorrelationHeatmap"
 export const revalidate = 3600; // matches the quotes/historical ETL cadence
 
 export const metadata: Metadata = {
-  title: "PSE Market Analytics — Volatility, Beta & Sector Correlation",
+  title: "PSE Market Analytics: Volatility, Beta & Sector Correlation",
   description:
-    "Quantitative analytics for Philippine Stock Exchange (PSE) stocks: annualized volatility, beta versus a reconstructed market benchmark, 1-year return, RSI, and a sector-by-sector return correlation matrix. Free, no login.",
+    "Quantitative analytics for Philippine Stock Exchange (PSE) stocks: annualized volatility, beta vs. a reconstructed market benchmark, 1-year return, RSI, and a sector-by-sector return correlation matrix. Free, no login.",
   alternates: { canonical: "/analytics" },
 };
 
@@ -19,7 +19,7 @@ function formatPeso(n: number | null): string {
 }
 
 function pct(n: number | null): string {
-  if (n == null) return "—";
+  if (n == null) return "N/A";
   return `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 }
 
@@ -57,19 +57,18 @@ export default async function AnalyticsPage() {
         Market Analytics
       </h1>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/72">
-        Risk and behavior metrics computed from about a year of end-of-day closing prices —{" "}
-        annualized volatility, beta against a reconstructed market benchmark, trailing return, and
-        RSI — plus how the exchange&apos;s sectors move together. Descriptive statistics only, never
-        a forecast, stock pick, or buy/sell signal.
+        Risk and behavior metrics from about a year of end-of-day closes: annualized volatility,
+        beta against a reconstructed market benchmark, trailing return, RSI, and how the
+        exchange&apos;s sectors move together. Descriptive statistics only, never a forecast,
+        stock pick, or buy/sell signal.
       </p>
 
       {analytics.source !== "real" ? (
         <div className="mt-8 rounded-xl bg-panel px-5 py-8 text-center shadow-sm shadow-black/5 ring-1 ring-panel-border">
           <p className="text-sm text-panel-fg/70">
-            Analytics need a populated history of daily closes, which isn&apos;t available in this
-            environment yet. Rather than show betas and correlations computed from placeholder data
-            (which would be noise dressed up as insight), this page stays empty until real price
-            history is on file.
+            Analytics need a populated history of daily closes, which isn&apos;t available yet.
+            Rather than show betas and correlations computed from placeholder data, this page
+            stays empty until real price history is on file.
           </p>
         </div>
       ) : (
@@ -86,7 +85,7 @@ export default async function AnalyticsPage() {
                 <strong className="text-panel-fg/85">Beta</strong> is cov(stock, benchmark) /
                 var(benchmark) on daily returns. The benchmark (&ldquo;PSEye Composite&rdquo;) is
                 reconstructed from the {analytics.benchmarkTickerCount} largest constituents&apos; own
-                closes, market-cap-weighted — a proxy, <em>not</em> the official float-adjusted PSEi.
+                closes, market-cap-weighted: a proxy, <em>not</em> the official float-adjusted PSEi.
                 A beta near 1 means the stock tends to move with the market; above 1, more sharply;
                 below 1, more mildly; below 0, opposite.
               </p>
@@ -162,9 +161,9 @@ export default async function AnalyticsPage() {
       )}
 
       <p className="mt-8 max-w-3xl text-xs text-panel-fg/68">
-        Delayed / end-of-day data, recomputed by PSEye — not real-time and not a
-        licensed feed. These are descriptive statistics on past prices, not financial advice, a
-        stock pick, or a buy/sell signal.
+        Delayed / end-of-day data, recomputed by PSEye. Not real-time, not a licensed feed. These
+        are descriptive statistics on past prices, not financial advice, a stock pick, or a
+        buy/sell signal.
       </p>
     </div>
   );
@@ -191,7 +190,7 @@ function Row({ row }: { row: AnalyticsRow }) {
           row.pctChange == null ? "text-panel-fg/65" : row.pctChange >= 0 ? "text-up" : "text-down"
         }`}
       >
-        {row.pctChange == null ? "—" : pct(row.pctChange)}
+        {row.pctChange == null ? "N/A" : pct(row.pctChange)}
       </td>
       <td
         className={`hidden px-3 py-2.5 text-right tabular-nums sm:table-cell ${
@@ -201,13 +200,13 @@ function Row({ row }: { row: AnalyticsRow }) {
         {pct(row.return1y)}
       </td>
       <td className="hidden px-3 py-2.5 text-right tabular-nums text-panel-fg/85 sm:table-cell">
-        {row.volatility == null ? "—" : `${row.volatility.toFixed(1)}%`}
+        {row.volatility == null ? "N/A" : `${row.volatility.toFixed(1)}%`}
       </td>
       <td className="hidden px-3 py-2.5 text-right tabular-nums text-panel-fg/85 sm:table-cell">
-        {row.beta == null ? "—" : row.beta.toFixed(2)}
+        {row.beta == null ? "N/A" : row.beta.toFixed(2)}
       </td>
       <td className={`px-2 py-2 text-right tabular-nums sm:px-3 sm:py-2.5 ${rsiTone}`}>
-        {row.rsi == null ? "—" : row.rsi.toFixed(0)}
+        {row.rsi == null ? "N/A" : row.rsi.toFixed(0)}
       </td>
     </tr>
   );

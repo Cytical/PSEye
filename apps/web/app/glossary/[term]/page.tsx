@@ -24,7 +24,7 @@ export async function generateMetadata({
   if (!term) return {};
 
   return {
-    title: `${term.question} — PSE Investing Glossary`,
+    title: `${term.question} | PSE Investing Glossary`,
     description: term.definition,
     alternates: { canonical: `/glossary/${term.id}` },
     openGraph: { title: term.question, description: term.definition },

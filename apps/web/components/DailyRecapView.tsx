@@ -84,7 +84,7 @@ export function DailyRecapView({
             </Link>
           )}
           <ShareButton
-            shareTitle={`PSE Daily Recap — ${formatLongDate(recap.date)}`}
+            shareTitle={`PSE Daily Recap: ${formatLongDate(recap.date)}`}
             shareText={
               snapshot
                 ? `PSEi closed at ${snapshot.pseiValue.toLocaleString("en-PH", {
@@ -92,7 +92,7 @@ export function DailyRecapView({
                     maximumFractionDigits: 2,
                   })} (${snapshot.pseiPctChange >= 0 ? "+" : ""}${snapshot.pseiPctChange.toFixed(
                     2
-                  )}%) — full PSE recap on PSEye`
+                  )}%). Full PSE recap on PSEye`
                 : `The full PSE market recap for ${formatLongDate(recap.date)} on PSEye`
             }
           />
@@ -161,11 +161,11 @@ export function DailyRecapView({
                 <StatTile label="Average move" value={pct2OrDash(breadth.meanMove)} />
                 <StatTile
                   label="Dispersion (σ)"
-                  value={breadth.moveStdev == null ? "—" : `${breadth.moveStdev.toFixed(2)}%`}
+                  value={breadth.moveStdev == null ? "N/A" : `${breadth.moveStdev.toFixed(2)}%`}
                 />
                 <StatTile
                   label="% advancing"
-                  value={breadth.positivePct == null ? "—" : `${breadth.positivePct.toFixed(0)}%`}
+                  value={breadth.positivePct == null ? "N/A" : `${breadth.positivePct.toFixed(0)}%`}
                 />
               </div>
               <div className="mt-2">
@@ -194,8 +194,8 @@ export function DailyRecapView({
       </div>
 
       <p className="mt-3 text-xs text-panel-fg/68">
-        Generated from data recorded by PSEye&apos;s own pipeline on this date — sections without
-        recorded data are omitted rather than estimated.
+        Generated from PSEye&apos;s own recorded data for this date. Sections without data are
+        omitted, not estimated.
       </p>
     </div>
   );

@@ -96,7 +96,7 @@ export function DailyRecapShareCard({
               )}
             </>
           ) : (
-            <p className="text-base text-panel-fg/60">Full recap below — index move, top movers, foreign flow &amp; disclosures</p>
+            <p className="text-base text-panel-fg/60">Full recap below: index move, top movers, foreign flow &amp; disclosures</p>
           )}
         </div>
 

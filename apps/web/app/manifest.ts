@@ -8,7 +8,7 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PSEye — PSE Market Tracker",
+    name: "PSEye: PSE Market Tracker",
     short_name: "PSEye",
     description: "A free, community-first tracker for the Philippine Stock Exchange.",
     start_url: "/",

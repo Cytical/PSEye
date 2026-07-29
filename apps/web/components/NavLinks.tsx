@@ -46,7 +46,7 @@ const DROPDOWNS: { label: string; links: NavLink[] }[] = [
   {
     label: "Screeners",
     links: [
-      { href: "/screener", label: "Screener", description: "Filter and sort every tracked stock" },
+      { href: "/screener", label: "Explorer", description: "Filter and sort every tracked stock" },
       { href: "/dividends", label: "Dividends", description: "Highest trailing-12-month dividend yields" },
       { href: "/rankings", label: "Rankings", description: "Every stock ranked by market cap" },
       { href: "/most-active", label: "Most Active", description: "Highest-turnover stocks today" },

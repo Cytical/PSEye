@@ -91,8 +91,8 @@ export default async function OfferingsPage() {
     <div className="mx-auto max-w-[1240px] px-4 py-8">
       <h1 className="text-2xl font-semibold tracking-tight">IPO &amp; Follow-on Offerings</h1>
       <p className="mt-1.5 text-sm text-panel-fg/72">
-        Subscription windows for new listings and follow-on offers, with plain-language
-        context for deciding whether to participate.
+        Subscription windows for new listings and follow-on offers, with plain-language notes
+        to help you decide whether to participate.
       </p>
 
       {sorted.length === 0 && (
@@ -175,8 +175,8 @@ export default async function OfferingsPage() {
       </div>
 
       <p className="mt-8 text-xs text-panel-fg/72">
-        Sample data, including fictional pre-IPO company names — a real offering-disclosure
-        tracker has not been wired in yet. Not financial advice.
+        Sample data, including fictional pre-IPO company names. A real offering-disclosure
+        tracker isn&apos;t wired in yet. Not financial advice.
       </p>
     </div>
   );

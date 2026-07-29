@@ -38,7 +38,12 @@ function currency(n: number): string {
 }
 
 export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
-  const [ticker, setTicker] = useState<string>(quotes[0]?.ticker ?? "");
+  // The composite proxy, not an arbitrary first stock — a first-time visitor
+  // exploring the tool recognizes "PSEi" immediately, where the old
+  // `quotes[0]` default landed on whatever ticker happened to sort first out
+  // of the DB (an unremarkable mid-cap), telling them nothing about what
+  // they were looking at.
+  const [ticker, setTicker] = useState<string>(COMPOSITE_VALUE);
   const [startDate, setStartDate] = useState(defaultStartDate());
   const [contribution, setContribution] = useState(5000);
   const [frequency, setFrequency] = useState<DcaFrequency>("monthly");
@@ -92,7 +97,7 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
             <option value={COMPOSITE_VALUE}>PSEi (equal-weighted proxy)</option>
             {quotes.map((q) => (
               <option key={q.ticker} value={q.ticker}>
-                {q.ticker} — {q.companyName}
+                {q.ticker}: {q.companyName}
               </option>
             ))}
           </select>
@@ -156,8 +161,8 @@ export function DcaCalculator({ quotes }: { quotes: Quote[] }) {
           </div>
           {isSampleData && (
             <p className="text-xs text-panel-fg/65">
-              Price history is sample data for this selection — a real EOD price history feed
-              hasn&apos;t been backfilled for it yet. Results are illustrative, not historical fact.
+              Price history for this selection is sample data: a real EOD feed hasn&apos;t been
+              backfilled yet. Results are illustrative, not historical fact.
             </p>
           )}
         </div>

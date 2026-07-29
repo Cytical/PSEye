@@ -13,7 +13,7 @@ const SUGGESTED = [
   { href: "/stocks", label: "All stocks" },
   { href: "/daily", label: "Daily recap" },
   { href: "/news", label: "News" },
-  { href: "/screener", label: "Screener" },
+  { href: "/screener", label: "Explorer" },
 ];
 
 export default function NotFound() {

@@ -36,7 +36,7 @@ export default function Error({
       </div>
       <h1 className="mt-4 text-xl font-semibold tracking-tight text-panel-fg">Something went wrong</h1>
       <p className="mt-2 text-sm text-panel-fg/72">
-        This page hit an unexpected error. It&apos;s been logged — try again in a moment.
+        This page hit an unexpected error. It&apos;s been logged, try again in a moment.
       </p>
       <div className="mt-6 flex items-center gap-2">
         <button

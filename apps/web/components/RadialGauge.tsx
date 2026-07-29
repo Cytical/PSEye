@@ -39,6 +39,10 @@ export function RadialGauge({
         strokeDashoffset={offset}
         strokeLinecap="round"
         transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        // Sweeps from empty (--gauge-from, the full circumference) to the
+        // `strokeDashoffset` above on mount — see the gauge-fill keyframe in
+        // globals.css for why there's no matching --gauge-to.
+        style={{ "--gauge-from": circumference, animation: "gauge-fill 600ms ease-out" } as React.CSSProperties}
       />
       <text
         x="50%"

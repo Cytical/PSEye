@@ -15,23 +15,23 @@ export default function AboutPage() {
 
       <div className="mt-5 flex flex-col gap-4 text-sm leading-relaxed text-foreground/80">
         <p>
-          PSEye is a free tracker for the Philippine Stock Exchange — a market map, per-stock
+          PSEye is a free tracker for the Philippine Stock Exchange: a market map, per-stock
           pages, dividend and disclosure history, foreign fund flow, block sales, and a
-          cost-averaging calculator, all in one place with no login and no paywall.
+          cost-averaging calculator. No login, no paywall.
         </p>
         <p>
-          It exists because the tools that already cover the PSE either don&apos;t cover the
-          things that make a market easy to actually read — a shareable heatmap of the whole
-          board, a foreign buying/selling tracker, news tagged to a specific ticker — or gate
-          those behind a subscription or a brokerage account. PSEye doesn&apos;t require either.
+          It exists because the tools that already cover the PSE either skip the things that
+          make a market easy to read (a shareable heatmap of the whole board, a foreign
+          buying/selling tracker, news tagged to a specific ticker) or gate them behind a
+          subscription or a brokerage account. PSEye requires neither.
         </p>
         <p>
-          The data is real, not a demo: prices, dividends, disclosures, block sales, and
-          foreign flow are scraped on a schedule from the exchange&apos;s own public pages and PSE&apos;s
-          published daily reports, not a licensed real-time feed — so figures are delayed/
-          end-of-day, never claimed as live intraday data. A small number of features (the IPO/
-          offerings tracker, and non-PSE charts) still run on placeholder data where no free,
-          reliable public source exists yet.
+          The data is real, not a demo. Prices, dividends, disclosures, block sales, and
+          foreign flow are scraped on a schedule from the exchange&apos;s own public pages and
+          PSE&apos;s published daily reports, not a licensed real-time feed, so figures are
+          delayed or end-of-day, never live intraday data. A few features (the IPO/offerings
+          tracker and non-PSE charts) still run on placeholder data since no free, reliable
+          public source exists yet.
         </p>
         <p>
           PSEye is a solo, spare-time project, built and maintained by{" "}
@@ -43,7 +43,7 @@ export default function AboutPage() {
           >
             Ezra Guiao
           </a>
-          . It&apos;s open source under the MIT license — the code, including exactly how each
+          . It&apos;s open source under the MIT license. The code, including exactly how each
           data source is scraped and parsed, is on{" "}
           <a
             href="https://github.com/Cytical/PSEye"
@@ -56,7 +56,14 @@ export default function AboutPage() {
           .
         </p>
         <p>
-          Nothing on PSEye is financial advice, a stock pick, or a buy/sell signal — it&apos;s
+          New to investing and not sure what to do with this?{" "}
+          <Link href="/getting-started" className="underline hover:no-underline">
+            Getting Started
+          </Link>{" "}
+          walks through opening a brokerage account and placing a first order.
+        </p>
+        <p>
+          Nothing on PSEye is financial advice, a stock pick, or a buy/sell signal. It&apos;s
           informational only. Spotted a data issue or have a question?{" "}
           <Link href="/contact" className="underline hover:no-underline">
             Get in touch

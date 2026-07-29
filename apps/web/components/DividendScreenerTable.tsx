@@ -113,17 +113,17 @@ export function DividendScreenerTable({ rows }: { rows: DividendScreenerRow[] })
                   {row.price == null ? <span className="text-panel-fg/65">N/A</span> : `₱${row.price.toFixed(2)}`}
                 </td>
                 <td className="hidden py-2.5 pr-4 text-right tabular-nums text-panel-fg sm:table-cell">
-                  {row.ttmDividend > 0 ? `₱${row.ttmDividend.toFixed(4).replace(/\.?0+$/, "")}` : <span className="text-panel-fg/65">—</span>}
+                  {row.ttmDividend > 0 ? `₱${row.ttmDividend.toFixed(4).replace(/\.?0+$/, "")}` : <span className="text-panel-fg/65">N/A</span>}
                 </td>
                 <td className="py-2 pr-2 text-right font-medium tabular-nums sm:py-2.5 sm:pr-4">
                   {row.yieldPct == null ? (
-                    <span className="text-panel-fg/65">—</span>
+                    <span className="text-panel-fg/65">N/A</span>
                   ) : (
                     <span className={row.yieldPct >= 4 ? "text-up" : "text-panel-fg"}>{row.yieldPct.toFixed(2)}%</span>
                   )}
                 </td>
                 <td className="hidden py-2.5 pr-4 text-right tabular-nums text-panel-fg/70 sm:table-cell">
-                  {row.payoutCount || "—"}
+                  {row.payoutCount || "N/A"}
                 </td>
                 <td className="py-2 pr-2 whitespace-nowrap text-panel-fg/70 sm:py-2.5 sm:pr-4">
                   {row.nextExDate ? (
@@ -134,7 +134,7 @@ export function DividendScreenerTable({ rows }: { rows: DividendScreenerRow[] })
                       )}
                     </>
                   ) : (
-                    <span className="text-panel-fg/65">—</span>
+                    <span className="text-panel-fg/65">N/A</span>
                   )}
                 </td>
               </tr>

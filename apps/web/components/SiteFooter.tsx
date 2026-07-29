@@ -1,16 +1,29 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
+import { formatUpdatedAt } from "./MarketSummaryBar";
+import { getMarketSnapshot } from "@/lib/marketSnapshot";
 
 const FOOTER_LINKS = [
   { href: "/stocks", label: "All Stocks" },
   { href: "/sectors", label: "Sectors" },
   { href: "/news", label: "News" },
   { href: "/glossary", label: "Glossary" },
+  { href: "/getting-started", label: "Getting Started" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
-export function SiteFooter() {
+/**
+ * Async (not a plain function component) so it can carry its own "last
+ * updated" line — the sidebar's version of this (MarketSummaryBar) only
+ * exists on the market map, so the footer's data-freshness disclaimer on
+ * every other page had no timestamp to back it up. Same cached
+ * `getMarketSnapshot` call every other route-level Server Component uses
+ * (see MarketTicker) — costs no extra DB read beyond the shared hourly cache.
+ */
+export async function SiteFooter() {
+  const snapshot = await getMarketSnapshot();
+
   return (
     <footer className="border-t border-foreground/10 bg-panel-raised/40">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-3 px-4 py-7 text-xs text-foreground/72 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
@@ -28,10 +41,19 @@ export function SiteFooter() {
             ))}
           </nav>
         </div>
-        <p className="sm:max-w-md sm:text-right">
-          PSEye is a free, community-first project — not a brokerage. Data is delayed/EOD, not
-          real-time, and nothing here is financial advice, a stock pick, or a buy/sell signal.
-        </p>
+        {/* "Bottom right of the page" — the disclaimer's own corner. The
+            timestamp sits directly above it so a visitor weighing "how stale
+            is this" reads them together instead of hunting for a clock
+            somewhere else on the page. */}
+        <div className="sm:max-w-md sm:text-right">
+          <p className="text-[11px] tabular-nums text-foreground/55">
+            Last updated {formatUpdatedAt(snapshot.capturedAt)} PHT
+          </p>
+          <p className="mt-1">
+            PSEye is a free, community-first project, not a brokerage. Data is delayed/EOD, not
+            real-time, and nothing here is financial advice, a stock pick, or a buy/sell signal.
+          </p>
+        </div>
       </div>
     </footer>
   );

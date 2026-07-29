@@ -1,12 +1,11 @@
 import { PSEI_TICKERS } from "@pseye/source-quotes";
 import { byInvestableCapDesc } from "./floatAdjustedCap";
 
-export type MarketMapFilter = "all" | "psei" | "top30" | "top50" | "top100" | "nasdaq100" | "watchlist";
+export type MarketMapFilter = "all" | "psei" | "top50" | "top100" | "nasdaq100" | "watchlist";
 
 export const MARKET_MAP_FILTERS: { key: MarketMapFilter; label: string }[] = [
   { key: "all", label: "All PSE" },
   { key: "psei", label: "PSEi" },
-  { key: "top30", label: "Top 30 PSE" },
   { key: "top50", label: "Top 50 PSE" },
   { key: "top100", label: "Top 100 PSE" },
   { key: "nasdaq100", label: "Nasdaq 100" },
@@ -19,14 +18,17 @@ export const MARKET_MAP_FILTERS: { key: MarketMapFilter; label: string }[] = [
  * that leaves each tile a couple of millimetres across — not readable, and
  * well under the ~44px minimum tap target. Desktop keeps "All PSE" as its
  * default, and either default is one tap away from the other.
+ *
+ * "psei", not a dedicated top-30 filter — the two are the same 30-stock
+ * count, and a separate "Top 30 PSE" option next to "PSEi" was a redundant
+ * pair (removed) rather than two meaningfully different views.
  */
-export const NARROW_DEFAULT_FILTER: MarketMapFilter = "top30";
+export const NARROW_DEFAULT_FILTER: MarketMapFilter = "psei";
 
 const PSEI_TICKER_SET = new Set(PSEI_TICKERS);
 
 /** How many stocks each market-cap-ranked filter keeps. */
 const TOP_N: Partial<Record<MarketMapFilter, number>> = {
-  top30: 30,
   top50: 50,
   top100: 100,
 };

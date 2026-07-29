@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch with PSEye — report a data issue, ask a question, or just say hi.",
+  description: "Get in touch with PSEye: report a data issue, ask a question, or just say hi.",
   alternates: { canonical: "/contact" },
 };
 
@@ -48,7 +48,7 @@ export default function ContactPage() {
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">Contact</h1>
       <p className="mt-2.5 text-sm text-foreground/70">
         Spotted a data issue, have a question, or just want to say hi? PSEye is a solo, free,
-        community-first project — reach out directly.
+        community-first project. Reach out directly.
       </p>
 
       <div className="mt-6 flex flex-col gap-3">

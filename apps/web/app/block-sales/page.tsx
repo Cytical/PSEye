@@ -5,7 +5,7 @@ import { getBlockSales } from "@/lib/blockSales";
 export const revalidate = 86400; // daily; matches the ETL job's cadence
 
 export const metadata: Metadata = {
-  title: "PSE Block Sales — Large Negotiated Trades",
+  title: "PSE Block Sales: Large Negotiated Trades",
   description: "Large negotiated trades from PSE's Daily Quotation Report, sorted by value.",
   alternates: { canonical: "/block-sales" },
 };
@@ -30,9 +30,9 @@ export default async function BlockSalesPage() {
       <p className="kicker text-accent">Market Data</p>
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Block Sales</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
-        Large negotiated trades (&quot;crosses&quot;) arranged directly between parties and
-        executed outside the normal continuous order book, from PSE&apos;s Daily Quotation
-        Report. Sorted by trade value, largest first, over the last 30 days.
+        Large negotiated trades (&quot;crosses&quot;) arranged directly between parties, outside
+        the normal order book. From PSE&apos;s Daily Quotation Report, largest value first, over
+        the last 30 days.
       </p>
 
       {trades.length > 0 ? (
@@ -92,8 +92,8 @@ export default async function BlockSalesPage() {
 
       {source === "mock" && (
         <p className="mt-6 text-xs text-panel-fg/72">
-          Sample data — no real block sales are on record yet for the last 30 days. Figures
-          here are illustrative, not actual trades.
+          Sample data. No real block sales are on record yet for the last 30 days, so these
+          figures are illustrative, not actual trades.
         </p>
       )}
     </div>

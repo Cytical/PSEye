@@ -4,7 +4,7 @@ import { getDailyRecap } from "@/lib/dailyRecap";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "PSEye — PSE daily market recap";
+export const alt = "PSEye: PSE daily market recap";
 
 const CANVAS_BG = "#0d0f14";
 const PANEL_BG = "#151922";
@@ -103,7 +103,7 @@ export default async function Image({ params }: { params: Promise<{ date: string
         )}
 
         <span style={{ fontSize: 20, color: MUTED, marginTop: gainers.length > 0 ? 44 : 56 }}>
-          Delayed/EOD data — not for trading decisions
+          Delayed/EOD data, not for trading decisions
         </span>
       </div>
     ),

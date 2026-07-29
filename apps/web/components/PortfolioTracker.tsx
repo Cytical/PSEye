@@ -126,8 +126,8 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
 
       {rows.length === 0 ? (
         <p className="mt-8 text-sm text-panel-fg/72">
-          No holdings yet — add one above to see live gain/loss. Stored only in your browser; nothing
-          is sent anywhere.
+          No holdings yet. Add one above to see live gain/loss. Stored only in your browser;
+          nothing is sent anywhere.
         </p>
       ) : (
         <>

@@ -11,7 +11,7 @@ export function WorkflowRunsCard({ data }: { data: WorkflowRunsResult }) {
   return (
     <section className="rounded-lg border border-black/10 p-4 dark:border-white/10">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-base font-semibold">Data fetch history — last {data.windowDays} days</h2>
+        <h2 className="text-base font-semibold">Data fetch history, last {data.windowDays} days</h2>
         <span className="text-xs text-black/50 dark:text-white/50">
           {data.repo} · Actions · refreshed {fmtManila(data.fetchedAt)}
         </span>
@@ -25,7 +25,7 @@ export function WorkflowRunsCard({ data }: { data: WorkflowRunsResult }) {
       {!data.ok ? (
         <p className="mt-4 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
           Couldn&apos;t load run history: {data.error}. (Unauthenticated GitHub API is rate-limited
-          to 60/hr per IP — set GITHUB_TOKEN to raise it.)
+          to 60/hr per IP. Set GITHUB_TOKEN to raise it.)
         </p>
       ) : (
         <>
@@ -44,7 +44,7 @@ export function WorkflowRunsCard({ data }: { data: WorkflowRunsResult }) {
           {data.otherGroups.length > 0 && (
             <details className="mt-5">
               <summary className="cursor-pointer text-xs font-medium text-black/60 dark:text-white/60">
-                Other workflows (CI, migrations, backfills) — {data.otherGroups.length}
+                Other workflows (CI, migrations, backfills): {data.otherGroups.length}
               </summary>
               <div className="mt-3 space-y-4">
                 {data.otherGroups.map((g) => (

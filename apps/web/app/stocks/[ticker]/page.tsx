@@ -26,7 +26,6 @@ import { RecordStockView } from "@/components/RecordStockView";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { ShareButton } from "@/components/ShareButton";
 import { sectorToSlug } from "@/lib/sectorSlug";
-import { MiniSparkline } from "@/components/MiniSparkline";
 import { Kpi } from "@/components/Kpi";
 import { Panel } from "@/components/Panel";
 import { RangeBar } from "@/components/RangeBar";
@@ -59,8 +58,6 @@ const DASH_ROW = "flex flex-col gap-3 lg:h-[19.5rem] lg:flex-row 2xl:h-[21rem]";
  */
 const SPAN_WIDE = "min-w-0 lg:basis-1/2 lg:grow-[2]";
 const SPAN_SIDE = "min-w-0 lg:basis-1/4 lg:grow";
-/** Comfortable width for one hero-rail metric tile; see the rail's own comment. */
-const HERO_TILE_PX = 170;
 
 function findCompany(tickerParam: string) {
   const upper = tickerParam.toUpperCase();
@@ -80,8 +77,8 @@ export async function generateMetadata({
   const company = findCompany(ticker);
   if (!company) return {};
 
-  const title = `${company.ticker} Stock Price Today — ${company.companyName} (PSE)`;
-  const description = `${company.companyName} (PSE: ${company.ticker}) stock price today, market-cap rank, sector, 52-week high/low, dividend history, and latest disclosures on the Philippine Stock Exchange.`;
+  const title = `${company.ticker} Stock Price Today: ${company.companyName} (PSE)`;
+  const description = `${company.companyName} (PSE: ${company.ticker}): live price, market-cap rank, sector, 52-week range, dividend history, and latest disclosures.`;
 
   return {
     title,
@@ -111,6 +108,18 @@ function formatCompact(n: number): string {
   if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
   return n.toLocaleString("en-PH");
+}
+
+/** First sentence of the SEC-sourced description — a plain-English "what
+ * does this company do" line for a visitor who doesn't yet know what an
+ * RSI or a Sharpe ratio is, surfaced right under the ticker instead of only
+ * appearing in the full "About" panel below the quantitative dashboard. SEC
+ * 17-A descriptions reliably open with an identifying sentence ("X was
+ * incorporated on... to serve as...", "X is engaged in..."), so this is a
+ * cheap, honest summary rather than a truncation that could cut mid-thought. */
+function firstSentence(description: string): string {
+  const match = description.match(/^.*?[.!?](?=\s|$)/);
+  return (match?.[0] ?? description).trim();
 }
 
 function formatDate(iso: string): string {
@@ -367,15 +376,20 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             </span>
           </h1>
         </div>
+        {profile && (
+          <p className="w-full max-w-2xl text-xs leading-snug text-panel-fg/65">
+            {firstSentence(profile.description)}
+          </p>
+        )}
         <div className="flex shrink-0 items-center gap-2">
           <ShareButton
-            shareTitle={`${company.ticker} — ${company.companyName}`}
+            shareTitle={`${company.ticker}: ${company.companyName}`}
             shareText={
               quote?.price == null
-                ? `${company.ticker} (${company.companyName}) on the PSE — via PSEye`
+                ? `${company.ticker} (${company.companyName}) on PSEye`
                 : `${company.ticker} ${formatPeso(quote.price)} (${(quote.pctChange ?? 0) >= 0 ? "+" : ""}${(
                     quote.pctChange ?? 0
-                  ).toFixed(2)}%) on the PSE — via PSEye`
+                  ).toFixed(2)}%) on PSEye`
             }
           />
           <Link
@@ -443,18 +457,17 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           <div className="mt-1 text-[10.5px] text-panel-fg/60">
             Latest close{closes.length > 0 ? ` · ${formatDate(closes[closes.length - 1].date)}` : ""}
           </div>
-          {closes.length >= 2 && <MiniSparkline values={closes.map((c) => c.close)} className="mt-2 h-8 w-full" />}
         </div>
 
         {yearStats && (
-          <div className="min-w-0 lg:w-[210px] lg:shrink-0 lg:border-l lg:border-panel-border lg:pl-5">
+          <div className="min-w-0 lg:w-[300px] lg:shrink-0 lg:border-l lg:border-panel-border lg:pl-6">
             <div className="flex items-baseline justify-between gap-2">
               <span className="kicker text-panel-fg/60">
                 {yearStats.sinceLabel ? `Range since ${yearStats.sinceLabel}` : "52-week range"}
               </span>
               {yearStats.pctFromHigh != null && (
                 <span
-                  className={`text-[11px] font-semibold tabular-nums ${
+                  className={`text-sm font-semibold tabular-nums ${
                     yearStats.pctFromHigh >= -1 ? "text-up" : yearStats.pctFromHigh <= -20 ? "text-down" : "text-panel-fg/75"
                   }`}
                 >
@@ -463,13 +476,14 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                 </span>
               )}
             </div>
-            <div className="mt-2.5">
+            <div className="mt-4">
               <RangeBar
                 low={yearStats.low}
                 high={yearStats.high}
                 current={quote?.price ?? null}
                 lowLabel={formatPeso(yearStats.low)}
                 highLabel={formatPeso(yearStats.high)}
+                size="lg"
               />
             </div>
           </div>
@@ -480,15 +494,15 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           // the quote actually carries, so its columns are auto-fit rather than
           // a fixed count — a hard `grid-cols-6` squeezed a two-metric rail
           // into sixths, truncating labels to "M…" and colliding the values.
-          // The width cap handles the other end of that range: `1fr` tracks
-          // fill a six-metric rail evenly, but stretched a two-metric one to
-          // 640px per tile, leaving half a screen between the two numbers.
+          // No width cap here (unlike the old `size="md"` rail): with the
+          // sparkline gone this is the section meant to fill the rest of the
+          // strip, so a two-metric quote gets two large tiles instead of two
+          // small ones stranded on the left.
           <div
-            className="grid min-w-0 flex-1 grid-cols-[repeat(auto-fit,minmax(84px,1fr))] gap-x-4 gap-y-2.5 lg:border-l lg:border-panel-border lg:pl-5"
-            style={{ maxWidth: heroStats.length * HERO_TILE_PX + (heroStats.length - 1) * 16 }}
+            className="grid min-w-0 flex-1 grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-x-6 gap-y-3 lg:border-l lg:border-panel-border lg:pl-6"
           >
             {heroStats.map((s) => (
-              <Kpi key={s.label} label={s.label} value={s.value} hint={s.hint} size="md" />
+              <Kpi key={s.label} label={s.label} value={s.value} hint={s.hint} size="lg" />
             ))}
           </div>
         )}
@@ -765,9 +779,8 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       </div>
 
       <p className="mt-4 text-xs text-panel-fg/72">
-        Delayed/EOD data, not real-time. Every figure here is a descriptive statistic on past
-        closing prices — not a forecast, a stock pick, or a buy/sell signal, and not financial
-        advice.
+        Delayed/EOD data, not real-time. Figures are statistics on past closing prices, not a
+        forecast, stock pick, or buy/sell signal, and not financial advice.
       </p>
     </div>
   );

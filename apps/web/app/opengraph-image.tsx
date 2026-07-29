@@ -11,7 +11,7 @@ import {
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "PSEye — PSE Market Map. Box size is market cap, color is today's percent change.";
+export const alt = "PSEye: PSE Market Map. Box size is market cap, color is today's percent change.";
 
 const CANVAS_PADDING = 20;
 const HEADER_HEIGHT = 64;
@@ -49,7 +49,7 @@ export default async function Image() {
             </div>
             <span style={{ fontSize: 20, color: "#8b93a1" }}>PSE Market Map</span>
           </div>
-          <span style={{ fontSize: 15, color: "#5b6272" }}>Delayed/EOD data — not for trading decisions</span>
+          <span style={{ fontSize: 15, color: "#5b6272" }}>Delayed/EOD data, not for trading decisions</span>
         </div>
 
         <div

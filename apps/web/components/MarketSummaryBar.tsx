@@ -28,8 +28,9 @@ function formatPeriodLabel(periodEnd: string): string {
 // Fixed to Asia/Manila rather than the visitor's local timezone — otherwise
 // the server (UTC) and a client browser in a different zone would format the
 // same instant differently and trip a hydration mismatch, same reasoning as
-// formatPickerDate's fixed UTC above.
-function formatUpdatedAt(capturedAt: string): string {
+// formatPickerDate's fixed UTC above. Exported so SiteFooter's own "last
+// updated" line (bottom-right of every page) reads identically to this one.
+export function formatUpdatedAt(capturedAt: string): string {
   return new Date(capturedAt).toLocaleTimeString("en-PH", {
     hour: "numeric",
     minute: "2-digit",

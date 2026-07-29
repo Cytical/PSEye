@@ -7,7 +7,7 @@ import { VISIBLE_SECTORS } from "@/lib/sectorSlug";
 export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as the screener/market map
 
 export const metadata: Metadata = {
-  title: "Top 100 PSE Stocks by Market Cap — Company Rankings",
+  title: "Top 100 PSE Stocks by Market Cap: Company Rankings",
   description:
     "The 100 largest Philippine Stock Exchange (PSE) companies ranked by market capitalization, plus a full ranking within each sector. Free, no login.",
   alternates: { canonical: "/rankings" },
@@ -43,7 +43,7 @@ export default async function RankingsPage() {
         itemListElement: top100.map((r) => ({
           "@type": "ListItem",
           position: r.overallRank,
-          name: `${r.ticker} — ${r.companyName}`,
+          name: `${r.ticker}: ${r.companyName}`,
           url: `${siteUrl}/stocks/${r.ticker}`,
         })),
       },
@@ -55,7 +55,7 @@ export default async function RankingsPage() {
             name: "Does this ranking include private (non-listed) Philippine companies?",
             acceptedAnswer: {
               "@type": "Answer",
-              text: "No. This ranking covers only the companies listed on the Philippine Stock Exchange, because market capitalization requires a public share price and share count — both published by the exchange. Private companies don't have an exchange-quoted price, so any 'estimated' valuation for one would be a guess dressed up as data. PSEye only publishes figures traceable to a real published source, so private companies are left out rather than estimated.",
+              text: "No. This ranking covers only companies listed on the Philippine Stock Exchange, since market cap requires a public share price and share count, both published by the exchange. Private companies have no exchange-quoted price, so an 'estimated' valuation would just be a guess dressed up as data. PSEye only publishes figures traceable to a real source, so private companies are left out.",
               },
           },
         ],
@@ -84,8 +84,8 @@ export default async function RankingsPage() {
         <Link href="/glossary#market-capitalization" className="underline hover:text-panel-fg">
           market capitalization
         </Link>{" "}
-        — the share of each company actually available to trade on the PSE, which is what the
-        PSEi itself is weighted by. The top 100 across the whole exchange, and a full ranking
+        (the share of each company actually available to trade on the PSE, which is also how the
+        PSEi itself is weighted). The top 100 across the whole exchange, plus a full ranking
         within each of its{" "}
         {bySector.length}{" "}
         <Link href="/sectors" className="underline hover:text-panel-fg">
@@ -102,12 +102,12 @@ export default async function RankingsPage() {
           Does this include private (non-listed) companies?
         </summary>
         <p className="mt-2 text-panel-fg/70">
-          No — and it never will as an &quot;estimate.&quot; Market cap needs a real public share
+          No, and it never will as an &quot;estimate.&quot; Market cap needs a real public share
           price and share count, both published by the exchange. A private company has neither, so
-          any number PSEye showed for one would be a guess, not data. Every figure on this site
-          traces back to a real published source; this ranking
-          stays limited to the {rows.length + excludedCount} companies actually listed on the PSE
-          rather than mixing in fabricated estimates for the rest.
+          any figure PSEye showed for one would be a guess, not data. Every number on this site
+          traces back to a real published source; this ranking covers only the{" "}
+          {rows.length + excludedCount} companies actually listed on the PSE, not fabricated
+          estimates for the rest.
         </p>
       </details>
 
@@ -145,12 +145,12 @@ export default async function RankingsPage() {
       </section>
 
       <p className="mt-8 text-xs text-panel-fg/72">
-        Ranked by free-float-adjusted market capitalization — PSE Edge&apos;s reported market cap
+        Ranked by free-float-adjusted market capitalization: PSE Edge&apos;s reported market cap
         (price × shares outstanding) multiplied by its published Free Float Level, both shown per
-        row above. Ranking on the unadjusted figure would put two foreign dual-listings, Manulife
-        and Sun Life, in the top two places on the strength of shares that trade in Toronto rather
-        than here; float-adjusting is also how the PSEi and the major index providers weight their
-        own constituents. Not financial advice, a stock pick, or a buy/sell signal.
+        row above. The unadjusted figure would put two foreign dual-listings, Manulife and Sun
+        Life, in the top two places on shares that trade in Toronto, not here; float-adjusting is
+        also how the PSEi and the major index providers weight their own constituents. Not
+        financial advice, a stock pick, or a buy/sell signal.
       </p>
     </div>
   );

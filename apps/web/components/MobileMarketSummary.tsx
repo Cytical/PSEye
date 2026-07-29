@@ -137,7 +137,7 @@ function MoverCell({ label, quote }: { label: string; quote: (SummaryQuote & { p
     return (
       <div className="min-w-0">
         <div className="kicker text-panel-fg/68">{label}</div>
-        <div className="mt-0.5 text-sm font-semibold text-panel-fg/65">—</div>
+        <div className="mt-0.5 text-sm font-semibold text-panel-fg/65">N/A</div>
       </div>
     );
   }

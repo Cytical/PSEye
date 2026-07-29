@@ -187,7 +187,7 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
                 <option value="">Select a ticker…</option>
                 {availableToAdd.map((q) => (
                   <option key={q.ticker} value={q.ticker}>
-                    {q.ticker} — {q.companyName}
+                    {q.ticker}: {q.companyName}
                   </option>
                 ))}
               </select>
@@ -242,9 +242,8 @@ export function CompareTool({ quotes }: { quotes: Quote[] }) {
 
       {!loading && selected.length > 0 && isSampleData && (
         <p className="text-xs text-panel-fg/72">
-          Price history is sample data for one or more of these tickers — a real EOD price
-          history feed hasn&apos;t been backfilled for it yet. Results are illustrative, not
-          historical fact.
+          Price history for one or more of these tickers is sample data: a real EOD feed
+          hasn&apos;t been backfilled yet. Results are illustrative, not historical fact.
         </p>
       )}
     </div>

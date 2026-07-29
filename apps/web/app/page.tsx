@@ -8,13 +8,12 @@ import { getRecentRecapDates } from "@/lib/dailyRecap";
 import { manilaToday } from "@/lib/manilaDate";
 import { MarketMap } from "@/components/MarketMap";
 import { MarketMapFaq } from "@/components/MarketMapFaq";
-import { MarketStatusBadge } from "@/components/MarketStatusBadge";
 import { getMarketStatus } from "@/lib/marketStatus";
 
 export const revalidate = 3600; // 1h; matches quotes/market-snapshot's hourly ETL cadence (market-data-hourly.yml) — a tighter window would only add DB reads without fresher data
 
 export const metadata: Metadata = {
-  title: "PSE Market Map — Live PSEi Heatmap",
+  title: "PSE Market Map: Live PSEi Heatmap",
   description:
     "Live heatmap of the Philippine Stock Exchange (PSE): every PSEi stock sized by market cap and colored by today's % change, grouped by sector. Free, no login.",
   alternates: { canonical: "/" },
@@ -28,11 +27,17 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "How do I read the market map?",
-    a: "Each box is a listed company. Bigger box means bigger market capitalization; green means the price is up today, red means it's down — the deeper the shade, the bigger the move. Boxes are grouped into panels by PSE sector, so you can see which parts of the market are leading or lagging at a glance.",
+    a: "Each box is a listed company, sized by market cap and colored by today's price change: green for up, red for down. A deeper shade means a bigger move. Boxes are grouped into panels by PSE sector, so you can see which parts of the market are leading or lagging at a glance.",
+  },
+  {
+    q: "I'm new to investing: how do I actually buy a stock?",
+    a: "PSEye is a tracker, not a brokerage, so it can't place an order for you. You'd open an account with a PSE-accredited stockbroker, then buy in whole board lots through their platform.",
+    href: "/getting-started",
+    hrefLabel: "Read the full walkthrough →",
   },
   {
     q: "Is this live pricing?",
-    a: "Prices are delayed/end-of-day quotes, refreshed on a schedule through the trading day — not a tick-by-tick real-time feed.",
+    a: "Prices are delayed/end-of-day quotes, refreshed on a schedule through the trading day, not a tick-by-tick real-time feed.",
   },
   {
     q: "Where does the data come from?",
@@ -48,7 +53,7 @@ const FAQ = [
   },
   {
     q: "What else can I track on PSEye?",
-    a: "Market-cap and dividend-yield rankings, ex-dividend dates, net foreign buying and selling, block sales, disclosures, and a per-day market recap — all linked from the menu above.",
+    a: "Market-cap and dividend-yield rankings, ex-dividend dates, net foreign buying and selling, block sales, disclosures, and a per-day market recap, all linked from the menu above.",
   },
 ];
 
@@ -88,49 +93,28 @@ export default async function MarketMapPage() {
           not the FAQ below, so the captured image stays a compact, shareable
           card instead of an awkwardly tall crop. */}
       <div id="market-map-capture">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <p className="kicker text-accent">Market Map</p>
-          {/* Seeded with the server's reading so SSR and the first client
-              render agree, then kept honest in the browser — this route is
-              cached for an hour, so a render-time value would go stale. */}
-          <MarketStatusBadge initial={status} />
-        </div>
-        {/* nowrap only from sm up. Below that the vw term bottoms out at the
-            clamp minimum, so the line stops scaling with the viewport and
-            simply overflowed it: measured on a 390px phone, "Visualized."
-            ended 42px past the right edge and gave the whole homepage a
-            horizontal scrollbar. Wrapping to two lines breaks naturally after
-            the comma, which also lets the minimum size go up from 1.35rem to
-            1.75rem — the headline is bigger on phones now, not smaller. */}
-        <h1 className="mt-2 font-serif text-[clamp(1.75rem,4.6vw,3.25rem)] font-semibold leading-[1.05] tracking-tight sm:whitespace-nowrap">
-          The Philippine Stock Market, <span className="italic text-accent">Visualized.</span>
-        </h1>
-        {/* WCAG 2.4.1 again, for the widget rather than the page: the treemap
-            renders one focusable button per company — 284 of them, measured —
-            and it is the last thing in <main>, so without this a keyboard user
-            who wants the FAQ (or the footer) has to tab through every listed
-            stock to get there. Visually hidden until focused, like the
-            site-wide skip link in layout.tsx. Sits before MarketMap so it also
-            skips the filter sidebar and toolbar. */}
+        {/* WCAG 2.4.1: the treemap renders one focusable button per company —
+            284 of them, measured — and it is the last thing in <main>, so
+            without this a keyboard user who wants the FAQ (or the footer) has
+            to tab through every listed stock to get there. Visually hidden
+            until focused, like the site-wide skip link in layout.tsx. Sits
+            before MarketMap (whose own header now carries the kicker/badge/h1 —
+            see MarketMap.tsx) so it also skips the filter sidebar and toolbar. */}
         <a
           href="#market-map-faq"
           className="sr-only focus:not-sr-only focus:mt-4 focus:inline-block focus:rounded-md focus:bg-panel focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-panel-fg focus:ring-1 focus:ring-panel-border"
         >
           Skip the market map
         </a>
-        {/* Was mt-7. With the map's own toolbar row gone (see MarketMap.tsx),
-            that gap was the last of the dead band between the headline and the
-            first tile. */}
-        <div className="mt-4">
-          <MarketMap
-            stocks={quotes}
-            profileByTicker={profileByTicker}
-            snapshot={snapshot}
-            foreignFlow={foreignFlow}
-            sparklineByTicker={sparklineByTicker}
-            latestRecapDate={latestRecapDate}
-          />
-        </div>
+        <MarketMap
+          stocks={quotes}
+          profileByTicker={profileByTicker}
+          snapshot={snapshot}
+          foreignFlow={foreignFlow}
+          sparklineByTicker={sparklineByTicker}
+          latestRecapDate={latestRecapDate}
+          status={status}
+        />
       </div>
 
       {/* Target of the "Skip the market map" bypass link above; tabIndex -1 so

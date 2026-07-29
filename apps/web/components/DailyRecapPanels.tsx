@@ -22,12 +22,12 @@ export function formatCompactPeso(n: number): string {
 }
 
 export function formatIndexValue(n: number | null): string {
-  if (n == null) return "—";
+  if (n == null) return "N/A";
   return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export function pct2OrDash(n: number | null): string {
-  if (n == null) return "—";
+  if (n == null) return "N/A";
   return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 }
 
@@ -188,9 +188,15 @@ export function ForeignFlowSummary({
   const buyTotal = buys.reduce((sum, r) => sum + r.netValue, 0);
   const sellTotal = sells.reduce((sum, r) => sum + r.netValue, 0); // already negative per-row
   const net = buyTotal + sellTotal;
-  const maxAbs = Math.max(1, buyTotal, Math.abs(sellTotal));
-  const buyPct = (buyTotal / maxAbs) * 50;
-  const sellPct = (Math.abs(sellTotal) / maxAbs) * 50;
+  // Each side's share of buying+selling combined, not scaled against a
+  // shared max — the old scale left the smaller side's bar short of the
+  // center line and the *larger* side capped at exactly half, so whichever
+  // side lost always left visible empty track. Proportional-of-total always
+  // sums to 100%, so the two colors fill the whole bar with nothing left
+  // over to show a background/grey segment through.
+  const totalAbs = Math.max(1, buyTotal + Math.abs(sellTotal));
+  const buyPct = (buyTotal / totalAbs) * 100;
+  const sellPct = (Math.abs(sellTotal) / totalAbs) * 100;
   const topBuy = buys[0];
   const topSell = sells[0];
 
@@ -212,14 +218,19 @@ export function ForeignFlowSummary({
               {formatCompactPeso(Math.abs(net))}
             </span>
           </div>
-          <div className="relative mt-2 h-2 rounded-full bg-panel-border/60">
-            <div className="absolute inset-y-0 left-1/2 w-px bg-panel-border" />
-            <div className="absolute inset-y-0 rounded-l-full" style={{ right: "50%", width: `${buyPct}%`, background: UP }} />
-            <div className="absolute inset-y-0 rounded-r-full" style={{ left: "50%", width: `${sellPct}%`, background: DOWN }} />
+          {/* Selling/red on the left, buying/green on the right. No
+              center-zero marker: with the two sides now proportional to
+              each other (always summing to 100%) rather than to a shared
+              scale, the split point moves with the data and isn't "zero"
+              anymore — a fixed 50% line would drift away from the actual
+              color boundary and read as a stray tick mark. */}
+          <div className="relative mt-2 h-2 overflow-hidden rounded-full bg-panel-border/60">
+            <div className="absolute inset-y-0 left-0 rounded-l-full" style={{ width: `${sellPct}%`, background: DOWN }} />
+            <div className="absolute inset-y-0 right-0 rounded-r-full" style={{ width: `${buyPct}%`, background: UP }} />
           </div>
           <div className="mt-1.5 flex items-center justify-between text-[11px]">
-            <span style={{ color: UP }}>Buying {formatCompactPeso(buyTotal)}</span>
             <span style={{ color: DOWN }}>Selling {formatCompactPeso(Math.abs(sellTotal))}</span>
+            <span style={{ color: UP }}>Buying {formatCompactPeso(buyTotal)}</span>
           </div>
         </>
       )}

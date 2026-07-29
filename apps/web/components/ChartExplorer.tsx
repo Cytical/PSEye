@@ -39,7 +39,7 @@ export function ChartExplorer() {
         >
           {NASDAQ_TICKERS.map((t) => (
             <option key={t.symbol} value={t.symbol}>
-              {t.symbol.replace("NASDAQ:", "")} — {t.label}
+              {t.symbol.replace("NASDAQ:", "")}: {t.label}
             </option>
           ))}
         </select>

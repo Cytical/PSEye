@@ -28,10 +28,10 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ date: string }> }): Promise<Metadata> {
   const { date } = await params;
   if (!DATE_RE.test(date)) return {};
-  const title = `PSE Daily Recap — ${formatLongDate(date)}`;
+  const title = `PSE Daily Recap: ${formatLongDate(date)}`;
   return {
     title,
-    description: `What happened on the Philippine Stock Exchange on ${formatLongDate(date)}: PSEi close, top movers, foreign flow, block sales, and disclosures.`,
+    description: `PSE recap for ${formatLongDate(date)}: PSEi close, top movers, foreign flow, block sales, disclosures.`,
     alternates: { canonical: `/daily/${date}` },
     openGraph: { title },
   };

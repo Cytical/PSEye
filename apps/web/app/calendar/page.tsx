@@ -13,8 +13,8 @@ import { manilaToday } from "@/lib/manilaDate";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "PSE Dividend Calendar — Ex-Date & Pay Dates",
-  description: "Dividend and corporate actions calendar — ex-date, record date, and payment date.",
+  title: "PSE Dividend Calendar: Ex-Date & Pay Dates",
+  description: "Dividend and corporate actions calendar: ex-date, record date, and payment date.",
   alternates: { canonical: "/calendar" },
 };
 
@@ -57,6 +57,152 @@ function groupByMonth(actions: CorporateAction[]): { monthKey: string; actions: 
   return [...groups.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([monthKey, actions]) => ({ monthKey, actions }));
+}
+
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+/** One `YYYY-MM` month laid out as calendar weeks (Sun-first), `null` cells
+ * padding out the leading/trailing days that belong to adjacent months —
+ * same shape a normal month-grid UI uses, kept in UTC throughout since every
+ * date here is already a plain `YYYY-MM-DD` string, not a real instant. */
+function buildCalendarWeeks(monthKey: string): (string | null)[][] {
+  const [yearStr, monthStr] = monthKey.split("-");
+  const year = Number(yearStr);
+  const monthNum = Number(monthStr); // 1-based (e.g. 7 for July)
+  const daysInMonth = new Date(Date.UTC(year, monthNum, 0)).getUTCDate();
+  const firstWeekday = new Date(Date.UTC(year, monthNum - 1, 1)).getUTCDay(); // 0=Sun
+
+  const cells: (string | null)[] = [];
+  for (let i = 0; i < firstWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push(`${yearStr}-${monthStr}-${String(d).padStart(2, "0")}`);
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const weeks: (string | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return weeks;
+}
+
+/** The calendar grid shows one month. Today's month if it has any ex-dates on
+ * record; otherwise the nearest upcoming month that does, so a visitor
+ * landing between two dividend seasons doesn't just see an empty grid — same
+ * "lead with what's actionable" reasoning as `upcoming`/`past` below. Falls
+ * back to today's own (empty) month only when nothing on file is upcoming. */
+function pickCalendarMonth(
+  allMonths: { monthKey: string; actions: CorporateAction[] }[],
+  todayIso: string
+): { monthKey: string; actions: CorporateAction[] } {
+  const currentMonthKey = todayIso.slice(0, 7);
+  const current = allMonths.find((m) => m.monthKey === currentMonthKey);
+  if (current) return current;
+  const next = allMonths.find((m) => m.monthKey > currentMonthKey);
+  if (next) return next;
+  return { monthKey: currentMonthKey, actions: [] };
+}
+
+/** At-a-glance month grid, rendered above the itemized list below it. Static
+ * — no navigation/interactivity — so this stays a plain server component
+ * like the rest of the page; a visitor wanting other months already has the
+ * full list underneath. */
+function MonthCalendar({
+  monthKey,
+  actions,
+  todayIso,
+}: {
+  monthKey: string;
+  actions: CorporateAction[];
+  todayIso: string;
+}) {
+  const weeks = buildCalendarWeeks(monthKey);
+  const byDay = new Map<string, CorporateAction[]>();
+  for (const action of actions) {
+    if (!byDay.has(action.exDate)) byDay.set(action.exDate, []);
+    byDay.get(action.exDate)!.push(action);
+  }
+  const typesPresent = [...new Set(actions.map((a) => a.type))];
+
+  return (
+    <div className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:p-5">
+      <h2 className="kicker text-panel-fg/72">{formatMonthHeading(`${monthKey}-01`)} at a glance</h2>
+
+      <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[10px] font-medium uppercase tracking-wide text-panel-fg/50">
+        {WEEKDAY_LABELS.map((label) => (
+          <div key={label} aria-hidden="true">
+            {label}
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-1 grid grid-cols-7 gap-1">
+        {weeks.flatMap((week, weekIndex) =>
+          week.map((dayIso, dayIndex) => {
+            if (!dayIso) {
+              return <div key={`${weekIndex}-${dayIndex}`} aria-hidden="true" />;
+            }
+            const dayActions = byDay.get(dayIso) ?? [];
+            const isToday = dayIso === todayIso;
+            const dayNum = Number(dayIso.slice(-2));
+            const summary =
+              dayActions.length > 0
+                ? `${dayActions.length} ex-date${dayActions.length > 1 ? "s" : ""}: ${dayActions
+                    .map((a) => `${a.ticker} ${CORPORATE_ACTION_LABELS[a.type]}`)
+                    .join(", ")}`
+                : null;
+
+            return (
+              <div
+                key={dayIso}
+                title={summary ?? undefined}
+                className={`flex min-h-[44px] flex-col items-center gap-1 rounded-lg py-1 text-xs sm:min-h-[56px] sm:py-1.5 ${
+                  isToday
+                    ? "bg-accent/12 ring-1 ring-accent/40"
+                    : dayActions.length > 0
+                      ? "bg-panel-raised/60"
+                      : ""
+                }`}
+              >
+                <span className={`tabular-nums ${isToday ? "font-semibold text-accent" : "text-panel-fg/80"}`}>
+                  {dayNum}
+                </span>
+                {dayActions.length > 0 && (
+                  <span className="flex flex-wrap items-center justify-center gap-0.5 px-0.5" aria-hidden="true">
+                    {dayActions.slice(0, 4).map((action) => (
+                      <span
+                        key={`${action.ticker}-${action.type}`}
+                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: CORPORATE_ACTION_TYPE_ACCENT[action.type] }}
+                      />
+                    ))}
+                  </span>
+                )}
+                {summary && <span className="sr-only">{summary}</span>}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {typesPresent.length > 0 ? (
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-panel-border pt-3">
+          {typesPresent.map((type) => (
+            <span key={type} className="flex items-center gap-1.5 text-[11px] text-panel-fg/72">
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                aria-hidden="true"
+                style={{ backgroundColor: CORPORATE_ACTION_TYPE_ACCENT[type] }}
+              />
+              {CORPORATE_ACTION_LABELS[type]}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 border-t border-panel-border pt-3 text-xs text-panel-fg/60">
+          No ex-dates on record this month.
+        </p>
+      )}
+    </div>
+  );
 }
 
 function MonthGroup({
@@ -106,6 +252,8 @@ export default async function CalendarPage() {
   // that just happened is far likelier to be the one you want.
   const pastMonths = groupByMonth(past).reverse();
   const nextUp = upcoming[0];
+  const allMonths = groupByMonth(sorted);
+  const calendarMonth = pickCalendarMonth(allMonths, todayIso);
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8">
@@ -113,7 +261,7 @@ export default async function CalendarPage() {
       <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">Dividend &amp; Corporate Actions Calendar</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
         Ex-date, record date, and payment date for dividends, rights offers, and other
-        corporate actions. Own the stock before the ex-date to be entitled.
+        corporate actions. Own the stock before the ex-date to qualify.
       </p>
 
       {nextUp && (
@@ -127,6 +275,12 @@ export default async function CalendarPage() {
         </p>
       )}
 
+      {sorted.length > 0 && (
+        <div className="mt-8">
+          <MonthCalendar monthKey={calendarMonth.monthKey} actions={calendarMonth.actions} todayIso={todayIso} />
+        </div>
+      )}
+
       {upcomingMonths.length > 0 && (
         <div className="mt-8">
           <MonthGroup months={upcomingMonths} todayIso={todayIso} isPast={false} />
@@ -136,7 +290,7 @@ export default async function CalendarPage() {
       {upcoming.length === 0 && sorted.length > 0 && (
         <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/72 shadow-sm shadow-black/5 ring-1 ring-panel-border">
           No upcoming corporate actions on record. PSE Edge publishes these as companies declare
-          them — past actions are listed below.
+          them; see past actions below.
         </p>
       )}
 
@@ -153,7 +307,7 @@ export default async function CalendarPage() {
 
       {sorted.length === 0 && (
         <p className="mt-8 rounded-xl bg-panel p-6 text-center text-sm text-panel-fg/72 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-          No corporate actions on record for the current window.
+          No corporate actions on record for this period.
         </p>
       )}
     </div>
@@ -214,7 +368,7 @@ function ActionRow({ action, isPast, todayIso }: { action: CorporateAction; isPa
           </div>
           <div>
             <div className="kicker text-panel-fg/72">Payment date</div>
-            <div className="mt-0.5 text-panel-fg/80">{action.paymentDate ? formatDate(action.paymentDate) : "—"}</div>
+            <div className="mt-0.5 text-panel-fg/80">{action.paymentDate ? formatDate(action.paymentDate) : "N/A"}</div>
           </div>
         </div>
 

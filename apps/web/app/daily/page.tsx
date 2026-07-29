@@ -15,9 +15,9 @@ async function getLatestRecapDate(): Promise<string | null> {
 export async function generateMetadata(): Promise<Metadata> {
   const latest = await getLatestRecapDate();
   return {
-    title: "PSE Market Recap — PSEi Today's Movers & Flow",
+    title: "PSE Market Recap: PSEi Today's Movers & Flow",
     description:
-      "One page per PSE trading day: index move, top movers, foreign flow, block sales, and disclosures.",
+      "One page per PSE trading day: index move, top movers, foreign flow, block sales, disclosures.",
     // Points at the dated permalink, not at itself. /daily renders the same
     // recap as /daily/<latest>, so the two URLs are byte-for-byte duplicates on
     // any given day; the dated URL is the stable one (it keeps this content
@@ -46,8 +46,7 @@ export default async function DailyIndexPage() {
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">Daily Recap</h1>
         <p className="mt-3 text-sm text-panel-fg/72">
-          No trading days are on record yet — recaps are generated from real recorded market data, so
-          they&apos;ll start appearing once the data pipeline has captured its first session.
+          No trading days recorded yet. Recaps appear once the data pipeline captures its first session.
         </p>
       </div>
     );

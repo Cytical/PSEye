@@ -46,6 +46,7 @@ const ROUTES: {
   { path: "/stocks", changeFrequency: "daily", priority: 0.7, quoteDated: true },
   { path: "/sectors", changeFrequency: "daily", priority: 0.6, quoteDated: true },
   { path: "/glossary", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/getting-started", changeFrequency: "yearly", priority: 0.5 },
   { path: "/about", changeFrequency: "yearly", priority: 0.3 },
   { path: "/contact", changeFrequency: "yearly", priority: 0.3 },
 ];

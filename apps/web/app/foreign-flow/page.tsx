@@ -7,7 +7,7 @@ import { getForeignFlowPageData } from "@/lib/foreignFlow";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "PSE Foreign Buying & Selling — Net Fund Flow",
+  title: "PSE Foreign Buying & Selling: Net Fund Flow",
   description: "Weekly index-level and daily per-stock net foreign buying/selling on the PSE.",
   alternates: { canonical: "/foreign-flow" },
 };
@@ -66,7 +66,7 @@ export default async function ForeignFlowPage() {
       <p className="mt-6 text-xs text-panel-fg/72">
         {stockFlowSource === "real"
           ? "Per-stock rankings are real daily net foreign buying/selling figures from PSE's Daily Quotation Report."
-          : "Per-stock rankings above are sample data — the real daily source hasn't populated any rows yet."}
+          : "Per-stock rankings above are sample data. The real daily source hasn't populated any rows yet."}
       </p>
     </div>
   );

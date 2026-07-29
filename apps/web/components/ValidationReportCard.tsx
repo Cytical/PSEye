@@ -60,8 +60,8 @@ export function ValidationReportCard({
                       {issue.severity}
                     </span>
                   </td>
-                  <td className="py-1.5 pr-3 font-mono">{issue.ticker || "—"}</td>
-                  <td className="py-1.5 pr-3">{issue.companyName || "—"}</td>
+                  <td className="py-1.5 pr-3 font-mono">{issue.ticker || "N/A"}</td>
+                  <td className="py-1.5 pr-3">{issue.companyName || "N/A"}</td>
                   <td className="py-1.5">{issue.message}</td>
                 </tr>
               ))}
@@ -72,7 +72,7 @@ export function ValidationReportCard({
 
       {report.issues.length === 0 && (
         <p className="mt-4 text-sm text-black/50 dark:text-white/50">
-          No issues found — {warningCount} warnings, {errorCount} errors.
+          No issues found ({warningCount} warnings, {errorCount} errors).
         </p>
       )}
     </section>
