@@ -68,8 +68,10 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
 
   const currency = stock.currency ?? "PHP";
   const symbol = currency === "USD" ? "$" : "₱";
-  const changeColor =
-    stock.pctChange == null ? "text-panel-fg/68" : stock.pctChange >= 0 ? "text-up" : "text-down";
+  // A missing % change renders as flat 0.00%, not "N/A" — see pctChangeToColor
+  // in @pseye/treemap-layout for why. Price keeps its own null handling: an
+  // unknown price is genuinely unknown, and "₱0.00" would be a false quote.
+  const changeColor = (stock.pctChange ?? 0) >= 0 ? "text-up" : "text-down";
 
   return (
     <div
@@ -119,9 +121,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
                 {stock.price == null ? "N/A" : `${symbol}${stock.price.toFixed(2)}`}
               </div>
               <div className={`text-sm font-semibold ${changeColor}`}>
-                {stock.pctChange == null
-                  ? "N/A"
-                  : `${stock.pctChange >= 0 ? "+" : ""}${stock.pctChange.toFixed(2)}% today`}
+                {`${(stock.pctChange ?? 0) >= 0 ? "+" : ""}${(stock.pctChange ?? 0).toFixed(2)}% today`}
               </div>
             </div>
             <div className="text-right text-xs text-panel-fg/68">

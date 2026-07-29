@@ -173,14 +173,10 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
                     {row.price == null ? <span className="text-panel-fg/65">N/A</span> : `₱${row.price.toFixed(2)}`}
                   </td>
                   <td className="py-2.5 pr-4 text-right font-medium tabular-nums">
-                    {row.pctChange == null ? (
-                      <span className="text-panel-fg/65">—</span>
-                    ) : (
-                      <span className={changeColor(row.pctChange)}>
-                        {row.pctChange >= 0 ? "+" : ""}
-                        {row.pctChange.toFixed(2)}%
-                      </span>
-                    )}
+                    <span className={changeColor(row.pctChange ?? 0)}>
+                      {(row.pctChange ?? 0) >= 0 ? "+" : ""}
+                      {(row.pctChange ?? 0).toFixed(2)}%
+                    </span>
                   </td>
                   <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">{formatMarketCap(row.marketCap)}</td>
                   <td className="py-2.5 pr-4 text-right tabular-nums">

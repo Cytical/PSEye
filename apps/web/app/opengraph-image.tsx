@@ -123,9 +123,7 @@ export default async function Image() {
                   >
                     <span style={{ fontSize: 14, fontWeight: 700 }}>{box.ticker}</span>
                     <span style={{ fontSize: 11 }}>
-                      {box.pctChange == null
-                        ? "N/A"
-                        : `${box.pctChange >= 0 ? "+" : ""}${box.pctChange.toFixed(2)}%`}
+                      {`${(box.pctChange ?? 0) >= 0 ? "+" : ""}${(box.pctChange ?? 0).toFixed(2)}%`}
                     </span>
                   </div>
                 )}

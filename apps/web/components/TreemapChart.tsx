@@ -8,7 +8,6 @@ import {
   shouldShowLabel,
   SECTOR_HEADER_HEIGHT,
   LEGEND_BANDS,
-  NO_DATA_COLOR,
   type TreemapInput,
 } from "@pseye/treemap-layout";
 import type { CompanyProfile } from "@/lib/companyProfiles";
@@ -24,9 +23,12 @@ export interface TreemapStock extends TreemapInput {
   currency?: "PHP" | "USD";
 }
 
-function formatPctChange(pctChange: number | null): string {
-  if (pctChange === null) return "N/A";
-  return `${pctChange >= 0 ? "+" : ""}${pctChange.toFixed(2)}%`;
+/** A null % change (no trade to report) renders as +0.00%, indistinguishable
+ * from a stock that traded and closed flat — see pctChangeToColor's note for
+ * why, and change the two together if that ever gets reversed. */
+export function formatPctChange(pctChange: number | null): string {
+  const value = pctChange ?? 0;
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
 interface TreemapChartProps {
@@ -537,15 +539,7 @@ export function TreemapChart({
           <div className="pointer-events-none absolute bottom-3 left-3 min-w-[190px] rounded-xl border border-panel-border bg-panel/95 px-3.5 py-3 text-xs text-panel-fg shadow-xl shadow-black/20 backdrop-blur-sm">
             <div className="flex items-baseline justify-between gap-3">
               <span className="text-sm font-bold tracking-tight">{hovered.ticker}</span>
-              <span
-                className={`text-sm font-semibold ${
-                  hovered.pctChange == null
-                    ? "text-panel-fg/68"
-                    : hovered.pctChange >= 0
-                      ? "text-up"
-                      : "text-down"
-                }`}
-              >
+              <span className={`text-sm font-semibold ${(hovered.pctChange ?? 0) >= 0 ? "text-up" : "text-down"}`}>
                 {formatPctChange(hovered.pctChange)}
               </span>
             </div>
@@ -600,13 +594,6 @@ export function TreemapChart({
               </span>
             ))}
           </div>
-        </div>
-        <div className="flex items-center gap-1.5 text-[10px] font-medium text-foreground/68">
-          <span
-            className="h-2.5 w-2.5 rounded-sm ring-1 ring-inset ring-foreground/10"
-            style={{ background: NO_DATA_COLOR }}
-          />
-          No trade today
         </div>
       </div>
     </div>

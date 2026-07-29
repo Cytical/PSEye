@@ -25,9 +25,12 @@ export default async function Image({ params }: { params: Promise<{ ticker: stri
   const quotes = await getDailyQuotes();
   const quote = quotes.find((q) => q.ticker === upper);
 
-  const pctChange = quote?.pctChange ?? null;
-  const changeColor = pctChange == null ? MUTED : pctChange >= 0 ? UP : DOWN;
-  const changeText = pctChange == null ? "N/A" : `${pctChange >= 0 ? "+" : ""}${pctChange.toFixed(2)}%`;
+  // A missing % change reads as flat 0.00% site-wide (see pctChangeToColor in
+  // @pseye/treemap-layout); price keeps its own "N/A" below, since an unknown
+  // price is genuinely unknown and "₱0.00" would be a false quote.
+  const pctChange = quote?.pctChange ?? 0;
+  const changeColor = pctChange >= 0 ? UP : DOWN;
+  const changeText = `${pctChange >= 0 ? "+" : ""}${pctChange.toFixed(2)}%`;
   const priceText = quote?.price == null ? "N/A" : `₱${quote.price.toFixed(2)}`;
 
   return new ImageResponse(

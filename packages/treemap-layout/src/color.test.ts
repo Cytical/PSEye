@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { getContrastText, pctChangeToColor, shouldShowLabel, NO_DATA_COLOR } from "./color";
+import { getContrastText, pctChangeToColor, shouldShowLabel } from "./color";
 
 describe("pctChangeToColor", () => {
-  it("returns the dedicated N/A color for null, distinct from the 0% flat color", () => {
-    const noData = pctChangeToColor(null);
-    expect(noData).toBe(NO_DATA_COLOR);
-    expect(noData).not.toBe(pctChangeToColor(0));
+  // Product decision, 2026-07-29: "no trade to report" and "traded, closed
+  // unchanged" are deliberately not distinguished anywhere in the UI — null
+  // renders as flat 0.00% and is colored identically. The dedicated
+  // NO_DATA_COLOR swatch and the map's "No trade today" legend entry were
+  // removed in the same change.
+  it("colors a null (no trade) exactly like a flat 0% close", () => {
+    expect(pctChangeToColor(null)).toBe(pctChangeToColor(0));
   });
 
   it("clamps beyond +/-3% rather than extrapolating past the domain", () => {
@@ -44,8 +47,9 @@ describe("pctChangeToColor", () => {
     }
   });
 
-  it("null still returns the shared N/A color regardless of theme/colorblind mode", () => {
-    expect(pctChangeToColor(null, "light", true)).toBe(NO_DATA_COLOR);
+  it("null tracks the 0% color in every theme/colorblind combination", () => {
+    expect(pctChangeToColor(null, "light", true)).toBe(pctChangeToColor(0, "light", true));
+    expect(pctChangeToColor(null, "dark", false)).toBe(pctChangeToColor(0, "dark", false));
   });
 
   it("is discrete (finviz-style bands), not a continuous gradient: values that round to the same whole percent share a color", () => {

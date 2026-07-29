@@ -88,20 +88,24 @@ const scales = {
   "light-colorblind": buildScale(LIGHT_COLORBLIND_RANGE),
 };
 
-/** Distinct from the flat (0%) color so an N/A tile doesn't read as "unchanged" in either theme. */
-export const NO_DATA_COLOR = "#5b5e66";
-
 /**
  * `theme` defaults to "dark" and `colorblind` to `false` so callers that
  * render one fixed look regardless of the visitor's site preferences
  * (opengraph-image.tsx's static share-image card) don't need to pass
  * anything; TreemapChart.tsx passes the visitor's live theme/colorblind
  * settings explicitly.
+ *
+ * A null `pctChange` (the source had no trade to report — suspended ticker, no
+ * fill that session) is colored as flat 0%, the same as a stock that traded and
+ * closed unchanged. This is a deliberate product decision made 2026-07-29: the
+ * two states are no longer distinguished anywhere in the UI, so there is no
+ * longer a separate no-data swatch (`NO_DATA_COLOR`) or "No trade today" legend
+ * entry. If they ever need to be told apart again, this line and
+ * TreemapChart.tsx's `formatPctChange` are the pair to change back together.
  */
 export function pctChangeToColor(pctChange: number | null, theme: ColorTheme = "dark", colorblind = false): string {
-  if (pctChange === null) return NO_DATA_COLOR;
   const key = colorblind ? (`${theme}-colorblind` as const) : theme;
-  return scales[key](bandFor(pctChange));
+  return scales[key](bandFor(pctChange ?? 0));
 }
 
 function srgbToLinear(channel: number): number {

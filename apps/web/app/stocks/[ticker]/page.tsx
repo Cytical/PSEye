@@ -372,11 +372,9 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             shareText={
               quote?.price == null
                 ? `${company.ticker} (${company.companyName}) on the PSE — via PSEye`
-                : `${company.ticker} ${formatPeso(quote.price)}${
-                    quote.pctChange == null
-                      ? ""
-                      : ` (${quote.pctChange >= 0 ? "+" : ""}${quote.pctChange.toFixed(2)}%)`
-                  } on the PSE — via PSEye`
+                : `${company.ticker} ${formatPeso(quote.price)} (${(quote.pctChange ?? 0) >= 0 ? "+" : ""}${(
+                    quote.pctChange ?? 0
+                  ).toFixed(2)}%) on the PSE — via PSEye`
             }
           />
           <Link
@@ -421,13 +419,16 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             <span className="text-[30px] font-bold leading-none tracking-tight tabular-nums text-panel-fg">
               {quote?.price == null ? "N/A" : formatPeso(quote.price)}
             </span>
-            {quote?.pctChange != null && (
+            {/* Rendered whenever there's a quote row at all: a null % change
+                shows as flat 0.00% rather than being hidden, matching the map
+                and every table — see pctChangeToColor in @pseye/treemap-layout. */}
+            {quote != null && (
               <span
-                className={`text-sm font-semibold tabular-nums ${quote.pctChange >= 0 ? "text-up" : "text-down"}`}
+                className={`text-sm font-semibold tabular-nums ${(quote.pctChange ?? 0) >= 0 ? "text-up" : "text-down"}`}
               >
                 {pesoChange != null && `${pesoChange >= 0 ? "+" : "−"}${Math.abs(pesoChange).toFixed(2)} `}
-                ({quote.pctChange >= 0 ? "+" : ""}
-                {quote.pctChange.toFixed(2)}%)
+                ({(quote.pctChange ?? 0) >= 0 ? "+" : ""}
+                {(quote.pctChange ?? 0).toFixed(2)}%)
               </span>
             )}
           </div>
@@ -532,17 +533,9 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                     <span className="flex shrink-0 items-baseline gap-2.5 tabular-nums">
                       <span className="text-panel-fg/80">{peer.price == null ? "N/A" : formatPeso(peer.price)}</span>
                       <span
-                        className={`w-[52px] text-right ${
-                          peer.pctChange == null
-                            ? "text-panel-fg/65"
-                            : peer.pctChange >= 0
-                              ? "text-up"
-                              : "text-down"
-                        }`}
+                        className={`w-[52px] text-right ${(peer.pctChange ?? 0) >= 0 ? "text-up" : "text-down"}`}
                       >
-                        {peer.pctChange == null
-                          ? "—"
-                          : `${peer.pctChange >= 0 ? "+" : ""}${peer.pctChange.toFixed(2)}%`}
+                        {`${(peer.pctChange ?? 0) >= 0 ? "+" : ""}${(peer.pctChange ?? 0).toFixed(2)}%`}
                       </span>
                     </span>
                   </Link>

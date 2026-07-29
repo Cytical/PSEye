@@ -83,13 +83,11 @@ export default async function StocksIndexPage() {
             <ul className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
               {companies.map((c) => {
                 const quote = quoteByTicker.get(c.ticker);
-                const pctChange = quote?.pctChange ?? null;
-                const toneClass =
-                  pctChange == null
-                    ? "text-panel-fg/65"
-                    : pctChange >= 0
-                      ? "text-up"
-                      : "text-down";
+                // A missing % change reads as flat 0.00% site-wide — see
+                // pctChangeToColor in @pseye/treemap-layout. Price keeps its
+                // own null handling; "₱0.00" would be a false quote.
+                const pctChange = quote?.pctChange ?? 0;
+                const toneClass = pctChange >= 0 ? "text-up" : "text-down";
                 return (
                   <li key={c.ticker}>
                     <Link
@@ -105,7 +103,7 @@ export default async function StocksIndexPage() {
                           {quote?.price == null ? "N/A" : formatPeso(quote.price)}
                         </span>{" "}
                         <span className={toneClass}>
-                          {pctChange == null ? "" : `${pctChange >= 0 ? "+" : ""}${pctChange.toFixed(2)}%`}
+                          {`${pctChange >= 0 ? "+" : ""}${pctChange.toFixed(2)}%`}
                         </span>
                       </span>
                     </Link>
