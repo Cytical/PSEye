@@ -1,11 +1,8 @@
 import { histogram } from "@/lib/analytics";
 
-const WIDTH = 640;
-const HEIGHT = 200;
 const PAD_LEFT = 8;
 const PAD_RIGHT = 8;
 const PAD_TOP = 10;
-const PAD_BOTTOM = 26;
 
 /**
  * Static server-rendered histogram of daily returns (zero client JS, same
@@ -13,11 +10,37 @@ const PAD_BOTTOM = 26;
  * at/above 0 use --up, so the shape of the return distribution — its spread,
  * skew, and fat tails — reads at a glance. `returns` are simple daily returns
  * (e.g. 0.012 = +1.2%).
+ *
+ * The viewBox is a prop, not a constant, because this renders at two very
+ * different widths: full-panel-wide on the analytics route, and ~230px in the
+ * stock dashboard's statistics panel. An SVG scales its text with the viewBox,
+ * so a fixed 640-wide box squeezed into 230px would render its 10px axis
+ * labels at ~3.6px. Passing a narrower box (and a proportionally larger
+ * `fontSize`) keeps the labels legible at the size they're actually displayed.
  */
-export function ReturnHistogram({ returns }: { returns: number[] }) {
+export function ReturnHistogram({
+  returns,
+  width = 640,
+  height = 200,
+  fontSize = 10,
+  tickCount = 5,
+  binCount = 31,
+}: {
+  returns: number[];
+  width?: number;
+  height?: number;
+  fontSize?: number;
+  /** 5 ticks fit a wide box; a narrow one only has room for 3. */
+  tickCount?: 3 | 5;
+  binCount?: number;
+}) {
   if (returns.length < 20) return null;
 
-  const bins = histogram(returns, 31);
+  const WIDTH = width;
+  const HEIGHT = height;
+  const PAD_BOTTOM = fontSize * 2.6;
+
+  const bins = histogram(returns, binCount);
   const maxCount = Math.max(...bins.map((b) => b.count));
   if (maxCount === 0) return null;
 
@@ -32,7 +55,7 @@ export function ReturnHistogram({ returns }: { returns: number[] }) {
   const zeroX = xFor(0);
 
   // A few axis ticks in percent, including 0.
-  const ticks = [min, min + span * 0.25, 0, min + span * 0.75, max]
+  const ticks = (tickCount === 3 ? [min, 0, max] : [min, min + span * 0.25, 0, min + span * 0.75, max])
     .filter((t, i, arr) => arr.indexOf(t) === i && t >= min && t <= max)
     .sort((a, b) => a - b);
 
@@ -67,12 +90,12 @@ export function ReturnHistogram({ returns }: { returns: number[] }) {
         <text
           key={t}
           x={xFor(t)}
-          y={HEIGHT - 8}
+          y={HEIGHT - fontSize * 0.8}
           // First/last tick sit at the plot's edge — center-anchoring them
           // (like the interior ticks) would run half the label past the
           // viewBox edge and get clipped by the container's overflow.
           textAnchor={i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle"}
-          fontSize={10}
+          fontSize={fontSize}
           className="fill-panel-fg/65"
         >
           {`${t >= 0 ? "+" : ""}${(t * 100).toFixed(1)}%`}

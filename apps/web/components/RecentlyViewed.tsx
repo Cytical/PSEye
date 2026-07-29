@@ -11,19 +11,17 @@ export function RecentlyViewed({ excludeTicker }: { excludeTicker?: string }) {
   if (tickers.length === 0) return null;
 
   return (
-    <div>
-      <h2 className="text-sm font-medium text-panel-fg">Recently viewed</h2>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {tickers.map((ticker) => (
-          <Link
-            key={ticker}
-            href={`/stocks/${ticker}`}
-            className="rounded-full border border-panel-border px-2.5 py-1 font-mono text-xs text-panel-fg transition-colors hover:bg-panel-raised"
-          >
-            {ticker}
-          </Link>
-        ))}
-      </div>
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="kicker text-panel-fg/60">Recently viewed</span>
+      {tickers.map((ticker) => (
+        <Link
+          key={ticker}
+          href={`/stocks/${ticker}`}
+          className="rounded-full border border-panel-border px-2.5 py-0.5 font-mono text-xs text-panel-fg transition-colors hover:bg-panel-raised"
+        >
+          {ticker}
+        </Link>
+      ))}
     </div>
   );
 }

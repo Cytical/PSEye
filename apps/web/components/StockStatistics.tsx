@@ -17,6 +17,7 @@ import {
 } from "@/lib/analytics";
 import { ReturnHistogram } from "./ReturnHistogram";
 import { Kpi } from "./Kpi";
+import { SubHead } from "./StockAnalytics";
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -29,13 +30,28 @@ export interface DividendSummary {
   payoutCount: number;
 }
 
+/** How many daily closes the panel is describing — the dashboard shows this as
+ * the Panel's header meta, so it needs to be readable without mounting the
+ * body. Returns null when there isn't enough history for `StockStatistics` to
+ * render at all, which is also the page's gate for showing the panel. */
+export function statisticsSampleSize(closes: HistoricalClose[]): number | null {
+  const n = dailyReturns(closes.map((c) => c.close)).length;
+  return n < 30 ? null : n + 1;
+}
+
 /**
  * Static server-rendered "advanced statistics" profile (zero client JS) — the
- * data-science layer PH retail tools don't surface: risk-adjusted return,
- * the full daily-return distribution (shape + tail risk), income yield, and
- * seasonality. Everything is close-based, computed from the ~1yr of closes the
- * stock page already holds (plus dividend data it already fetched), so no extra
- * queries. Only mounts with real data and enough history (page gates on it).
+ * data-science layer PH retail tools don't surface: risk-adjusted return, the
+ * full daily-return distribution (shape + tail risk), and income yield.
+ * Everything is close-based, computed from the ~1yr of closes the stock page
+ * already holds (plus dividend data it already fetched), so no extra queries.
+ *
+ * Renders the panel *body* only — see StockAnalytics for why. Seasonality used
+ * to live here too but is now its own full-width `StockSeasonality` panel: a
+ * 12-column table was the one thing in here that couldn't be read in a
+ * dashboard-height column, and it's explicitly the most descriptive (least
+ * actionable) block on the page, so it belongs below the fold rather than
+ * forcing the whole risk profile down there with it.
  */
 export function StockStatistics({
   closes,
@@ -66,157 +82,154 @@ export function StockStatistics({
   const var95 = historicalVaR(returns, 0.95);
   const var99 = historicalVaR(returns, 0.99);
 
+  const showIncome = dividend != null && (dividend.yieldPct != null || dividend.payoutCount > 0);
+
+  return (
+    <div className="grid grid-cols-1 gap-x-5 gap-y-3 xl:grid-cols-[minmax(0,1fr)_minmax(190px,225px)]">
+      <div className="flex min-w-0 flex-col gap-3">
+        <div>
+          <SubHead>Risk-adjusted return</SubHead>
+          <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-4">
+            <Kpi
+              label="Annualized"
+              value={annReturn == null ? "—" : pct(annReturn)}
+              tone={toneOf(annReturn)}
+              hint="CAGR"
+              info="Compound annual growth rate implied by the closing-price series over this window."
+            />
+            <Kpi
+              label="Sharpe"
+              value={sharpe == null ? "—" : sharpe.toFixed(2)}
+              tone={toneOf(sharpe)}
+              hint="per unit risk"
+              info="Excess return over the risk-free rate, divided by total volatility. Higher is better; above 1 is generally considered good, above 2 very good."
+            />
+            <Kpi
+              label="Sortino"
+              value={sortino == null ? "—" : sortino.toFixed(2)}
+              tone={toneOf(sortino)}
+              hint="per unit downside"
+              info="Like the Sharpe ratio, but only penalizes downside volatility (losses), not upside swings — a stock that only ever surprises to the upside scores better here than on Sharpe."
+            />
+            <Kpi
+              label="Downside dev."
+              value={downDevAnnPct == null ? "—" : `${downDevAnnPct.toFixed(1)}%`}
+              hint="losses only"
+              info="Standard deviation of returns below the risk-free rate — volatility from losing days only, ignoring how much the stock swings upward."
+            />
+          </div>
+        </div>
+
+        <div>
+          <SubHead>Daily return distribution</SubHead>
+          <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-4">
+            <Kpi label="Avg daily" value={pct2(avgDaily)} tone={toneOf(avgDaily)} />
+            <Kpi label="Positive days" value={posDays == null ? "—" : `${posDays.toFixed(0)}%`} />
+            <Kpi label="Best day" value={pct(best)} tone="up" />
+            <Kpi label="Worst day" value={pct(worst)} tone="down" />
+            <Kpi
+              label="Skewness"
+              value={skew == null ? "—" : skew.toFixed(2)}
+              hint={skew == null ? undefined : skew > 0.1 ? "right tail" : skew < -0.1 ? "left tail" : "symmetric"}
+              info="Asymmetry of the daily-return distribution. Positive means occasional large up days pull the tail right; negative means occasional large down days pull it left."
+            />
+            <Kpi
+              label="Excess kurtosis"
+              value={kurt == null ? "—" : kurt.toFixed(2)}
+              hint={kurt == null ? undefined : kurt > 1 ? "fat tails" : "near-normal"}
+              info={
+                'How much more often extreme daily moves happen versus a normal distribution. Higher means more "fat tail" surprise days than a bell curve would predict.'
+              }
+            />
+            <Kpi
+              label="VaR (95%)"
+              value={var95 == null ? "—" : `−${var95.toFixed(1)}%`}
+              tone="down"
+              hint="worst 5% of days"
+              info="Historical VaR: read directly off the actual return distribution, not a normal-model estimate. On the worst 5% of days in this window, the loss was at least this large."
+            />
+            <Kpi
+              label="VaR (99%)"
+              value={var99 == null ? "—" : `−${var99.toFixed(1)}%`}
+              tone="down"
+              hint="worst 1% of days"
+              info="Same as VaR (95%), but for the worst 1% of days — a rarer, larger loss threshold."
+            />
+          </div>
+        </div>
+
+      </div>
+
+      {/* Right column: the histogram, then Income beneath it. Income used to
+          sit under the distribution KPIs on the left, which left this column
+          as one tall, mostly-empty raised box — the exact dead space this
+          dashboard layout exists to remove. The box now hugs the chart. */}
+      <div className="flex min-w-0 flex-col gap-3">
+        <div>
+          <SubHead>Return histogram</SubHead>
+          <div className="mt-1.5 rounded-lg bg-panel-raised p-2 ring-1 ring-panel-border">
+            {/* Narrow viewBox + larger in-box font: this column renders ~215px
+                wide, where the default 640-wide box would shrink axis labels to
+                an unreadable ~3.6px. */}
+            <ReturnHistogram returns={returns} width={300} height={200} fontSize={13} tickCount={3} binCount={25} />
+          </div>
+        </div>
+
+        {showIncome && (
+          <div>
+            <SubHead>Income</SubHead>
+            <div className="mt-1.5 grid grid-cols-3 gap-x-3 gap-y-2.5">
+              <Kpi
+                label="Yield (TTM)"
+                value={dividend.yieldPct == null ? "—" : `${dividend.yieldPct.toFixed(2)}%`}
+                tone={dividend.yieldPct != null && dividend.yieldPct > 0 ? "up" : undefined}
+              />
+              <Kpi label="Dividends" value={`₱${dividend.ttm.toFixed(4).replace(/\.?0+$/, "")}`} hint="TTM" />
+              <Kpi label="Payouts" value={String(dividend.payoutCount)} hint="TTM" />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Average return by calendar month. Split out of `StockStatistics` so it can
+ * sit full-width below the dashboard fold — 12 columns never read well inside
+ * a dashboard-height column, and by its own caveat this is descriptive color
+ * rather than something to trade on.
+ */
+export function StockSeasonality({ closes }: { closes: HistoricalClose[] }) {
   const monthly = monthlyReturnStats(closes);
-  const monthlyWithData = monthly.filter((m) => m.avgReturn != null);
+  if (monthly.filter((m) => m.avgReturn != null).length < 6) return null;
   const maxYears = Math.max(0, ...monthly.map((m) => m.years));
 
   return (
-    <div className="rounded-xl bg-panel p-3.5 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <div className="flex items-baseline justify-between">
-        <h2 className="kicker text-panel-fg/68">Statistical profile</h2>
-        <span className="text-[11px] text-panel-fg/65">{returns.length + 1} daily closes</span>
-      </div>
-
-      {/* Risk-adjusted return */}
-      <h3 className="mt-3 text-xs font-semibold text-panel-fg/70">Risk-adjusted return</h3>
-      <div className="mt-2 flex flex-wrap gap-x-6 gap-y-3">
-        <Kpi
-          label="Annualized return"
-          value={annReturn == null ? "—" : pct(annReturn)}
-          tone={toneOf(annReturn)}
-          info="Compound annual growth rate implied by the closing-price series over this window."
-        />
-        <Kpi
-          label="Sharpe ratio"
-          value={sharpe == null ? "—" : sharpe.toFixed(2)}
-          tone={toneOf(sharpe)}
-          hint="return per unit of risk"
-          info="Excess return over the risk-free rate, divided by total volatility. Higher is better; above 1 is generally considered good, above 2 very good."
-        />
-        <Kpi
-          label="Sortino ratio"
-          value={sortino == null ? "—" : sortino.toFixed(2)}
-          tone={toneOf(sortino)}
-          hint="return per unit of downside risk"
-          info="Like the Sharpe ratio, but only penalizes downside volatility (losses), not upside swings — a stock that only ever surprises to the upside scores better here than on Sharpe."
-        />
-        <Kpi
-          label="Downside deviation"
-          value={downDevAnnPct == null ? "—" : `${downDevAnnPct.toFixed(1)}%`}
-          hint="annualized, losses only"
-          info="Standard deviation of returns below the risk-free rate — volatility from losing days only, ignoring how much the stock swings upward."
-        />
-      </div>
-
-      {/* Return distribution + histogram, side by side so the panel reads as
-          numbers-plus-picture rather than another stack of tiles. */}
-      <h3 className="mt-5 text-xs font-semibold text-panel-fg/70">Daily return distribution</h3>
-      <div className="mt-2 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-        <div className="flex flex-wrap content-start gap-x-6 gap-y-3">
-          <Kpi label="Avg daily return" value={pct2(avgDaily)} tone={toneOf(avgDaily)} />
-          <Kpi label="Positive days" value={posDays == null ? "—" : `${posDays.toFixed(0)}%`} />
-          <Kpi
-            label="Skewness"
-            value={skew == null ? "—" : skew.toFixed(2)}
-            hint={skew == null ? undefined : skew > 0.1 ? "right tail" : skew < -0.1 ? "left tail" : "symmetric"}
-            info="Asymmetry of the daily-return distribution. Positive means occasional large up days pull the tail right; negative means occasional large down days pull it left."
-          />
-          <Kpi
-            label="Excess kurtosis"
-            value={kurt == null ? "—" : kurt.toFixed(2)}
-            hint={kurt == null ? undefined : kurt > 1 ? "fat tails" : "near-normal"}
-            info={
-              'How much more often extreme daily moves happen versus a normal distribution. Higher means more "fat tail" surprise days than a bell curve would predict.'
+    <div>
+      <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-12">
+        {monthly.map((m) => (
+          <div
+            key={m.month}
+            className="rounded-md px-1 py-1.5 text-center"
+            style={{ backgroundColor: seasonColor(m.avgReturn) }}
+            title={
+              m.avgReturn == null
+                ? `${MONTH_LABELS[m.month - 1]}: no data`
+                : `${MONTH_LABELS[m.month - 1]}: ${pct(m.avgReturn)} avg over ${m.years} ${m.years === 1 ? "year" : "years"}`
             }
-          />
-          <Kpi label="Best day" value={pct(best)} tone="up" />
-          <Kpi label="Worst day" value={pct(worst)} tone="down" />
-          <Kpi
-            label="VaR (95%)"
-            value={var95 == null ? "—" : `−${var95.toFixed(1)}%`}
-            tone="down"
-            hint="worst 5% of days"
-            info="Historical VaR: read directly off the actual return distribution, not a normal-model estimate. On the worst 5% of days in this window, the loss was at least this large."
-          />
-          <Kpi
-            label="VaR (99%)"
-            value={var99 == null ? "—" : `−${var99.toFixed(1)}%`}
-            tone="down"
-            hint="worst 1% of days"
-            info="Same as VaR (95%), but for the worst 1% of days — a rarer, larger loss threshold."
-          />
-        </div>
-        <div className="rounded-lg bg-panel-raised p-3 ring-1 ring-panel-border">
-          <ReturnHistogram returns={returns} />
-        </div>
+          >
+            <div className="text-[10px] text-panel-fg/68">{MONTH_LABELS[m.month - 1]}</div>
+            <div className="text-xs font-semibold tabular-nums text-panel-fg">
+              {m.avgReturn == null ? "—" : `${m.avgReturn >= 0 ? "+" : ""}${m.avgReturn.toFixed(1)}`}
+            </div>
+          </div>
+        ))}
       </div>
-
-      {/* Income */}
-      {dividend && (dividend.yieldPct != null || dividend.payoutCount > 0) && (
-        <>
-          <h3 className="mt-5 text-xs font-semibold text-panel-fg/70">Income</h3>
-          <div className="mt-2 flex flex-wrap gap-x-6 gap-y-3">
-            <Kpi
-              label="Dividend yield (TTM)"
-              value={dividend.yieldPct == null ? "—" : `${dividend.yieldPct.toFixed(2)}%`}
-              tone={dividend.yieldPct != null && dividend.yieldPct > 0 ? "up" : undefined}
-            />
-            <Kpi label="Dividends (TTM)" value={`₱${dividend.ttm.toFixed(4).replace(/\.?0+$/, "")}`} />
-            <Kpi label="Payouts (TTM)" value={String(dividend.payoutCount)} />
-          </div>
-        </>
-      )}
-
-      {/* Seasonality */}
-      {monthlyWithData.length >= 6 && (
-        <>
-          <h3 className="mt-5 text-xs font-semibold text-panel-fg/70">
-            Seasonality{" "}
-            <span className="font-normal text-panel-fg/65">
-              — average return by calendar month (up to {maxYears} {maxYears === 1 ? "year" : "years"} of data)
-            </span>
-          </h3>
-          <div className="mt-2 overflow-x-auto">
-            <table className="w-full min-w-[560px] border-separate border-spacing-1 text-center text-xs">
-              <thead>
-                <tr>
-                  {monthly.map((m) => (
-                    <th key={m.month} className="p-1 font-medium text-panel-fg/68">
-                      {MONTH_LABELS[m.month - 1]}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  {monthly.map((m) => (
-                    <td
-                      key={m.month}
-                      className="rounded-md p-1.5 tabular-nums text-panel-fg"
-                      style={{ backgroundColor: seasonColor(m.avgReturn) }}
-                      title={
-                        m.avgReturn == null
-                          ? `${MONTH_LABELS[m.month - 1]}: no data`
-                          : `${MONTH_LABELS[m.month - 1]}: ${pct(m.avgReturn)} avg over ${m.years} ${m.years === 1 ? "year" : "years"}`
-                      }
-                    >
-                      {m.avgReturn == null ? "—" : `${m.avgReturn >= 0 ? "+" : ""}${m.avgReturn.toFixed(1)}`}
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-1 text-[11px] text-panel-fg/65">
-            Only a few years of history back each month, so this is descriptive color, not a
-            predictable &ldquo;month effect.&rdquo;
-          </p>
-        </>
-      )}
-
-      <p className="mt-3 text-[11px] text-panel-fg/68">
-        Sharpe/Sortino use a ~{(PH_ANNUAL_RISK_FREE * 100).toFixed(2)}% annual risk-free assumption.
-        Descriptive statistics on past closes — not a forecast, stock pick, or buy/sell signal.
+      <p className="mt-2 text-[11px] text-panel-fg/65">
+        Average % return by calendar month, up to {maxYears} {maxYears === 1 ? "year" : "years"} of history.
+        Only a few years back each month, so this is descriptive color, not a predictable
+        &ldquo;month effect.&rdquo;
       </p>
     </div>
   );

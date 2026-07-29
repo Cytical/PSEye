@@ -213,46 +213,34 @@ label[for] {
   }
 }
 
-/* /stocks/[ticker]'s main sections, named so each can be positioned
- * independently of DOM order per breakpoint — a plain reordered flex-col
- * can't do that (mobile order and desktop order are unrelated here: mobile
- * stays exactly the single-column order the page always had). Assign a
- * section's area via the matching `[grid-area:x]` Tailwind arbitrary class.
+/* Thin, theme-aware scrollbar for a Panel's internal scroll area (see
+ * components/Panel.tsx). A platform scrollbar at its default width inside a
+ * ~300px dashboard panel eats visible content width and reads as a rendering
+ * bug rather than an affordance. "overscroll-behavior: contain" stops a
+ * flick that reaches the end of a list from scrolling the whole page next,
+ * which on this layout would jump the reader off the dashboard entirely.
  *
- * Desktop is a literal 3-row × 3-column bento, not a few tall columns with
- * dead space beside them: every area spans exactly one row (the chart is the
- * only one wider than one column), so no section's height forces a gap in a
- * sibling column two rows down the way a multi-row span did in an earlier
- * version of this layout. Row 1 is the wide price chart beside sector peers;
- * row 2 is Analytics / Statistics / News; row 3 is About / Recently Viewed /
- * Disclosures & dividend history. */
-.stock-detail-grid {
-  display: grid;
-  /* minmax(0, 1fr), not a bare 1fr: a grid item's default min-width is auto,
-     so any child with wide intrinsic content (the price chart's SVG, a long
-     company name in the sector-peers list) grows the track past the
-     container instead of wrapping/scrolling within it — the same class of
-     mobile-overflow bug ForeignFlowPage's FlowTable min-w-0 comment already
-     documents for flex. */
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas:
-    "chart"
-    "analytics"
-    "statistics"
-    "about"
-    "peers"
-    "discl"
-    "news"
-    "recent";
-  gap: 1.75rem;
+ * The stock page's layout used to live here too, as a ".stock-detail-grid"
+ * 3x3 grid-template-areas bento. It is now plain Tailwind grid utilities on
+ * the page itself: with fixed row heights and internally-scrolling panels,
+ * nothing needs to be positioned independently of DOM order anymore, and a
+ * "lg:col-span-*" on each panel says where it goes at the point of use. */
+.panel-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--panel-fg) 22%, transparent) transparent;
+  overscroll-behavior: contain;
 }
 
-@media (min-width: 1024px) {
-  .stock-detail-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-areas:
-      "chart      chart      peers"
-      "analytics  statistics news"
-      "about      recent     discl";
-  }
+.panel-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.panel-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--panel-fg) 22%, transparent);
+  border-radius: 999px;
 }

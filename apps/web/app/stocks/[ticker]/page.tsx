@@ -13,7 +13,12 @@ import { getNewsForTicker } from "@/lib/news";
 import { getHistoricalQuotes } from "@/lib/historicalQuotes";
 import { StockPriceChart } from "@/components/StockPriceChart";
 import { StockAnalytics } from "@/components/StockAnalytics";
-import { StockStatistics, type DividendSummary } from "@/components/StockStatistics";
+import {
+  StockStatistics,
+  StockSeasonality,
+  statisticsSampleSize,
+  type DividendSummary,
+} from "@/components/StockStatistics";
 import { parseDividendAmount } from "@/lib/dividends";
 import { WatchlistStarButton } from "@/components/WatchlistStarButton";
 import { RecordStockView } from "@/components/RecordStockView";
@@ -22,6 +27,8 @@ import { ShareButton } from "@/components/ShareButton";
 import { sectorToSlug } from "@/lib/sectorSlug";
 import { MiniSparkline } from "@/components/MiniSparkline";
 import { Kpi } from "@/components/Kpi";
+import { Panel } from "@/components/Panel";
+import { RangeBar } from "@/components/RangeBar";
 
 export const revalidate = 3600; // hourly; matches the quotes ETL cadence
 
@@ -29,6 +36,32 @@ export const revalidate = 3600; // hourly; matches the quotes ETL cadence
 const HISTORY_LOOKBACK_DAYS = 90;
 /** Stats window — the standard 52-week high/low frame. The ETL keeps ~4 years, so one year is safely covered. */
 const STATS_LOOKBACK_DAYS = 365;
+
+/**
+ * Height of each of the two above-the-fold dashboard rows. Sized so the whole
+ * dashboard — title, hero strip, and both rows — lands inside roughly a
+ * 1000px-tall viewport, which is the point of the layout: the panels scroll
+ * internally so that adding a 30-item disclosure list can never push the row
+ * below it off screen. Only applied from `lg` up; below that the rows collapse
+ * to a single column and take their natural heights, since a fixed 20rem panel
+ * on a phone would be almost entirely scrollbar.
+ */
+const DASH_ROW = "flex flex-col gap-3 lg:h-[19.5rem] lg:flex-row 2xl:h-[21rem]";
+/**
+ * Panel widths within a `DASH_ROW`. Flex basis + grow rather than a 12-column
+ * grid's `col-span-*`, specifically so a row heals when a panel doesn't
+ * render: Chart, Analytics, and Statistics all require real DB-backed history,
+ * and a ticker without it drops all three, which under `col-span-*` left
+ * literal empty columns. Here the survivors absorb the space instead —
+ * half/quarter/quarter when everything is present, an even split when the wide
+ * panel is missing.
+ */
+const SPAN_WIDE = "min-w-0 lg:basis-1/2 lg:grow-[2]";
+const SPAN_SIDE = "min-w-0 lg:basis-1/4 lg:grow";
+/** Mobile cap for scrolling panels, where `DASH_ROW`'s fixed height doesn't apply. */
+const MOBILE_SCROLL_CAP = "max-h-[19rem] lg:max-h-none";
+/** Comfortable width for one hero-rail metric tile; see the rail's own comment. */
+const HERO_TILE_PX = 170;
 
 function findCompany(tickerParam: string) {
   const upper = tickerParam.toUpperCase();
@@ -72,6 +105,15 @@ function formatMarketCap(n: number): string {
   return `₱${n.toFixed(0)}`;
 }
 
+/** Share counts and ₱ turnover both run into the billions — compact or the hero rail can't hold them. */
+function formatCompact(n: number): string {
+  if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return n.toLocaleString("en-PH");
+}
+
 function formatDate(iso: string): string {
   return new Date(iso + "T00:00:00Z").toLocaleDateString("en-PH", {
     month: "short",
@@ -110,6 +152,16 @@ function buildCompanyFacts(profile: CompanyProfile): { label: string; value: Rea
   return facts;
 }
 
+/** Empty state for a fixed-height panel: centered, so a "nothing here" line
+ * doesn't sit alone in the top-left corner of an otherwise blank card. */
+function PanelEmpty({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex h-full items-center justify-center px-4 py-6 text-center text-xs text-panel-fg/60">
+      {children}
+    </div>
+  );
+}
+
 function formatRelative(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const hours = Math.round(diffMs / 3_600_000);
@@ -141,8 +193,11 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
   const quote = quotes.find((q) => q.ticker === ticker);
   const profile = profiles[ticker] ?? null;
-  const companyDisclosures = disclosures.filter((d) => d.ticker === ticker).slice(0, 8);
-  const companyActions = corporateActions.filter((a) => a.ticker === ticker).slice(0, 8);
+  // The panels these feed scroll internally now, so a longer list costs no
+  // layout height — worth showing more than the 8 the old fixed-height columns
+  // could fit before they started pushing sibling sections down the page.
+  const companyDisclosures = disclosures.filter((d) => d.ticker === ticker).slice(0, 25);
+  const companyActions = corporateActions.filter((a) => a.ticker === ticker).slice(0, 25);
 
   const sector = quote?.sector ?? company.sector;
   const rankedByMarketCap = [...quotes].sort((a, b) => b.marketCap - a.marketCap);
@@ -150,12 +205,12 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
   const sectorRanked = rankedByMarketCap.filter((q) => q.sector === sector);
   const selfSectorIndex = sectorRanked.findIndex((q) => q.ticker === ticker);
   const sectorRank = selfSectorIndex + 1;
-  const summaryLine = `${sector} · #${rank} by market cap of ${quotes.length} tracked PSE stocks · #${sectorRank} of ${sectorRanked.length} in sector`;
 
   // Peers nearest in market-cap rank within the same sector, not just the
   // sector's biggest names — more genuinely "similar" for a small-cap stock
   // than always pointing at the same handful of blue chips regardless of size.
-  const PEER_COUNT = 6;
+  // Wider window than before for the same reason the lists above are longer.
+  const PEER_COUNT = 10;
   let peerWindowStart = Math.max(0, selfSectorIndex - Math.floor(PEER_COUNT / 2));
   const peerWindowEnd = Math.min(sectorRanked.length, peerWindowStart + PEER_COUNT + 1);
   peerWindowStart = Math.max(0, peerWindowEnd - (PEER_COUNT + 1));
@@ -225,7 +280,30 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         }
       : null;
 
+  // Previous close is derivable from the two fields the quote already carries,
+  // so the hero can show the peso move alongside the percentage without the
+  // ETL storing a third column. Guarded against the -100% (price went to zero)
+  // case that would divide by zero.
+  const prevClose =
+    quote?.price != null && quote.pctChange != null && quote.pctChange !== -100
+      ? quote.price / (1 + quote.pctChange / 100)
+      : null;
+  const pesoChange = quote?.price != null && prevClose != null ? quote.price - prevClose : null;
+
+  // Only the fields this particular quote actually has — a rail of "—"
+  // placeholders would be worse than a shorter rail.
+  const heroStats: { label: string; value: string; hint?: string }[] = [];
+  if (quote) heroStats.push({ label: "Market cap", value: formatMarketCap(quote.marketCap) });
+  if (prevClose != null) heroStats.push({ label: "Prev close", value: formatPeso(prevClose) });
+  if (quote?.volume != null) heroStats.push({ label: "Volume", value: formatCompact(quote.volume), hint: "shares" });
+  if (quote?.value != null) heroStats.push({ label: "Turnover", value: `₱${formatCompact(quote.value)}`, hint: "today" });
+  if (quote?.freeFloatPct != null)
+    heroStats.push({ label: "Free float", value: `${quote.freeFloatPct.toFixed(1)}%` });
+  if (dividendSummary?.yieldPct != null)
+    heroStats.push({ label: "Div yield", value: `${dividendSummary.yieldPct.toFixed(2)}%`, hint: "TTM" });
+
   const companyFacts = profile ? buildCompanyFacts(profile) : [];
+  const statsSample = yearCloses.length > 0 ? statisticsSampleSize(yearCloses) : null;
   // "Dec 20, 1967" parses fine via the Date constructor; anything PSE Edge
   // phrases differently (rare, but seen as blank/placeholder on a handful of
   // companies) just fails silently and omits foundingDate rather than
@@ -238,12 +316,15 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
   const sameAs = [profile?.website, profile?.wikipediaUrl].filter((v): v is string => Boolean(v));
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const sectorHref = `/sectors/${sectorToSlug(sector)}`;
   // @graph bundles the company identity with a BreadcrumbList — Google renders the
   // latter as a breadcrumb trail under the search result (instead of the raw URL),
-  // which is a free click-through-rate lever, not just cosmetic markup. The
-  // profile-derived fields (address/foundingDate/sameAs) are exactly the kind
-  // of entity-disambiguation signal Google's docs point to sameAs for — omitted
-  // entirely (not emitted as null) when the profile hasn't backfilled them.
+  // which is a free click-through-rate lever, not just cosmetic markup. Its three
+  // levels mirror the visible trail in the header exactly, which is what Google's
+  // breadcrumb guidance asks for. The profile-derived fields
+  // (address/foundingDate/sameAs) are exactly the kind of entity-disambiguation
+  // signal Google's docs point to sameAs for — omitted entirely (not emitted as
+  // null) when the profile hasn't backfilled them.
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -260,35 +341,30 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Market Map", item: siteUrl },
-          { "@type": "ListItem", position: 2, name: company.ticker, item: `${siteUrl}/stocks/${company.ticker}` },
+          { "@type": "ListItem", position: 2, name: sector, item: `${siteUrl}${sectorHref}` },
+          { "@type": "ListItem", position: 3, name: company.ticker, item: `${siteUrl}/stocks/${company.ticker}` },
         ],
       },
     ],
   };
 
   return (
-    <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-[1600px] px-4 pb-8 pt-4 sm:px-6">
       <RecordStockView ticker={ticker} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="text-xs text-panel-fg/68">
-        <Link href="/" className="hover:underline">
-          Market Map
-        </Link>
-        <span className="mx-1.5">/</span>
-        <span>{company.ticker}</span>
-      </nav>
-
-      <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
-        <div className="flex items-baseline gap-2">
-          <WatchlistStarButton ticker={company.ticker} size={22} className="translate-y-0.5" />
-          <div>
-            <p className="kicker text-accent">{company.ticker}</p>
-            <h1 className="mt-0.5 font-serif text-2xl font-semibold leading-tight tracking-tight text-panel-fg">
+      {/* Title bar. Two lines total: the old header spent four (breadcrumb,
+          kicker, name, summary) before a single number appeared. The breadcrumb
+          is folded into the meta line rather than getting a row of its own. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <WatchlistStarButton ticker={company.ticker} size={20} />
+          <h1 className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 leading-tight">
+            <span className="font-mono text-lg font-bold tracking-tight text-accent">{company.ticker}</span>
+            <span className="truncate font-serif text-xl font-semibold tracking-tight text-panel-fg">
               {company.companyName}
-            </h1>
-            <p className="mt-1 text-sm text-panel-fg/72">{summaryLine}</p>
-          </div>
+            </span>
+          </h1>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <ShareButton
@@ -312,275 +388,385 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         </div>
       </div>
 
-      {/* Hero price card + a borderless KPI strip, replacing what used to be
-          7 identical bordered "Stat" boxes in a row — the price is the one
-          number on this page that deserves to look different from the rest,
-          and a wall of same-sized cards for everything else read as
-          repetitive rather than dense. */}
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2.2fr)]">
-        <div className="rounded-2xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-          <div className="text-[11px] text-panel-fg/60">Price</div>
-          <div className="mt-1 flex items-baseline gap-2.5">
-            <span className="text-3xl font-bold tabular-nums text-panel-fg">
+      <nav aria-label="Breadcrumb" className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-panel-fg/68">
+        <Link href="/" className="hover:underline">
+          Market Map
+        </Link>
+        <span aria-hidden="true">/</span>
+        <Link href={sectorHref} className="hover:underline">
+          {sector}
+        </Link>
+        <span aria-hidden="true">/</span>
+        <span className="text-panel-fg/85">{company.ticker}</span>
+        <span aria-hidden="true" className="mx-1 text-panel-fg/40">
+          &middot;
+        </span>
+        <span>
+          #{rank} of {quotes.length} by market cap
+        </span>
+        <span aria-hidden="true" className="mx-1 text-panel-fg/40">
+          &middot;
+        </span>
+        <span>
+          #{sectorRank} of {sectorRanked.length} in sector
+        </span>
+      </nav>
+
+      {/* Hero strip: price, where it sits in its own 52-week range, and the
+          quote fields the page never used to surface at all (volume, turnover,
+          free float), in one band instead of two half-empty cards. */}
+      <div className="mt-3 flex flex-col gap-x-5 gap-y-3 rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border lg:flex-row">
+        <div className="min-w-0 lg:w-[190px] lg:shrink-0">
+          <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+            <span className="text-[30px] font-bold leading-none tracking-tight tabular-nums text-panel-fg">
               {quote?.price == null ? "N/A" : formatPeso(quote.price)}
             </span>
             {quote?.pctChange != null && (
               <span
                 className={`text-sm font-semibold tabular-nums ${quote.pctChange >= 0 ? "text-up" : "text-down"}`}
               >
-                {quote.pctChange >= 0 ? "+" : ""}
-                {quote.pctChange.toFixed(2)}%
+                {pesoChange != null && `${pesoChange >= 0 ? "+" : "−"}${Math.abs(pesoChange).toFixed(2)} `}
+                ({quote.pctChange >= 0 ? "+" : ""}
+                {quote.pctChange.toFixed(2)}%)
               </span>
             )}
           </div>
-          {closes.length >= 2 && (
-            <MiniSparkline values={closes.map((c) => c.close)} className="mt-3 h-9 w-full" />
-          )}
+          <div className="mt-1 text-[10.5px] text-panel-fg/60">
+            Latest close{closes.length > 0 ? ` · ${formatDate(closes[closes.length - 1].date)}` : ""}
+          </div>
+          {closes.length >= 2 && <MiniSparkline values={closes.map((c) => c.close)} className="mt-2 h-8 w-full" />}
         </div>
 
-        <div className="flex flex-wrap items-start gap-x-7 gap-y-3 rounded-2xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-          <Kpi label="Market cap" value={quote ? formatMarketCap(quote.marketCap) : "N/A"} />
-          <Kpi label="Sector" value={sector} />
-          {yearStats && (
-            <>
-              <Kpi
-                label={yearStats.sinceLabel ? `High since ${yearStats.sinceLabel}` : "52-wk high"}
-                value={formatPeso(yearStats.high)}
-              />
-              <Kpi
-                label={yearStats.sinceLabel ? `Low since ${yearStats.sinceLabel}` : "52-wk low"}
-                value={formatPeso(yearStats.low)}
-              />
+        {yearStats && (
+          <div className="min-w-0 lg:w-[210px] lg:shrink-0 lg:border-l lg:border-panel-border lg:pl-5">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="kicker text-panel-fg/60">
+                {yearStats.sinceLabel ? `Range since ${yearStats.sinceLabel}` : "52-week range"}
+              </span>
               {yearStats.pctFromHigh != null && (
-                <Kpi
-                  label={yearStats.sinceLabel ? "vs that high" : "vs 52-wk high"}
-                  value={`${yearStats.pctFromHigh >= 0 ? "+" : ""}${yearStats.pctFromHigh.toFixed(1)}%`}
-                  tone={yearStats.pctFromHigh >= -1 ? "up" : yearStats.pctFromHigh <= -20 ? "down" : undefined}
-                />
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="stock-detail-grid mt-6">
-      {closes.length >= 2 && (
-        <div className="[grid-area:chart]">
-          <h2 className="kicker text-panel-fg/68">Closing price, last {HISTORY_LOOKBACK_DAYS} days</h2>
-          <div className="mt-2 rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-            <StockPriceChart closes={closes} />
-          </div>
-        </div>
-      )}
-
-      {yearCloses.length >= 21 && (
-        <div className="[grid-area:analytics]">
-          <StockAnalytics closes={yearCloses} />
-        </div>
-      )}
-
-      {yearCloses.length >= 31 && (
-        <div className="[grid-area:statistics]">
-          <StockStatistics closes={yearCloses} dividend={dividendSummary} />
-        </div>
-      )}
-
-      {profile && (
-        <div className="[grid-area:about]">
-          <h2 className="kicker text-panel-fg/68">About</h2>
-          <div className="mt-2 flex flex-col gap-2.5">
-            {profile.description.split("\n\n").map((paragraph, i) => (
-              <p key={i} className="text-sm leading-snug text-panel-fg/80">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-          <p className="mt-1.5 text-[11px] text-panel-fg/72">{profile.source}</p>
-
-          {companyFacts.length > 0 && (
-            <>
-              <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-2 border-t border-panel-border pt-3 sm:grid-cols-2">
-                {companyFacts.map((f) => (
-                  <div key={f.label} className="flex items-baseline justify-between gap-3 text-sm sm:block">
-                    <dt className="text-[11px] text-panel-fg/68 sm:kicker sm:text-panel-fg/68">{f.label}</dt>
-                    <dd className="text-right text-panel-fg/85 sm:mt-0.5 sm:text-left">{f.value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <p className="mt-1.5 text-[11px] text-panel-fg/72">
-                Security &amp; Contact Information — PSE Edge company profile
-              </p>
-            </>
-          )}
-
-          {profile.wikipediaSummary && (
-            <div className="mt-3 border-t border-panel-border pt-2.5">
-              <p className="line-clamp-3 text-xs leading-snug text-panel-fg/65">{profile.wikipediaSummary}</p>
-              {profile.wikipediaUrl && (
-                <a
-                  href={profile.wikipediaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-block text-[11px] text-panel-fg/60 hover:underline"
+                <span
+                  className={`text-[11px] font-semibold tabular-nums ${
+                    yearStats.pctFromHigh >= -1 ? "text-up" : yearStats.pctFromHigh <= -20 ? "text-down" : "text-panel-fg/75"
+                  }`}
                 >
-                  {profile.wikipediaTitle} on Wikipedia →
-                </a>
+                  {yearStats.pctFromHigh >= 0 ? "+" : ""}
+                  {yearStats.pctFromHigh.toFixed(1)}% vs high
+                </span>
               )}
             </div>
-          )}
-        </div>
-      )}
+            <div className="mt-2.5">
+              <RangeBar
+                low={yearStats.low}
+                high={yearStats.high}
+                current={quote?.price ?? null}
+                lowLabel={formatPeso(yearStats.low)}
+                highLabel={formatPeso(yearStats.high)}
+              />
+            </div>
+          </div>
+        )}
 
-      {sectorPeers.length > 0 && (
-        <div className="[grid-area:peers]">
-          <h2 className="kicker text-panel-fg/68">Sector peers</h2>
-          <ul className="mt-2 flex flex-col divide-y divide-panel-border rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
-            {sectorPeers.map((peer) => (
-              <li key={peer.ticker}>
-                <Link
-                  href={`/stocks/${peer.ticker}`}
-                  className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-panel-raised"
-                >
-                  <span>
-                    <span className="font-mono text-xs font-semibold text-panel-fg">{peer.ticker}</span>
-                    <span className="ml-2 text-panel-fg/70">{peer.companyName}</span>
-                  </span>
-                  <span className="flex shrink-0 items-center gap-3 tabular-nums">
-                    <span className="text-panel-fg/80">{peer.price == null ? "N/A" : formatPeso(peer.price)}</span>
-                    <span
-                      className={
-                        peer.pctChange == null
-                          ? "text-panel-fg/65"
-                          : peer.pctChange >= 0
-                            ? "text-up"
-                            : "text-down"
-                      }
-                    >
-                      {peer.pctChange == null
-                        ? "—"
-                        : `${peer.pctChange >= 0 ? "+" : ""}${peer.pctChange.toFixed(2)}%`}
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href={`/sectors/${sectorToSlug(sector)}`}
-            className="mt-2 inline-block text-xs text-panel-fg/68 hover:underline"
+        {heroStats.length > 0 && (
+          // The rail holds anywhere from two to six metrics depending on what
+          // the quote actually carries, so its columns are auto-fit rather than
+          // a fixed count — a hard `grid-cols-6` squeezed a two-metric rail
+          // into sixths, truncating labels to "M…" and colliding the values.
+          // The width cap handles the other end of that range: `1fr` tracks
+          // fill a six-metric rail evenly, but stretched a two-metric one to
+          // 640px per tile, leaving half a screen between the two numbers.
+          <div
+            className="grid min-w-0 flex-1 grid-cols-[repeat(auto-fit,minmax(84px,1fr))] gap-x-4 gap-y-2.5 lg:border-l lg:border-panel-border lg:pl-5"
+            style={{ maxWidth: heroStats.length * HERO_TILE_PX + (heroStats.length - 1) * 16 }}
           >
-            See all {sectorRanked.length} in {sector} →
-          </Link>
-        </div>
-      )}
+            {heroStats.map((s) => (
+              <Kpi key={s.label} label={s.label} value={s.value} hint={s.hint} size="md" />
+            ))}
+          </div>
+        )}
+      </div>
 
-      <div className="[grid-area:discl] flex flex-col gap-6">
-        <div>
-          <h2 className="kicker text-panel-fg/68">Recent disclosures</h2>
+      {/* Dashboard row 1 — price action and where this stock sits among peers. */}
+      <div className={`mt-3 ${DASH_ROW}`}>
+        {closes.length >= 2 && (
+          <Panel
+            title="Closing price"
+            meta={`last ${HISTORY_LOOKBACK_DAYS} days`}
+            className={SPAN_WIDE}
+            bodyClassName="flex items-center p-2"
+            flush
+          >
+            <StockPriceChart closes={closes} />
+          </Panel>
+        )}
+
+        {yearCloses.length >= 21 && (
+          <Panel title="Analytics" meta="~1yr of closes" className={SPAN_SIDE} scroll>
+            <StockAnalytics closes={yearCloses} />
+          </Panel>
+        )}
+
+        {sectorPeers.length > 0 && (
+          <Panel
+            title="Sector peers"
+            meta={sector}
+            className={`${SPAN_SIDE} ${MOBILE_SCROLL_CAP}`}
+            scroll
+            flush
+            footer={
+              <Link href={sectorHref} className="text-panel-fg/68 hover:underline">
+                See all {sectorRanked.length} in {sector} →
+              </Link>
+            }
+          >
+            <ul className="divide-y divide-panel-border">
+              {sectorPeers.map((peer) => (
+                <li key={peer.ticker}>
+                  <Link
+                    href={`/stocks/${peer.ticker}`}
+                    className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs hover:bg-panel-raised"
+                  >
+                    <span className="min-w-0 truncate">
+                      <span className="font-mono font-semibold text-panel-fg">{peer.ticker}</span>
+                      <span className="ml-2 text-panel-fg/70">{peer.companyName}</span>
+                    </span>
+                    <span className="flex shrink-0 items-baseline gap-2.5 tabular-nums">
+                      <span className="text-panel-fg/80">{peer.price == null ? "N/A" : formatPeso(peer.price)}</span>
+                      <span
+                        className={`w-[52px] text-right ${
+                          peer.pctChange == null
+                            ? "text-panel-fg/65"
+                            : peer.pctChange >= 0
+                              ? "text-up"
+                              : "text-down"
+                        }`}
+                      >
+                        {peer.pctChange == null
+                          ? "—"
+                          : `${peer.pctChange >= 0 ? "+" : ""}${peer.pctChange.toFixed(2)}%`}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        )}
+      </div>
+
+      {/* Dashboard row 2 — the quantitative profile beside the two live feeds. */}
+      <div className={`mt-3 ${DASH_ROW}`}>
+        {statsSample != null && (
+          <Panel
+            title="Statistical profile"
+            meta={`${statsSample} daily closes`}
+            className={SPAN_WIDE}
+            scroll
+          >
+            <StockStatistics closes={yearCloses} dividend={dividendSummary} />
+          </Panel>
+        )}
+
+        <Panel
+          title="Recent disclosures"
+          meta={companyDisclosures.length > 0 ? `${companyDisclosures.length} filings` : undefined}
+          className={`${SPAN_SIDE} ${MOBILE_SCROLL_CAP}`}
+          scroll
+          flush
+          footer={
+            <Link href="/disclosures" className="text-panel-fg/68 hover:underline">
+              All disclosures →
+            </Link>
+          }
+        >
           {companyDisclosures.length > 0 ? (
-            <ul className="mt-2 flex flex-col gap-2">
+            <ul className="divide-y divide-panel-border">
               {companyDisclosures.map((d) => {
                 const accent = DISCLOSURE_TYPE_ACCENT[d.type];
                 return (
                   <li
                     key={d.referenceNo}
-                    className="rounded-lg bg-panel px-3 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border"
-                    style={{ borderLeft: `3px solid ${accent}` }}
+                    className="px-3 py-2 text-xs"
+                    style={{ boxShadow: `inset 3px 0 0 ${accent}` }}
                   >
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <span
-                        className="type-badge rounded-full px-2 py-0.5 text-[10px] font-medium"
+                        className="type-badge truncate rounded-full px-1.5 py-0.5 text-[10px] font-medium"
                         style={{ "--badge-accent": accent } as React.CSSProperties}
                       >
                         {DISCLOSURE_TYPE_LABELS[d.type]}
                       </span>
-                      <span className="ml-auto text-[11px] text-panel-fg/72">{formatRelative(d.filedAt)}</span>
+                      <span className="ml-auto shrink-0 text-[10.5px] text-panel-fg/72">
+                        {formatRelative(d.filedAt)}
+                      </span>
                     </div>
                     {d.url ? (
                       <a
                         href={d.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-1 block text-panel-fg hover:underline"
+                        className="mt-0.5 block leading-snug text-panel-fg hover:underline"
                       >
                         {d.headline} <span aria-hidden="true">↗</span>
                       </a>
                     ) : (
-                      <p className="mt-1 text-panel-fg">{d.headline}</p>
+                      <p className="mt-0.5 leading-snug text-panel-fg">{d.headline}</p>
                     )}
                   </li>
                 );
               })}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-panel-fg/68">No recent disclosures on record.</p>
+            <PanelEmpty>No recent disclosures on record for {company.ticker}.</PanelEmpty>
           )}
-          <Link href="/disclosures" className="mt-2 inline-block text-xs text-panel-fg/68 hover:underline">
-            All disclosures →
-          </Link>
-        </div>
+        </Panel>
 
-        <div>
-          <h2 className="kicker text-panel-fg/68">Dividend &amp; corporate action history</h2>
+        <Panel
+          title="In the news"
+          meta={news.length > 0 ? `${news.length} mentions` : undefined}
+          className={`${SPAN_SIDE} ${MOBILE_SCROLL_CAP}`}
+          scroll
+          flush
+          footer={
+            <Link href="/news" className="text-panel-fg/68 hover:underline">
+              All PSE news →
+            </Link>
+          }
+        >
+          {news.length > 0 ? (
+            <ul className="divide-y divide-panel-border">
+              {news.map((item) => (
+                <li key={item.url} className="px-3 py-2 text-xs">
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block leading-snug text-panel-fg hover:underline"
+                  >
+                    {item.title}
+                  </a>
+                  <div className="mt-0.5 text-[10.5px] text-panel-fg/72">
+                    {item.source} &middot; {formatRelative(item.publishedAt.toISOString())}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <PanelEmpty>No recent news mentions {company.ticker}.</PanelEmpty>
+          )}
+        </Panel>
+      </div>
+
+      {/* Below the fold: reference material rather than live market state. */}
+      <div className="mt-3 flex flex-col items-stretch gap-3 lg:flex-row">
+        {/* Not MOBILE_SCROLL_CAP: this row's panels stretch to match the
+            tallest sibling (About), so this one needs a desktop cap too —
+            and `lg:max-h-none` from that constant would have cancelled it. */}
+        <Panel
+          title="Dividends & corporate actions"
+          meta={companyActions.length > 0 ? `${companyActions.length} on record` : undefined}
+          className="min-w-0 max-h-[19rem] lg:max-h-[26rem] lg:basis-1/3 lg:grow"
+          scroll
+          flush
+          footer={
+            <Link href="/calendar" className="text-panel-fg/68 hover:underline">
+              Full calendar →
+            </Link>
+          }
+        >
           {companyActions.length > 0 ? (
-            <ul className="mt-2 flex flex-col gap-2">
+            <ul className="divide-y divide-panel-border">
               {companyActions.map((a) => {
                 const accent = CORPORATE_ACTION_TYPE_ACCENT[a.type];
                 return (
                   <li
                     key={`${a.type}-${a.exDate}`}
-                    className="rounded-lg bg-panel px-3 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border"
-                    style={{ borderLeft: `3px solid ${accent}` }}
+                    className="px-3 py-2 text-xs"
+                    style={{ boxShadow: `inset 3px 0 0 ${accent}` }}
                   >
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <span
-                        className="type-badge rounded-full px-2 py-0.5 text-[10px] font-medium"
+                        className="type-badge truncate rounded-full px-1.5 py-0.5 text-[10px] font-medium"
                         style={{ "--badge-accent": accent } as React.CSSProperties}
                       >
                         {CORPORATE_ACTION_LABELS[a.type]}
                       </span>
-                      <span className="ml-auto text-[11px] text-panel-fg/72">Ex-date {formatDate(a.exDate)}</span>
+                      <span className="ml-auto shrink-0 text-[10.5px] text-panel-fg/72">
+                        Ex-date {formatDate(a.exDate)}
+                      </span>
                     </div>
-                    <p className="mt-1 text-panel-fg">{a.details}</p>
+                    <p className="mt-0.5 leading-snug text-panel-fg">{a.details}</p>
                   </li>
                 );
               })}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-panel-fg/68">No recent corporate actions on record.</p>
+            <PanelEmpty>No dividends or corporate actions on record for {company.ticker}.</PanelEmpty>
           )}
-          <Link href="/calendar" className="mt-2 inline-block text-xs text-panel-fg/68 hover:underline">
-            Full calendar →
-          </Link>
-        </div>
+        </Panel>
+
+        {profile && (
+          <Panel
+            title={`About ${company.ticker}`}
+            meta={profile.source}
+            className="min-w-0 lg:basis-2/3 lg:grow-[2]"
+            bodyClassName="flex flex-col gap-3"
+          >
+            {/* Block flow, not flex: CSS multi-column has no effect on a flex
+                container, so `columns-2` silently did nothing when this was a
+                `flex flex-col`. Paragraph spacing is margins for the same
+                reason — `gap` doesn't apply here either. */}
+            <div className="text-sm leading-snug text-panel-fg/80 [&>p]:mb-2 [&>p:last-child]:mb-0 sm:columns-2 sm:gap-5">
+              {profile.description.split("\n\n").map((paragraph, i) => (
+                <p key={i}>{paragraph}</p>
+              ))}
+            </div>
+
+            {companyFacts.length > 0 && (
+              <dl className="grid grid-cols-2 gap-x-5 gap-y-2 border-t border-panel-border pt-2.5 sm:grid-cols-3 xl:grid-cols-6">
+                {companyFacts.map((f) => (
+                  <div key={f.label} className="min-w-0">
+                    <dt className="text-[10.5px] leading-tight text-panel-fg/60">{f.label}</dt>
+                    <dd className="mt-0.5 text-xs leading-snug text-panel-fg/85">{f.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+
+            {profile.wikipediaSummary && (
+              <div className="border-t border-panel-border pt-2.5">
+                <p className="line-clamp-2 text-xs leading-snug text-panel-fg/65">{profile.wikipediaSummary}</p>
+                {profile.wikipediaUrl && (
+                  <a
+                    href={profile.wikipediaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-block text-[11px] text-panel-fg/60 hover:underline"
+                  >
+                    {profile.wikipediaTitle} on Wikipedia →
+                  </a>
+                )}
+              </div>
+            )}
+          </Panel>
+        )}
       </div>
 
-      {news.length > 0 && (
-        <div className="[grid-area:news]">
-          <h2 className="kicker text-panel-fg/68">In the news</h2>
-          <ul className="mt-2 flex flex-col gap-2.5">
-            {news.map((item) => (
-              <li key={item.url} className="text-sm">
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-panel-fg hover:underline">
-                  {item.title}
-                </a>
-                <div className="text-[11px] text-panel-fg/72">
-                  {item.source} &middot; {formatRelative(item.publishedAt.toISOString())}
-                </div>
-              </li>
-            ))}
-          </ul>
+      {yearCloses.length >= 31 && (
+        <div className="mt-3">
+          <Panel title="Seasonality" meta="average return by calendar month">
+            <StockSeasonality closes={yearCloses} />
+          </Panel>
         </div>
       )}
 
-      <div className="[grid-area:recent]">
+      <div className="mt-4">
         <RecentlyViewed excludeTicker={ticker} />
       </div>
-      </div>
 
-      <p className="mt-8 text-xs text-panel-fg/72">
-        Delayed/EOD data, not real-time. Not financial advice, a stock pick, or a
-        buy/sell signal.
+      <p className="mt-4 text-xs text-panel-fg/72">
+        Delayed/EOD data, not real-time. Every figure here is a descriptive statistic on past
+        closing prices — not a forecast, a stock pick, or a buy/sell signal, and not financial
+        advice.
       </p>
     </div>
   );
