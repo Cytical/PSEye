@@ -49,35 +49,42 @@ export function DailyRecapShareCard({
       </div>
 
       {snapshot ? (
-        <div className="mt-3 min-w-0">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
-            <span className="text-xs text-panel-fg/50">PSEi</span>
-            <span className="text-4xl font-bold tabular-nums text-panel-fg sm:text-5xl">
-              {snapshot.pseiValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-            <span className="text-xl font-bold tabular-nums sm:text-2xl" style={{ color: changeColor }}>
-              {snapshot.pseiPctChange >= 0 ? "+" : ""}
-              {snapshot.pseiPctChange.toFixed(2)}%
-            </span>
-            <span className="text-sm text-panel-fg/55">
-              {snapshot.pseiChange >= 0 ? "+" : ""}
-              {snapshot.pseiChange.toFixed(2)} pts
-            </span>
-            {breadth && (
-              <span className="text-xs">
-                <span className="font-semibold tabular-nums" style={{ color: UP }}>
-                  {breadth.advancers}▲
-                </span>
-                <span className="mx-1 text-panel-fg/55">/</span>
-                <span className="font-semibold tabular-nums" style={{ color: DOWN }}>
-                  {breadth.decliners}▼
-                </span>
-                <span className="ml-1.5 text-panel-fg/55">{breadth.unchanged} flat</span>
+        <div className="mt-3 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2 lg:items-center">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
+              <span className="text-xs text-panel-fg/50">PSEi</span>
+              <span className="text-4xl font-bold tabular-nums text-panel-fg sm:text-5xl">
+                {snapshot.pseiValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-            )}
+              <span className="text-xl font-bold tabular-nums sm:text-2xl" style={{ color: changeColor }}>
+                {snapshot.pseiPctChange >= 0 ? "+" : ""}
+                {snapshot.pseiPctChange.toFixed(2)}%
+              </span>
+              <span className="text-sm text-panel-fg/55">
+                {snapshot.pseiChange >= 0 ? "+" : ""}
+                {snapshot.pseiChange.toFixed(2)} pts
+              </span>
+              {breadth && (
+                <span className="text-xs">
+                  <span className="font-semibold tabular-nums" style={{ color: UP }}>
+                    {breadth.advancers}▲
+                  </span>
+                  <span className="mx-1 text-panel-fg/55">/</span>
+                  <span className="font-semibold tabular-nums" style={{ color: DOWN }}>
+                    {breadth.decliners}▼
+                  </span>
+                  <span className="ml-1.5 text-panel-fg/55">{breadth.unchanged} flat</span>
+                </span>
+              )}
+            </div>
           </div>
+          {/* Capped to this grid column (roughly half the card on desktop,
+              not the old full-card width) so the chart reads as a supporting
+              visual next to the headline number rather than dominating the
+              page — a 640:280 viewBox at ~half the previous rendered width
+              also renders proportionally half as tall. */}
           {pseiHistory.length > 1 && (
-            <div className="mt-4">
+            <div className="min-w-0">
               <PseiTrendChart history={pseiHistory} color={changeColor} />
             </div>
           )}
