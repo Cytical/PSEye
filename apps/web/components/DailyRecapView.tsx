@@ -74,11 +74,14 @@ function Panel({
   title,
   moreHref,
   scroll,
+  wide,
   children,
 }: {
   title: string;
   moreHref?: string;
   scroll?: boolean;
+  /** For 2-panel rows: a wider basis/cap so two panels split the row evenly instead of hugging the left with a 3-per-row cap meant for the movers row. */
+  wide?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -93,14 +96,18 @@ function Panel({
     // fewer populated panels than the layout has room for — e.g. no foreign
     // flow data that day — the panels that *do* exist stretch to fill the
     // row instead of leaving a dead gap next to them, capped with a max-width
-    // rather than left to stretch indefinitely. basis-[420px] targets 3 per
-    // row on a real desktop viewport (~1550px of content width) rather than
-    // the previous 260px floor, which packed 5 cramped, truncating panels
-    // into row one and left row two's lone survivor an isolated 440px box
-    // with most of the row empty beside it — still the "wasted space"
-    // complaint, just relocated. Wider panels also mean disclosure headlines
-    // and company names stop truncating as aggressively.
-    <section className="flex min-w-0 max-w-[560px] flex-1 basis-[420px] flex-col rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+    // rather than left to stretch indefinitely. basis-[420px]/max-560 targets
+    // 3 per row on a real desktop viewport (~1550px of content width); the
+    // dashboard is now split into separate flex rows by panel count (3 movers,
+    // then 2+2 for the index/flow and breadth groups) rather than one big
+    // auto-wrapping bag, so a `wide` row's 2 panels get a bigger basis/cap to
+    // split the same row width evenly instead of leaving a gap where a third
+    // panel would have gone.
+    <section
+      className={`flex min-w-0 flex-1 flex-col rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border ${
+        wide ? "basis-[480px] max-w-[760px]" : "basis-[420px] max-w-[560px]"
+      }`}
+    >
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="kicker text-panel-fg/68">{title}</h2>
         {moreHref && (
@@ -109,7 +116,15 @@ function Panel({
           </Link>
         )}
       </div>
-      <div className={scroll ? "mt-2 max-h-64 overflow-y-auto pr-1" : "mt-2"}>{children}</div>
+      <div
+        className={
+          scroll
+            ? "mt-2 max-h-64 overflow-y-auto pr-1"
+            : "mt-2 flex flex-1 flex-col justify-center"
+        }
+      >
+        {children}
+      </div>
     </section>
   );
 }
@@ -156,6 +171,28 @@ function MostActiveList({ rows }: { rows: DailyRecap["mostActive"] }) {
 }
 
 /**
+ * Total tracked market cap plus the PSEi's own trailing 1-month/1-year
+ * average and 1-year high/low — its own panel rather than living inside
+ * Foreign Fund Flow, which it used to share purely to avoid a short panel
+ * next to Sector Movers/Breadth Detail. In practice that read as two
+ * unrelated stat blocks glued together under one heading; splitting them
+ * gives each a title that actually matches its contents.
+ */
+function MarketOverviewGrid({ overview }: { overview: DailyRecap["marketOverview"] }) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <StatTile label="Total Market Cap" value={formatCompactPeso(overview.totalMarketCap)} />
+      <StatTile
+        label="PSEi 1Y High / Low"
+        value={`${formatIndexValue(overview.yearHighPsei)} / ${formatIndexValue(overview.yearLowPsei)}`}
+      />
+      <StatTile label="PSEi 1M Avg" value={formatIndexValue(overview.monthAvgPsei)} />
+      <StatTile label="PSEi 1Y Avg" value={formatIndexValue(overview.yearAvgPsei)} />
+    </div>
+  );
+}
+
+/**
  * One aggregate bar, not a per-ticker breakdown — `stock_foreign_flow` only
  * stores the top 10 net buyers and top 10 net sellers each day (see that
  * table's own doc comment), not the full ~380-ticker board, so "all stocks"
@@ -165,23 +202,13 @@ function MostActiveList({ rows }: { rows: DailyRecap["mostActive"] }) {
  * biggest buyer/seller are called out below the bar (buys/sells arrive
  * ranked by |value| already, per getStockForeignFlowByDate's `orderBy(rank)`
  * — first row is the biggest).
- *
- * A market-overview stat grid sits above all of that — total tracked market
- * cap plus the PSEi's own trailing 1-month/1-year average and 1-year
- * high/low. Belongs here rather than its own panel: this was the one panel
- * visibly shorter than its row-mates (Sector Movers, Breadth Detail) once
- * the per-ticker flow list collapsed to an aggregate, and these are the same
- * "index at a glance" family of stat as the flow numbers below them, just a
- * longer time horizon.
  */
 function ForeignFlowSummary({
   buys,
   sells,
-  overview,
 }: {
   buys: DailyRecap["foreignBuys"];
   sells: DailyRecap["foreignSells"];
-  overview: DailyRecap["marketOverview"];
 }) {
   const hasFlow = buys.length > 0 || sells.length > 0;
   const buyTotal = buys.reduce((sum, r) => sum + r.netValue, 0);
@@ -195,23 +222,13 @@ function ForeignFlowSummary({
 
   return (
     <div>
-      <div className={hasFlow ? "mb-3 grid grid-cols-2 gap-2 border-b border-panel-border pb-3" : "grid grid-cols-2 gap-2"}>
-        <StatTile label="Total Market Cap" value={formatCompactPeso(overview.totalMarketCap)} />
-        <StatTile
-          label="PSEi 1Y High / Low"
-          value={`${formatIndexValue(overview.yearHighPsei)} / ${formatIndexValue(overview.yearLowPsei)}`}
-        />
-        <StatTile label="PSEi 1M Avg" value={formatIndexValue(overview.monthAvgPsei)} />
-        <StatTile label="PSEi 1Y Avg" value={formatIndexValue(overview.yearAvgPsei)} />
-      </div>
-
       {/* A genuine zero-net day is implausible for real foreign trading — an
           empty buys/sells pair means this source has no data recorded for
           the date, not that flow was exactly ₱0. Says so rather than
           rendering a bar/Net/Buying/Selling row that would otherwise look
           like a real (if boring) reading. */}
       {!hasFlow ? (
-        <p className="mt-3 text-[12px] text-panel-fg/65">No foreign flow data recorded for this date.</p>
+        <p className="text-[12px] text-panel-fg/65">No foreign flow data recorded for this date.</p>
       ) : (
         <>
           <div className="flex items-baseline justify-between">
@@ -370,16 +387,17 @@ export function DailyRecapView({
         />
       </div>
 
-      {/* One dashboard row rather than the old full-width stacked sections —
-          each panel caps its list at a scrollable max height (see Panel's
-          `scroll` prop) so this layout's total height stays bounded
-          regardless of how many movers/news items came in that day, instead
-          of the page growing with the data. flex-wrap packs however many
-          panels actually have data into as few rows as fit. Disclosures and
-          Block Sales dropped from this row entirely — both have their own
-          full pages (/disclosures, /block-sales) and duplicating them here
-          crowded out the stats specific to a day's session with content
-          that's really a filtered view of a different, longer-running feed. */}
+      {/* Three separate flex rows, grouped by what the panels are actually
+          about, rather than one big auto-wrapping bag. A single flat list of
+          7 possible panels wraps unpredictably as items come and go by date
+          (3 in a row, then a leftover row with just 1 panel and most of the
+          row empty) — splitting by group means each row's panel count is
+          known up front, so `wide` (see Panel) can size panels to actually
+          fill it. Disclosures and Block Sales are dropped entirely — both
+          have their own full pages (/disclosures, /block-sales) and
+          duplicating them here crowded out stats specific to a day's
+          session with content that's really a filtered view of a different,
+          longer-running feed. */}
       <div className="mt-3 flex flex-wrap gap-3">
         {recap.gainers.length > 0 && (
           <Panel title="Top Gainers">
@@ -396,24 +414,36 @@ export function DailyRecapView({
             <MostActiveList rows={recap.mostActive} />
           </Panel>
         )}
-        {/* Gated on marketOverview too, not just foreign flow — the overview
-            stats (total market cap, PSEi averages/high-low) live in this
-            panel per request but don't actually depend on foreign-flow data
-            existing. Gating on foreign flow alone would have hidden them
-            entirely on any day that source came up empty, even though
-            they'd have been perfectly renderable. */}
-        {(recap.foreignBuys.length > 0 || recap.foreignSells.length > 0 || recap.marketOverview.totalMarketCap > 0) && (
-          <Panel title="Foreign Fund Flow" moreHref="/foreign-flow">
-            <ForeignFlowSummary buys={recap.foreignBuys} sells={recap.foreignSells} overview={recap.marketOverview} />
+      </div>
+
+      {/* PSE-wide index stats and foreign fund flow are two different
+          questions ("where does the market stand" vs. "who's trading it")
+          that used to share one panel purely to avoid a short row — now each
+          gets its own title and card, side by side rather than merged. */}
+      <div className="mt-3 flex flex-wrap gap-3">
+        {recap.marketOverview.totalMarketCap > 0 && (
+          <Panel title="Market Overview" wide>
+            <MarketOverviewGrid overview={recap.marketOverview} />
           </Panel>
         )}
+        {/* Shown whenever the day has quotes at all, not just when foreign
+            flow itself is populated — that's what lets it render the
+            explicit "no data" message below instead of just vanishing. */}
+        {(recap.foreignBuys.length > 0 || recap.foreignSells.length > 0 || recap.marketOverview.totalMarketCap > 0) && (
+          <Panel title="Foreign Fund Flow" moreHref="/foreign-flow" wide>
+            <ForeignFlowSummary buys={recap.foreignBuys} sells={recap.foreignSells} />
+          </Panel>
+        )}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-3">
         {recap.sectorMoves.length > 0 && (
-          <Panel title="Sector Movers" moreHref="/sectors">
+          <Panel title="Sector Movers" moreHref="/sectors" wide>
             <SectorMoversList sectors={recap.sectorMoves} />
           </Panel>
         )}
         {breadth && breadth.histogram.length > 1 && (
-          <Panel title="Breadth Detail">
+          <Panel title="Breadth Detail" wide>
             <div className="grid grid-cols-2 gap-2">
               <StatTile label="Median move" value={pct2OrDash(breadth.medianMove)} />
               <StatTile label="Average move" value={pct2OrDash(breadth.meanMove)} />
