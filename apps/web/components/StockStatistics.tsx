@@ -16,6 +16,7 @@ import {
   TRADING_DAYS_PER_YEAR,
 } from "@/lib/analytics";
 import { ReturnHistogram } from "./ReturnHistogram";
+import { InfoTip } from "./InfoTip";
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -83,23 +84,27 @@ export function StockStatistics({
           label="Annualized return"
           value={annReturn == null ? "—" : pct(annReturn)}
           tone={toneOf(annReturn)}
+          info="Compound annual growth rate implied by the closing-price series over this window."
         />
         <Tile
           label="Sharpe ratio"
           value={sharpe == null ? "—" : sharpe.toFixed(2)}
           tone={toneOf(sharpe)}
           hint="return per unit of risk"
+          info="Excess return over the risk-free rate, divided by total volatility. Higher is better; above 1 is generally considered good, above 2 very good."
         />
         <Tile
           label="Sortino ratio"
           value={sortino == null ? "—" : sortino.toFixed(2)}
           tone={toneOf(sortino)}
           hint="return per unit of downside risk"
+          info="Like the Sharpe ratio, but only penalizes downside volatility (losses), not upside swings — a stock that only ever surprises to the upside scores better here than on Sharpe."
         />
         <Tile
           label="Downside deviation"
           value={downDevAnnPct == null ? "—" : `${downDevAnnPct.toFixed(1)}%`}
           hint="annualized, losses only"
+          info="Standard deviation of returns below the risk-free rate — volatility from losing days only, ignoring how much the stock swings upward."
         />
       </div>
 
@@ -112,11 +117,15 @@ export function StockStatistics({
           label="Skewness"
           value={skew == null ? "—" : skew.toFixed(2)}
           hint={skew == null ? undefined : skew > 0.1 ? "right tail" : skew < -0.1 ? "left tail" : "symmetric"}
+          info="Asymmetry of the daily-return distribution. Positive means occasional large up days pull the tail right; negative means occasional large down days pull it left."
         />
         <Tile
           label="Excess kurtosis"
           value={kurt == null ? "—" : kurt.toFixed(2)}
           hint={kurt == null ? undefined : kurt > 1 ? "fat tails" : "near-normal"}
+          info={
+            'How much more often extreme daily moves happen versus a normal distribution. Higher means more "fat tail" surprise days than a bell curve would predict.'
+          }
         />
         <Tile label="Best day" value={pct(best)} tone="up" />
         <Tile label="Worst day" value={pct(worst)} tone="down" />
@@ -125,12 +134,14 @@ export function StockStatistics({
           value={var95 == null ? "—" : `−${var95.toFixed(1)}%`}
           tone="down"
           hint="worst 5% of days"
+          info="Historical VaR: read directly off the actual return distribution, not a normal-model estimate. On the worst 5% of days in this window, the loss was at least this large."
         />
         <Tile
           label="Value-at-Risk (99%)"
           value={var99 == null ? "—" : `−${var99.toFixed(1)}%`}
           tone="down"
           hint="worst 1% of days"
+          info="Same as VaR (95%), but for the worst 1% of days — a rarer, larger loss threshold."
         />
       </div>
 
@@ -203,9 +214,7 @@ export function StockStatistics({
 
       <p className="mt-3 text-[11px] text-panel-fg/68">
         Sharpe/Sortino use a ~{(PH_ANNUAL_RISK_FREE * 100).toFixed(2)}% annual risk-free assumption.
-        Value-at-Risk is historical (read off the actual return distribution), not a normal-model
-        estimate. Descriptive statistics on past closes — not a forecast, stock pick, or buy/sell
-        signal.
+        Descriptive statistics on past closes — not a forecast, stock pick, or buy/sell signal.
       </p>
     </div>
   );
@@ -237,15 +246,20 @@ function Tile({
   value,
   tone,
   hint,
+  info,
 }: {
   label: string;
   value: string;
   tone?: "up" | "down";
   hint?: string;
+  info?: string;
 }) {
   return (
     <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-      <div className="text-[11px] text-panel-fg/68">{label}</div>
+      <div className="text-[11px] text-panel-fg/68">
+        {label}
+        {info && <InfoTip text={info} />}
+      </div>
       <div
         className={`mt-0.5 text-lg font-semibold tabular-nums ${
           tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-panel-fg"

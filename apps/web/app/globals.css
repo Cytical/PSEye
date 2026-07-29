@@ -219,15 +219,14 @@ label[for] {
  * stays exactly the single-column order the page always had). Assign a
  * section's area via the matching `[grid-area:x]` Tailwind arbitrary class.
  *
- * Desktop is 3 columns, packed by height rather than by reading order, so the
- * page fills the wide viewport instead of leaving two-thirds of it blank next
- * to a single narrow column: `statistics` (risk-adjusted return + full return
- * distribution + histogram + seasonality table) is by far the tallest single
- * section, so it gets its own center column, flanked by two columns that each
- * stack several shorter sections to roughly the same height — chart+analytics
- * +about on the left, sector peers+news+recently-viewed on the right.
- * Disclosures/corporate-actions stays full-width below all three — it's
- * already its own responsive 2-up layout and doesn't fit a narrow column. */
+ * Desktop is 3 columns grouped by purpose rather than reading order: price
+ * action (chart+analytics) on the left, the quant `statistics` panel (by far
+ * the tallest single section) alone in the center with Recently Viewed
+ * filling the space below it, and everything company-reference (sector
+ * peers, news, About incl. company facts, disclosures & dividend history) in
+ * the rightmost column. "." cells are intentionally empty — e.g. column 1
+ * has nothing across from `recent`/`about`/`discl` since it only has two
+ * short sections. */
 .stock-detail-grid {
   display: grid;
   /* minmax(0, 1fr), not a bare 1fr: a grid item's default min-width is auto,
@@ -244,7 +243,8 @@ label[for] {
     "about"
     "peers"
     "discl"
-    "news";
+    "news"
+    "recent";
   gap: 1.75rem;
 }
 
@@ -253,8 +253,8 @@ label[for] {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(0, 1fr);
     grid-template-areas:
       "chart statistics peers"
-      "analytics statistics peers"
-      "about statistics news"
-      "discl discl discl";
+      "analytics statistics news"
+      ".     recent     about"
+      ".     .          discl";
   }
 }

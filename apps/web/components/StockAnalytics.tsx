@@ -7,6 +7,7 @@ import {
   sma,
   trailingReturn,
 } from "@/lib/analytics";
+import { InfoTip } from "./InfoTip";
 
 /**
  * Static server-rendered risk/technical panel (no "use client", zero client
@@ -31,7 +32,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
   const ret3m = trailingReturn(series, 63); // ~63 ≈ 3 months
   const ret1y = trailingReturn(series, 251); // ~1 trading year
 
-  const metrics: { label: string; value: string; tone?: "up" | "down"; hint?: string }[] = [];
+  const metrics: { label: string; value: string; tone?: "up" | "down"; hint?: string; info?: string }[] = [];
 
   if (ret1m != null) metrics.push({ label: "1-month return", value: pct(ret1m), tone: signTone(ret1m) });
   if (ret3m != null) metrics.push({ label: "3-month return", value: pct(ret3m), tone: signTone(ret3m) });
@@ -42,6 +43,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       label: "Volatility (annualized)",
       value: `${vol.toFixed(1)}%`,
       hint: volHint(vol),
+      info: "Annualized standard deviation of daily log returns — how much the price swings day to day, scaled to a yearly figure. Higher means bigger, more frequent moves in either direction.",
     });
 
   if (ma50 != null)
@@ -50,6 +52,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       value: `₱${ma50.toFixed(2)}`,
       tone: price >= ma50 ? "up" : "down",
       hint: price >= ma50 ? "price above" : "price below",
+      info: "Simple moving average of the last 50 closing prices — a short-term trend line.",
     });
   if (ma200 != null)
     metrics.push({
@@ -57,6 +60,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       value: `₱${ma200.toFixed(2)}`,
       tone: price >= ma200 ? "up" : "down",
       hint: price >= ma200 ? "price above" : "price below",
+      info: "Simple moving average of the last 200 closing prices — a longer-term trend line.",
     });
 
   if (rsiValue != null) {
@@ -66,6 +70,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       value: rsiValue.toFixed(0),
       tone: label === "overbought" ? "down" : label === "oversold" ? "up" : undefined,
       hint: label,
+      info: "Relative Strength Index, Wilder's 14-day smoothing. Runs 0–100: readings above 70 are typically read as \"overbought,\" below 30 as \"oversold.\" A momentum reading, not a buy/sell signal.",
     });
   }
 
@@ -74,6 +79,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       label: "Max drawdown (1y)",
       value: pct(dd),
       tone: dd <= -20 ? "down" : undefined,
+      info: "The worst peak-to-trough decline over the past year — how far the price fell from its highest point before recovering.",
     });
 
   if (metrics.length === 0) return null;
@@ -90,7 +96,10 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
             key={m.label}
             className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border"
           >
-            <div className="text-[11px] text-panel-fg/68">{m.label}</div>
+            <div className="text-[11px] text-panel-fg/68">
+              {m.label}
+              {m.info && <InfoTip text={m.info} />}
+            </div>
             <div
               className={`mt-0.5 text-lg font-semibold tabular-nums ${
                 m.tone === "up" ? "text-up" : m.tone === "down" ? "text-down" : "text-panel-fg"
@@ -103,9 +112,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
         ))}
       </div>
       <p className="mt-2 text-[11px] text-panel-fg/68">
-        Volatility is the annualized standard deviation of daily log returns; RSI uses Wilder&apos;s
-        14-day smoothing; drawdown is the worst peak-to-trough drop over the window. Descriptive
-        statistics, not a forecast or a signal.
+        Descriptive statistics, not a forecast or a signal.
       </p>
     </div>
   );

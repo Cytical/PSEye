@@ -386,14 +386,19 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           <p className="mt-1.5 text-[11px] text-panel-fg/72">{profile.source}</p>
 
           {companyFacts.length > 0 && (
-            <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-2 border-t border-panel-border pt-3 sm:grid-cols-2">
-              {companyFacts.map((f) => (
-                <div key={f.label} className="flex items-baseline justify-between gap-3 text-sm sm:block">
-                  <dt className="text-[11px] text-panel-fg/68 sm:kicker sm:text-panel-fg/68">{f.label}</dt>
-                  <dd className="text-right text-panel-fg/85 sm:mt-0.5 sm:text-left">{f.value}</dd>
-                </div>
-              ))}
-            </dl>
+            <>
+              <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-2 border-t border-panel-border pt-3 sm:grid-cols-2">
+                {companyFacts.map((f) => (
+                  <div key={f.label} className="flex items-baseline justify-between gap-3 text-sm sm:block">
+                    <dt className="text-[11px] text-panel-fg/68 sm:kicker sm:text-panel-fg/68">{f.label}</dt>
+                    <dd className="text-right text-panel-fg/85 sm:mt-0.5 sm:text-left">{f.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mt-1.5 text-[11px] text-panel-fg/72">
+                Security &amp; Contact Information — PSE Edge company profile
+              </p>
+            </>
           )}
 
           {profile.wikipediaSummary && (
@@ -457,7 +462,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         </div>
       )}
 
-      <div className="[grid-area:discl] grid gap-6 sm:grid-cols-2">
+      <div className="[grid-area:discl] flex flex-col gap-6">
         <div>
           <h2 className="kicker text-panel-fg/68">Recent disclosures</h2>
           {companyDisclosures.length > 0 ? (
@@ -538,31 +543,25 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         </div>
       </div>
 
-      {/* News + Recently Viewed share one grid area (a flex column, not two
-          separately-positioned areas): on desktop they sit in the same
-          column as Sector Peers, which is naturally much shorter than the
-          chart/analytics/about column beside it — keeping these two as one
-          block lets whichever is present fill that leftover space as a unit
-          instead of each being stretched to its own separately-allocated
-          row. */}
-      <div className="[grid-area:news] flex flex-col gap-6">
-        {news.length > 0 && (
-          <div>
-            <h2 className="kicker text-panel-fg/68">In the news</h2>
-            <ul className="mt-2 flex flex-col gap-2.5">
-              {news.map((item) => (
-                <li key={item.url} className="text-sm">
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-panel-fg hover:underline">
-                    {item.title}
-                  </a>
-                  <div className="text-[11px] text-panel-fg/72">
-                    {item.source} &middot; {formatRelative(item.publishedAt.toISOString())}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+      {news.length > 0 && (
+        <div className="[grid-area:news]">
+          <h2 className="kicker text-panel-fg/68">In the news</h2>
+          <ul className="mt-2 flex flex-col gap-2.5">
+            {news.map((item) => (
+              <li key={item.url} className="text-sm">
+                <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-panel-fg hover:underline">
+                  {item.title}
+                </a>
+                <div className="text-[11px] text-panel-fg/72">
+                  {item.source} &middot; {formatRelative(item.publishedAt.toISOString())}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="[grid-area:recent]">
         <RecentlyViewed excludeTicker={ticker} />
       </div>
       </div>
