@@ -114,15 +114,18 @@ export function NavLinks({ variant = "inline" }: { variant?: "inline" | "stacked
         {DROPDOWNS.map((group) => (
           <div key={group.label} className="mt-1 flex flex-col gap-2 border-t border-foreground/10 pt-2.5">
             <span className="kicker text-foreground/65">{group.label}</span>
+            {/* No description line here, unlike the desktop dropdown below: with
+                17 links across four groups, a subtext line under each one turned
+                the mobile panel into a long scroll of clutter — the label alone
+                is enough once you're already looking at a short, grouped list. */}
             {group.links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 aria-current={isActive(link.href) ? "page" : undefined}
-                className="flex flex-col gap-0.5"
+                className={navLinkClass(isActive(link.href))}
               >
-                <span className={navLinkClass(isActive(link.href))}>{link.label}</span>
-                <span className="text-xs text-foreground/68">{link.description}</span>
+                {link.label}
               </Link>
             ))}
           </div>

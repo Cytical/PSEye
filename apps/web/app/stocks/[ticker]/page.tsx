@@ -9,6 +9,7 @@ import { getCompanyProfiles, type CompanyProfile } from "@/lib/companyProfiles";
 import { getDisclosures } from "@/lib/disclosures";
 import { getCorporateActions } from "@/lib/corporateActions";
 import { manilaToday } from "@/lib/manilaDate";
+import { byInvestableCapDesc } from "@/lib/floatAdjustedCap";
 import { getNewsForTicker } from "@/lib/news";
 import { getHistoricalQuotes } from "@/lib/historicalQuotes";
 import { StockPriceChart } from "@/components/StockPriceChart";
@@ -58,8 +59,6 @@ const DASH_ROW = "flex flex-col gap-3 lg:h-[19.5rem] lg:flex-row 2xl:h-[21rem]";
  */
 const SPAN_WIDE = "min-w-0 lg:basis-1/2 lg:grow-[2]";
 const SPAN_SIDE = "min-w-0 lg:basis-1/4 lg:grow";
-/** Mobile cap for scrolling panels, where `DASH_ROW`'s fixed height doesn't apply. */
-const MOBILE_SCROLL_CAP = "max-h-[19rem] lg:max-h-none";
 /** Comfortable width for one hero-rail metric tile; see the rail's own comment. */
 const HERO_TILE_PX = 170;
 
@@ -200,7 +199,9 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
   const companyActions = corporateActions.filter((a) => a.ticker === ticker).slice(0, 25);
 
   const sector = quote?.sector ?? company.sector;
-  const rankedByMarketCap = [...quotes].sort((a, b) => b.marketCap - a.marketCap);
+  // Float-adjusted, so the "#N of M" here matches the board /rankings
+  // publishes and the box sizes on the market map — see lib/floatAdjustedCap.ts.
+  const rankedByMarketCap = [...quotes].sort(byInvestableCapDesc);
   const rank = rankedByMarketCap.findIndex((q) => q.ticker === ticker) + 1;
   const sectorRanked = rankedByMarketCap.filter((q) => q.sector === sector);
   const selfSectorIndex = sectorRanked.findIndex((q) => q.ticker === ticker);
@@ -396,18 +397,25 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         </Link>
         <span aria-hidden="true">/</span>
         <span className="text-panel-fg/85">{company.ticker}</span>
-        <span aria-hidden="true" className="mx-1 text-panel-fg/40">
-          &middot;
-        </span>
-        <span>
-          #{rank} of {quotes.length} by market cap
-        </span>
-        <span aria-hidden="true" className="mx-1 text-panel-fg/40">
-          &middot;
-        </span>
-        <span>
-          #{sectorRank} of {sectorRanked.length} in sector
-        </span>
+        {/* rank is 0 for a ticker with no quote row at all, which gets no rank
+            text rather than "#0 of 282". The separator lives inside the branch
+            so it doesn't leave a dangling middot in that case. */}
+        {rank > 0 && (
+          <>
+            <span aria-hidden="true" className="mx-1 text-panel-fg/40">
+              &middot;
+            </span>
+            <span>
+              #{rank} of {rankedByMarketCap.length} by float-adjusted market cap
+            </span>
+            <span aria-hidden="true" className="mx-1 text-panel-fg/40">
+              &middot;
+            </span>
+            <span>
+              #{sectorRank} of {sectorRanked.length} in sector
+            </span>
+          </>
+        )}
       </nav>
 
       {/* Hero strip: price, where it sits in its own 52-week range, and the
@@ -510,7 +518,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           <Panel
             title="Sector peers"
             meta={sector}
-            className={`${SPAN_SIDE} ${MOBILE_SCROLL_CAP}`}
+            className={SPAN_SIDE}
             scroll
             flush
             footer={
@@ -562,7 +570,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         <Panel
           title="Recent disclosures"
           meta={companyDisclosures.length > 0 ? `${companyDisclosures.length} filings` : undefined}
-          className={`${SPAN_SIDE} ${MOBILE_SCROLL_CAP}`}
+          className={SPAN_SIDE}
           scroll
           flush
           footer={
@@ -616,7 +624,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         <Panel
           title="In the news"
           meta={news.length > 0 ? `${news.length} mentions` : undefined}
-          className={`${SPAN_SIDE} ${MOBILE_SCROLL_CAP}`}
+          className={SPAN_SIDE}
           scroll
           flush
           footer={
@@ -651,13 +659,13 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {/* Below the fold: reference material rather than live market state. */}
       <div className="mt-3 flex flex-col items-stretch gap-3 lg:flex-row">
-        {/* Not MOBILE_SCROLL_CAP: this row's panels stretch to match the
-            tallest sibling (About), so this one needs a desktop cap too —
-            and `lg:max-h-none` from that constant would have cancelled it. */}
+        {/* Capped only from `lg`: this row's panels stretch to match the tallest
+            sibling (About), so unlike the rows above it needs an explicit
+            desktop height for its body to have something to scroll within. */}
         <Panel
           title="Dividends & corporate actions"
           meta={companyActions.length > 0 ? `${companyActions.length} on record` : undefined}
-          className="min-w-0 max-h-[19rem] lg:max-h-[26rem] lg:basis-1/3 lg:grow"
+          className="min-w-0 lg:max-h-[26rem] lg:basis-1/3 lg:grow"
           scroll
           flush
           footer={

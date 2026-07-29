@@ -39,7 +39,7 @@ export default async function RankingsPage() {
       },
       {
         "@type": "ItemList",
-        name: "Top 100 PSE Stocks by Market Cap",
+        name: "Top 100 PSE Stocks by Float-Adjusted Market Cap",
         itemListElement: top100.map((r) => ({
           "@type": "ListItem",
           position: r.overallRank,
@@ -80,11 +80,13 @@ export default async function RankingsPage() {
         Company Rankings
       </h1>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/72">
-        Every tracked PSE-listed company ranked by{" "}
+        Every tracked PSE-listed company ranked by free-float-adjusted{" "}
         <Link href="/glossary#market-capitalization" className="underline hover:text-panel-fg">
           market capitalization
         </Link>{" "}
-        — the top 100 across the whole exchange, and a full ranking within each of its{" "}
+        — the share of each company actually available to trade on the PSE, which is what the
+        PSEi itself is weighted by. The top 100 across the whole exchange, and a full ranking
+        within each of its{" "}
         {bySector.length}{" "}
         <Link href="/sectors" className="underline hover:text-panel-fg">
           sectors
@@ -111,7 +113,7 @@ export default async function RankingsPage() {
 
       <section className="mt-8">
         <h2 className="font-serif text-lg font-semibold tracking-tight text-panel-fg">
-          Top {Math.min(TOP_N, top100.length)} by Market Cap
+          Top {Math.min(TOP_N, top100.length)} by Float-Adjusted Market Cap
         </h2>
         <div className="mt-3">
           <RankingsTable rows={top100} rankKey="overallRank" />
@@ -143,8 +145,12 @@ export default async function RankingsPage() {
       </section>
 
       <p className="mt-8 text-xs text-panel-fg/72">
-        Ranked by market capitalization (price × shares outstanding), not free-float-adjusted. Not
-        financial advice, a stock pick, or a buy/sell signal.
+        Ranked by free-float-adjusted market capitalization — PSE Edge&apos;s reported market cap
+        (price × shares outstanding) multiplied by its published Free Float Level, both shown per
+        row above. Ranking on the unadjusted figure would put two foreign dual-listings, Manulife
+        and Sun Life, in the top two places on the strength of shares that trade in Toronto rather
+        than here; float-adjusting is also how the PSEi and the major index providers weight their
+        own constituents. Not financial advice, a stock pick, or a buy/sell signal.
       </p>
     </div>
   );

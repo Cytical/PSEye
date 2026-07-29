@@ -28,8 +28,14 @@ export interface TreemapInput {
  * without needing to special-case any specific ticker. Falls back to raw
  * marketCap when freeFloatPct isn't known, so this is a no-op for the vast
  * majority of normal, high-float PH stocks.
+ *
+ * Exported because the site's market-cap *rankings* size stocks the same way
+ * (see apps/web/lib/floatAdjustedCap.ts) — they hit the identical distortion,
+ * and a ranking that disagreed with the box sizes on the map would be worse
+ * than either one alone. Kept here, in the package with no React/DOM
+ * dependency, so both callers share one definition and one rationale.
  */
-function floatAdjustedMarketCap(stock: TreemapInput): number {
+export function floatAdjustedMarketCap(stock: TreemapInput): number {
   if (stock.freeFloatPct == null) return stock.marketCap;
   return stock.marketCap * (stock.freeFloatPct / 100);
 }

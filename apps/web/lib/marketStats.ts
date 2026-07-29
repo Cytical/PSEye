@@ -13,6 +13,7 @@ import {
   type HistogramBin,
 } from "./analytics";
 import { alignByDate, datedReturns, weightedIndexReturns } from "./marketBenchmark";
+import { byInvestableCapDesc, investableMarketCap } from "./floatAdjustedCap";
 
 /**
  * Server-only. Cross-sectional "market statistics" — how the whole exchange
@@ -107,7 +108,10 @@ export async function getMarketStats(): Promise<MarketStats> {
   };
 
   // --- Deeper stats over the large-cap universe (needs history) ---
-  const ranked = [...quotes].sort((a, b) => b.marketCap - a.marketCap).slice(0, LARGE_CAP_UNIVERSE);
+  // Float-adjusted (see lib/floatAdjustedCap.ts) for both the universe cut and
+  // the weights below. Breadth above is unaffected either way: it's one vote
+  // per stock, which no cap figure distorts.
+  const ranked = [...quotes].sort(byInvestableCapDesc).slice(0, LARGE_CAP_UNIVERSE);
   const fromDate = isoDaysAgo(LOOKBACK_DAYS);
   const { source, history } = await getHistoricalQuotesLenient(
     ranked.map((q) => q.ticker),
@@ -130,7 +134,7 @@ export async function getMarketStats(): Promise<MarketStats> {
   }
 
   const benchmark = weightedIndexReturns(
-    universe.map((q) => ({ returns: datedReturns(history[q.ticker]), weight: q.marketCap }))
+    universe.map((q) => ({ returns: datedReturns(history[q.ticker]), weight: investableMarketCap(q) }))
   );
 
   const vols: number[] = [];

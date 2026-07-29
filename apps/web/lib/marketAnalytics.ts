@@ -3,6 +3,7 @@ import { getDailyQuotes } from "./quotes";
 import { getHistoricalQuotesLenient } from "./historicalQuotes";
 import { annualizedVolatility, beta, correlation, rsi, trailingReturn } from "./analytics";
 import { alignByDate, datedReturns, weightedIndexReturns, type DatedReturn } from "./marketBenchmark";
+import { byInvestableCapDesc, investableMarketCap } from "./floatAdjustedCap";
 
 /**
  * Server-only. Computes the /analytics page's two cross-sectional views from
@@ -60,7 +61,9 @@ export async function getMarketAnalytics(): Promise<MarketAnalytics> {
   // leaderboard rows. Requesting a superset (we filter to those with real
   // history after the read) keeps the leaderboard full even if a few of the
   // very top names have thin series.
-  const ranked = [...quotes].sort((a, b) => b.marketCap - a.marketCap);
+  // Float-adjusted (see lib/floatAdjustedCap.ts) for both the leaderboard cut
+  // and the benchmark's weights below.
+  const ranked = [...quotes].sort(byInvestableCapDesc);
   const candidates = ranked.slice(0, LEADERBOARD_SIZE + 20);
 
   const fromDate = isoDaysAgo(LOOKBACK_DAYS);
@@ -76,7 +79,7 @@ export async function getMarketAnalytics(): Promise<MarketAnalytics> {
 
   // Cap-weighted benchmark return series from the constituents' own closes.
   const benchmark = weightedIndexReturns(
-    withHistory.map((q) => ({ returns: datedReturns(history[q.ticker]), weight: q.marketCap }))
+    withHistory.map((q) => ({ returns: datedReturns(history[q.ticker]), weight: investableMarketCap(q) }))
   );
 
   const rows: AnalyticsRow[] = withHistory

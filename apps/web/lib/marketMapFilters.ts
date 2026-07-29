@@ -1,4 +1,5 @@
 import { PSEI_TICKERS } from "@pseye/source-quotes";
+import { byInvestableCapDesc } from "./floatAdjustedCap";
 
 export type MarketMapFilter = "all" | "psei" | "top30" | "top50" | "top100" | "nasdaq100" | "watchlist";
 
@@ -37,7 +38,12 @@ const TOP_N: Partial<Record<MarketMapFilter, number>> = {
  * which this pure function has no access to) — MarketMap.tsx special-cases
  * both of those itself rather than filtering here.
  */
-export function filterMarketMapStocks<T extends { ticker: string; marketCap: number }>(
+export function filterMarketMapStocks<
+  // freeFloatPct is in the constraint, not just tolerated structurally, so a
+  // caller passing a stock shape without it gets raw-cap ordering by explicit
+  // opt-out rather than by silent omission.
+  T extends { ticker: string; marketCap: number; freeFloatPct?: number | null },
+>(
   stocks: T[],
   filter: MarketMapFilter
 ): T[] {
@@ -46,5 +52,9 @@ export function filterMarketMapStocks<T extends { ticker: string; marketCap: num
 
   const limit = TOP_N[filter];
   if (limit == null) return stocks;
-  return [...stocks].sort((a, b) => b.marketCap - a.marketCap).slice(0, limit);
+  // Float-adjusted, matching the size the map already draws these same boxes
+  // with (see lib/floatAdjustedCap.ts). On raw cap the two foreign
+  // dual-listings took two of the thirty slots and then rendered as slivers,
+  // because the cut and the sizing disagreed about how big they were.
+  return [...stocks].sort(byInvestableCapDesc).slice(0, limit);
 }

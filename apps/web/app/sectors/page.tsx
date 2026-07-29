@@ -25,7 +25,10 @@ export default async function SectorsPage() {
 
   const sectors = VISIBLE_SECTORS.map((sector) => {
     const sectorRows = rows.filter((r) => r.sector === sector);
-    const totalMarketCap = sectorRows.reduce((sum, r) => sum + r.marketCap, 0);
+    // Float-adjusted, matching the order the rows themselves are ranked in.
+    // On raw cap the two foreign dual-listings added ~P6.8T of Toronto to
+    // Financials' total — see lib/floatAdjustedCap.ts.
+    const totalMarketCap = sectorRows.reduce((sum, r) => sum + r.investableMarketCap, 0);
     return { sector, slug: sectorToSlug(sector), count: sectorRows.length, totalMarketCap };
   }).filter((s) => s.count > 0);
 
@@ -59,7 +62,7 @@ export default async function SectorsPage() {
             <div className="text-base font-semibold text-panel-fg">{sector}</div>
             <div className="mt-1 text-xs text-panel-fg/72">
               {count} {count === 1 ? "company" : "companies"} · {formatMarketCap(totalMarketCap)} combined
-              market cap
+              float-adjusted market cap
             </div>
           </Link>
         ))}

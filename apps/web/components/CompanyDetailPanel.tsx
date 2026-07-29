@@ -12,8 +12,13 @@ const FOCUSABLE_SELECTOR =
 interface CompanyDetailPanelProps {
   stock: TreemapStock;
   profile: CompanyProfile | null;
-  /** 1-based position by market cap among the stocks currently shown (respects the active filter). */
-  rank: number;
+  /**
+   * 1-based position by float-adjusted market cap among the stocks currently
+   * shown (respects the active filter) — the same size the treemap draws boxes
+   * with, see lib/floatAdjustedCap.ts. Null only if the selected ticker somehow
+   * isn't in the ranked set, which the rank line then omits rather than guessing.
+   */
+  rank: number | null;
   totalCount: number;
   onClose: () => void;
 }
@@ -128,7 +133,7 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
               <div>Market cap</div>
               <div className="font-semibold text-panel-fg/80">{formatMarketCap(stock.marketCap, currency)}</div>
               <div className="mt-1">
-                #{rank} of {totalCount} shown
+                {rank == null ? "" : `#${rank} of ${totalCount} shown`}
               </div>
             </div>
           </div>
@@ -149,16 +154,26 @@ export function CompanyDetailPanel({ stock, profile, rank, totalCount, onClose }
               </>
             )}
           </div>
+        </div>
 
-          {currency !== "USD" && (
+        {/* The one thing this panel exists to hand off to, so it gets the
+            accent fill and a pinned bar of its own rather than sitting as the
+            last muted text link at the bottom of the scroll area, where on a
+            short viewport it was below the fold entirely. White ink on the
+            light theme's --accent measures 5.83:1; the dark theme's --accent is
+            a bright green, so it flips to the near-black page ink (10.8:1)
+            instead of keeping white, which would be unreadable. */}
+        {currency !== "USD" && (
+          <div className="shrink-0 border-t border-panel-border p-4">
             <Link
               href={`/stocks/${stock.ticker}`}
-              className="text-sm font-medium text-panel-fg/70 hover:text-panel-fg hover:underline"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90 dark:text-background"
             >
-              See more →
+              See more on {stock.ticker}
+              <span aria-hidden="true">→</span>
             </Link>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -45,12 +45,31 @@ const DARK_COLOR_RANGE = [
   "#30cc5a", // >= +3% (bright green)
 ];
 
+/**
+ * Every stop here is tied to something the rest of the light theme already
+ * uses, rather than being picked to look "red-ish"/"green-ish" on its own:
+ *
+ * - The two extremes are exactly --down / --up (globals.css). They used to be
+ *   #c23a2e / #1c8a4b, which *were* those tokens' values until both were
+ *   darkened for AA contrast — the map kept the old pair, so the brightest
+ *   tiles on the board no longer matched the gain/loss ink printed right next
+ *   to them in the sidebar, legend, and tooltip.
+ * - The two mid tints are luminance-matched to each other (0.446 vs 0.451
+ *   relative luminance), the same way --up/--down are (5.83 vs 5.77 against
+ *   white) — a -1% tile and a +1% tile carry equal visual weight instead of
+ *   the old pair's mint reading noticeably lighter and cooler than its salmon
+ *   counterpart, which is what made the light map look washed out and
+ *   unbalanced against the warm-paper canvas.
+ * - The flat center is a step below --panel-canvas (#f7f4ee) rather than a
+ *   near-match of it, so the large mass of tiles that sit within +/-0.5% on
+ *   any given day still reads as tiles on a canvas rather than as holes in it.
+ */
 const LIGHT_COLOR_RANGE = [
-  "#c23a2e", // <= -3% (matches --down's light-theme value)
-  "#e6a89f", // -1% (soft red, dark ink stays legible)
-  "#ece7d8", // 0% (flat, warm-paper neutral — near --panel-bg-raised)
-  "#a8d6b6", // +1% (soft green, dark ink stays legible)
-  "#1c8a4b", // >= +3% (matches --up's light-theme value)
+  "#b8382c", // <= -3% (--down, light theme)
+  "#e5a294", // -1% (warm red wash; dark ink at ~9:1)
+  "#e8e2d1", // 0% (flat, warm-paper neutral one step below --panel-canvas)
+  "#7cc296", // +1% (green wash, luminance-matched to the -1% red)
+  "#16743f", // >= +3% (--up, light theme)
 ];
 
 /**
@@ -69,11 +88,17 @@ const DARK_COLORBLIND_RANGE = [
   "#2f8fd6", // >= +3% (vivid blue)
 ];
 
+/** Same tuning pass as LIGHT_COLOR_RANGE above: the mid tints are
+ * luminance-matched to each other (0.460 vs 0.465) *and* to that palette's
+ * own mids, so switching colorblind mode on re-hues the map without also
+ * making it lighter or heavier; the extremes are nudged toward equal weight
+ * (orange at 4.86:1 against white ink, blue at 5.50:1) the way --up/--down
+ * are; the flat center is the shared neutral. */
 const LIGHT_COLORBLIND_RANGE = [
-  "#c2661e", // <= -3% (vivid orange)
-  "#e8c19b", // -1% (soft orange/tan, dark ink stays legible)
-  "#ece7d8", // 0% (flat, same neutral as LIGHT_COLOR_RANGE)
-  "#a7c8e0", // +1% (soft blue, dark ink stays legible)
+  "#ad5c1c", // <= -3% (vivid orange)
+  "#e5a877", // -1% (orange wash, dark ink stays legible)
+  "#e8e2d1", // 0% (flat, same neutral as LIGHT_COLOR_RANGE)
+  "#8cbcd8", // +1% (blue wash, luminance-matched to the -1% orange)
   "#1c6ea4", // >= +3% (vivid blue)
 ];
 

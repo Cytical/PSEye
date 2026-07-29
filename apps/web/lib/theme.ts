@@ -2,11 +2,6 @@ export type Theme = "light" | "dark";
 
 export const THEME_STORAGE_KEY = "pseye-theme";
 
-export const THEMES: { value: Theme; label: string; swatch: string }[] = [
-  { value: "light", label: "Light", swatch: "#ffffff" },
-  { value: "dark", label: "Dark", swatch: "#0a0a0a" },
-];
-
 /** Fired after every theme change so useColorTheme (./useColorTheme.ts) knows
  * to re-read the DOM attribute — plain dataset writes don't dispatch any
  * event on their own, same reasoning as the ?filter=/?ticker= URL sync in

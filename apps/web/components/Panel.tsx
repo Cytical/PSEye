@@ -32,7 +32,22 @@ export function Panel({
   children: ReactNode;
   className?: string;
   bodyClassName?: string;
-  /** Long lists: keep the panel at its row height and scroll the body instead. */
+  /**
+   * Long lists: keep the panel at its row height and scroll the body instead.
+   *
+   * Only from `lg` up — the same breakpoint that gives the dashboard rows a
+   * fixed height in the first place. Below it the panel has no height to stay
+   * within, so an inner scroller has nothing to buy and costs a lot: a touch
+   * drag that starts anywhere inside one of these panels (and on a phone they
+   * are full-width blocks stacked down the whole page) is captured by the inner
+   * scroll container instead of moving the page, and `.panel-scroll`'s
+   * `overscroll-behavior: contain` then stops it from chaining back out. The
+   * panels with no mobile height cap were the worst of it: `overflow-y: auto`
+   * makes an element a scroll container even when its content fits and there is
+   * nothing to scroll, so `contain` swallowed the gesture outright and the page
+   * simply would not move. Below `lg` the body now takes its natural height and
+   * the page scrolls, which is what the layout already assumed happened there.
+   */
   scroll?: boolean;
   /** Drop body padding for edge-to-edge content (divided lists, charts). */
   flush?: boolean;
@@ -46,7 +61,7 @@ export function Panel({
         {meta && <span className="shrink-0 text-[10.5px] text-panel-fg/60">{meta}</span>}
       </header>
       <div
-        className={`min-h-0 flex-1 ${flush ? "" : "px-3 py-2.5"} ${scroll ? "overflow-y-auto panel-scroll" : ""} ${bodyClassName}`}
+        className={`min-h-0 flex-1 ${flush ? "" : "px-3 py-2.5"} ${scroll ? "panel-scroll lg:overflow-y-auto" : ""} ${bodyClassName}`}
       >
         {children}
       </div>

@@ -128,20 +128,26 @@ export default async function AnalyticsPage() {
               The {analytics.rows.length} largest stocks by market cap with enough price history.
             </p>
             <div className="mt-3 overflow-x-auto rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <table className="w-full min-w-[720px] text-sm">
+              <table className="w-full text-xs sm:min-w-[720px] sm:text-sm">
                 <thead>
                   <tr className="border-b border-panel-border text-left text-xs text-panel-fg/68">
-                    <th className="px-3 py-2.5 font-medium">Stock</th>
-                    <th className="px-3 py-2.5 text-right font-medium">Price</th>
-                    <th className="px-3 py-2.5 text-right font-medium">Today</th>
-                    <th className="px-3 py-2.5 text-right font-medium">1Y</th>
-                    <th className="px-3 py-2.5 text-right font-medium" title="Annualized volatility">
+                    <th className="px-2 py-2.5 font-medium sm:px-3">Stock</th>
+                    <th className="px-2 py-2.5 text-right font-medium sm:px-3">Price</th>
+                    <th className="px-2 py-2.5 text-right font-medium sm:px-3">Today</th>
+                    <th className="hidden px-3 py-2.5 text-right font-medium sm:table-cell">1Y</th>
+                    <th
+                      className="hidden px-3 py-2.5 text-right font-medium sm:table-cell"
+                      title="Annualized volatility"
+                    >
                       Volatility
                     </th>
-                    <th className="px-3 py-2.5 text-right font-medium" title="Beta vs PSEye Composite">
+                    <th
+                      className="hidden px-3 py-2.5 text-right font-medium sm:table-cell"
+                      title="Beta vs PSEye Composite"
+                    >
                       Beta
                     </th>
-                    <th className="px-3 py-2.5 text-right font-medium">RSI</th>
+                    <th className="px-2 py-2.5 text-right font-medium sm:px-3">RSI</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -169,36 +175,38 @@ function Row({ row }: { row: AnalyticsRow }) {
     row.rsi == null ? "" : rsiLabel(row.rsi) === "overbought" ? "text-down" : rsiLabel(row.rsi) === "oversold" ? "text-up" : "text-panel-fg/70";
   return (
     <tr className="border-b border-panel-border/60 last:border-0 hover:bg-panel-raised">
-      <td className="px-3 py-2.5">
+      <td className="px-2 py-2 sm:px-3 sm:py-2.5">
         <Link href={`/stocks/${row.ticker}`} className="group inline-flex flex-col">
-          <span className="font-mono text-xs font-semibold text-panel-fg group-hover:underline">
+          <span className="font-mono text-[10px] font-semibold text-panel-fg group-hover:underline sm:text-xs">
             {row.ticker}
           </span>
-          <span className="max-w-[16rem] truncate text-[11px] text-panel-fg/68">{row.companyName}</span>
+          <span className="max-w-[10rem] truncate text-[11px] text-panel-fg/68 sm:max-w-[16rem]">
+            {row.companyName}
+          </span>
         </Link>
       </td>
-      <td className="px-3 py-2.5 text-right tabular-nums text-panel-fg/85">{formatPeso(row.price)}</td>
+      <td className="px-2 py-2 text-right tabular-nums text-panel-fg/85 sm:px-3 sm:py-2.5">{formatPeso(row.price)}</td>
       <td
-        className={`px-3 py-2.5 text-right tabular-nums ${
+        className={`px-2 py-2 text-right tabular-nums sm:px-3 sm:py-2.5 ${
           row.pctChange == null ? "text-panel-fg/65" : row.pctChange >= 0 ? "text-up" : "text-down"
         }`}
       >
         {row.pctChange == null ? "—" : pct(row.pctChange)}
       </td>
       <td
-        className={`px-3 py-2.5 text-right tabular-nums ${
+        className={`hidden px-3 py-2.5 text-right tabular-nums sm:table-cell ${
           row.return1y == null ? "text-panel-fg/65" : row.return1y >= 0 ? "text-up" : "text-down"
         }`}
       >
         {pct(row.return1y)}
       </td>
-      <td className="px-3 py-2.5 text-right tabular-nums text-panel-fg/85">
+      <td className="hidden px-3 py-2.5 text-right tabular-nums text-panel-fg/85 sm:table-cell">
         {row.volatility == null ? "—" : `${row.volatility.toFixed(1)}%`}
       </td>
-      <td className="px-3 py-2.5 text-right tabular-nums text-panel-fg/85">
+      <td className="hidden px-3 py-2.5 text-right tabular-nums text-panel-fg/85 sm:table-cell">
         {row.beta == null ? "—" : row.beta.toFixed(2)}
       </td>
-      <td className={`px-3 py-2.5 text-right tabular-nums ${rsiTone}`}>
+      <td className={`px-2 py-2 text-right tabular-nums sm:px-3 sm:py-2.5 ${rsiTone}`}>
         {row.rsi == null ? "—" : row.rsi.toFixed(0)}
       </td>
     </tr>

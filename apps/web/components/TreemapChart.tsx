@@ -13,6 +13,7 @@ import {
 import type { CompanyProfile } from "@/lib/companyProfiles";
 import { useColorTheme } from "@/lib/useColorTheme";
 import { useColorblindMode } from "@/lib/colorblindMode";
+import { byInvestableCapDesc } from "@/lib/floatAdjustedCap";
 import { CompanyDetailPanel } from "./CompanyDetailPanel";
 
 export interface TreemapStock extends TreemapInput {
@@ -59,7 +60,7 @@ const DEFAULT_HEIGHT = 760;
 // with the rest of the market map (see --panel-* in globals.css) — box fill
 // colors below stay data-driven (pctChangeToColor) regardless of theme.
 const CANVAS_BG = "var(--panel-canvas)";
-const HEADER_BG = "var(--panel-bg-raised)";
+const HEADER_BG = "var(--treemap-header-bg)";
 const GRID_LINE = "var(--panel-grid)";
 
 const MIN_ZOOM = 1;
@@ -192,9 +193,17 @@ export function TreemapChart({
 
   const sparkline = hovered ? (sparklineByTicker?.[hovered.ticker] ?? null) : null;
 
-  /** 1-based market-cap rank among the stocks currently shown (respects the active filter) — shown in the detail panel. */
+  /**
+   * 1-based market-cap rank among the stocks currently shown (respects the
+   * active filter) — shown in the detail panel.
+   *
+   * Ordered by the same float-adjusted size the boxes are drawn with (see
+   * lib/floatAdjustedCap.ts), so the rank agrees with what the visitor is
+   * looking at. On raw cap it didn't: Manulife rendered as a sliver whose own
+   * detail panel called it the largest company on the board.
+   */
   const rankByTicker = useMemo(() => {
-    const ranked = [...stocks].sort((a, b) => b.marketCap - a.marketCap);
+    const ranked = [...stocks].sort(byInvestableCapDesc);
     return new Map(ranked.map((s, i) => [s.ticker, i + 1]));
   }, [stocks]);
 
@@ -457,7 +466,16 @@ export function TreemapChart({
             <button
               key={box.ticker}
               type="button"
-              className="absolute flex flex-col items-center justify-center overflow-hidden text-center transition-[filter,box-shadow] duration-100 hover:z-10 hover:brightness-125"
+              // Hover feedback has to move *away* from the page's own
+              // background to register: brightening works on the dark map's
+              // near-black tiles, but on the light map's pale washes it just
+              // pushes them toward the paper canvas and drains the color out
+              // of exactly the tile being pointed at. Light mode deepens
+              // instead, and outlines with ink rather than the white ring
+              // that was near-invisible on a pale tile.
+              className={`absolute flex flex-col items-center justify-center overflow-hidden text-center transition-[filter,box-shadow] duration-100 hover:z-10 ${
+                colorTheme === "light" ? "hover:brightness-90" : "hover:brightness-125"
+              }`}
               style={{
                 left: box.x0,
                 top: box.y0,
@@ -466,7 +484,9 @@ export function TreemapChart({
                 backgroundColor: fill,
                 color: ink,
                 border: `1px solid ${GRID_LINE}`,
-                boxShadow: isHovered ? "inset 0 0 0 2px rgba(255,255,255,0.85)" : undefined,
+                boxShadow: isHovered
+                  ? `inset 0 0 0 2px ${colorTheme === "light" ? "rgba(11,11,11,0.55)" : "rgba(255,255,255,0.85)"}`
+                  : undefined,
               }}
               onMouseEnter={() => stock && setHovered(stock)}
               onMouseLeave={() => setHovered(null)}
@@ -565,7 +585,7 @@ export function TreemapChart({
         <CompanyDetailPanel
           stock={selected}
           profile={profileByTicker?.[selected.ticker] ?? null}
-          rank={rankByTicker.get(selected.ticker) ?? 1}
+          rank={rankByTicker.get(selected.ticker) ?? null}
           totalCount={stocks.length}
           onClose={() => selectTickerInUrl(null)}
         />

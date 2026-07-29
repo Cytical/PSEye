@@ -2,6 +2,7 @@ import type { HistoricalClose, Quote } from "@pseye/source-quotes";
 import { getDailyQuotes } from "./quotes";
 import { getHistoricalQuotesLenient } from "./historicalQuotes";
 import { datedReturns, weightedIndexReturns } from "./marketBenchmark";
+import { byInvestableCapDesc, investableMarketCap } from "./floatAdjustedCap";
 
 /**
  * Shared loader for the "large-cap universe + reconstructed cap-weighted
@@ -34,7 +35,10 @@ export async function loadUniverse({
   lookbackDays = 400,
 }: { size?: number; minCloses?: number; lookbackDays?: number } = {}): Promise<LoadedUniverse> {
   const quotes = await getDailyQuotes();
-  const ranked = [...quotes].sort((a, b) => b.marketCap - a.marketCap).slice(0, size);
+  // Float-adjusted for both the top-N cut and the weights below — a benchmark
+  // weighted on shares that don't trade on this exchange isn't tracking this
+  // market. Same convention the real PSEi uses; see lib/floatAdjustedCap.ts.
+  const ranked = [...quotes].sort(byInvestableCapDesc).slice(0, size);
 
   const from = new Date();
   from.setUTCDate(from.getUTCDate() - lookbackDays);
@@ -51,7 +55,7 @@ export async function loadUniverse({
   }
 
   const benchmark = weightedIndexReturns(
-    universe.map((q) => ({ returns: datedReturns(history[q.ticker]), weight: q.marketCap }))
+    universe.map((q) => ({ returns: datedReturns(history[q.ticker]), weight: investableMarketCap(q) }))
   );
 
   const allDates = universe.flatMap((q) => history[q.ticker].map((c) => c.date));

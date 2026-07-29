@@ -164,36 +164,47 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
 
           <div className="mt-6 overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm">
+              <table className="w-full text-xs sm:min-w-[720px] sm:text-sm">
                 <thead>
                   <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/68">
-                    <th className="py-1.5 pl-3 font-medium">Company</th>
-                    <th className="py-1.5 pr-4 text-right font-medium">Shares</th>
-                    <th className="py-1.5 pr-4 text-right font-medium">Avg. cost</th>
-                    <th className="py-1.5 pr-4 text-right font-medium">Price</th>
-                    <th className="py-1.5 pr-4 text-right font-medium">Market value</th>
-                    <th className="py-1.5 pr-4 text-right font-medium">Gain / loss</th>
-                    <th className="w-9 py-1.5" aria-label="Remove" />
+                    <th className="py-1.5 pl-2 font-medium sm:pl-3">Company</th>
+                    <th className="py-1.5 pr-2 text-right font-medium sm:pr-4">Shares</th>
+                    {/* Avg. cost and Price are hidden below sm — both are already
+                        folded into Gain/loss's % figure, so a phone can skip
+                        straight to Market value and Gain/loss without scrolling
+                        past the two inputs those are computed from. */}
+                    <th className="hidden py-1.5 pr-4 text-right font-medium sm:table-cell">Avg. cost</th>
+                    <th className="hidden py-1.5 pr-4 text-right font-medium sm:table-cell">Price</th>
+                    <th className="py-1.5 pr-2 text-right font-medium sm:pr-4">Market value</th>
+                    <th className="py-1.5 pr-2 text-right font-medium sm:pr-4">Gain / loss</th>
+                    <th className="w-7 py-1.5 sm:w-9" aria-label="Remove" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-panel-border">
                   {rows.map((row) => (
                     <tr key={row.ticker} className="transition-colors hover:bg-panel-raised">
-                      <td className="py-2.5 pl-3">
-                        <Link href={`/stocks/${row.ticker}`} className="text-panel-fg hover:underline">
-                          <span className="font-mono text-xs font-semibold">{row.ticker}</span>
-                          <span className="ml-2 text-panel-fg/70">{row.companyName}</span>
+                      <td className="max-w-[110px] py-2 pl-2 sm:max-w-none sm:py-2.5 sm:pl-3">
+                        <Link
+                          href={`/stocks/${row.ticker}`}
+                          className="flex items-center gap-1.5 text-panel-fg hover:underline"
+                        >
+                          <span className="shrink-0 font-mono text-[10px] font-semibold sm:text-xs">{row.ticker}</span>
+                          <span className="min-w-0 flex-1 truncate text-panel-fg/70">{row.companyName}</span>
                         </Link>
                       </td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">{row.shares.toLocaleString("en-PH")}</td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">{formatPeso(row.avgCost)}</td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">
+                      <td className="py-2 pr-2 text-right tabular-nums text-panel-fg sm:py-2.5 sm:pr-4">
+                        {row.shares.toLocaleString("en-PH")}
+                      </td>
+                      <td className="hidden py-2.5 pr-4 text-right tabular-nums text-panel-fg sm:table-cell">
+                        {formatPeso(row.avgCost)}
+                      </td>
+                      <td className="hidden py-2.5 pr-4 text-right tabular-nums text-panel-fg sm:table-cell">
                         {row.price == null ? <span className="text-panel-fg/65">N/A</span> : formatPeso(row.price)}
                       </td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">
+                      <td className="py-2 pr-2 text-right tabular-nums text-panel-fg sm:py-2.5 sm:pr-4">
                         {row.marketValue == null ? <span className="text-panel-fg/65">N/A</span> : formatPeso(row.marketValue)}
                       </td>
-                      <td className="py-2.5 pr-4 text-right font-medium tabular-nums">
+                      <td className="py-2 pr-2 text-right font-medium tabular-nums sm:py-2.5 sm:pr-4">
                         {row.gainLoss == null ? (
                           <span className="text-panel-fg/65">N/A</span>
                         ) : (
@@ -204,7 +215,7 @@ export function PortfolioTracker({ quotes }: { quotes: Quote[] }) {
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 pr-3 text-right">
+                      <td className="py-2 pr-2 text-right sm:py-2.5 sm:pr-3">
                         <button
                           type="button"
                           onClick={() => remove(row.ticker)}

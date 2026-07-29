@@ -7,7 +7,14 @@ import { useWatchlist } from "@/lib/watchlist";
 import { VISIBLE_SECTORS } from "@/lib/sectorSlug";
 import { WatchlistStarButton } from "./WatchlistStarButton";
 
-type SortKey = "ticker" | "sector" | "price" | "pctChange" | "marketCap" | "yieldPct";
+type SortKey =
+  | "ticker"
+  | "sector"
+  | "price"
+  | "pctChange"
+  | "marketCap"
+  | "investableMarketCap"
+  | "yieldPct";
 
 interface SortState {
   key: SortKey;
@@ -21,16 +28,26 @@ const DEFAULT_DIR: Record<SortKey, "asc" | "desc"> = {
   price: "desc",
   pctChange: "desc",
   marketCap: "desc",
+  investableMarketCap: "desc",
   yieldPct: "desc",
 };
 
-const COLUMNS: { key: SortKey; label: string; numeric: boolean }[] = [
+const COLUMNS: { key: SortKey; label: string; numeric: boolean; hideOnMobile?: boolean }[] = [
   { key: "ticker", label: "Company", numeric: false },
-  { key: "sector", label: "Sector", numeric: false },
+  { key: "sector", label: "Sector", numeric: false, hideOnMobile: true },
   { key: "price", label: "Price", numeric: true },
   { key: "pctChange", label: "Change", numeric: true },
-  { key: "marketCap", label: "Market cap", numeric: true },
-  { key: "yieldPct", label: "Div yield", numeric: true },
+  // Hidden below sm: with Float-adj. already visible (and sortable) there's no
+  // room to also show raw market cap on a phone without forcing horizontal
+  // scroll just to reach it — still there, and still sortable via this same
+  // header, once the viewport is wide enough to show the column.
+  { key: "marketCap", label: "Market cap", numeric: true, hideOnMobile: true },
+  // Kept alongside raw market cap rather than replacing it: this is a data
+  // table, so both are legitimately sortable — but the float-adjusted figure is
+  // the default (see the initial `sort` state), matching /rankings and the
+  // market map. See lib/floatAdjustedCap.ts.
+  { key: "investableMarketCap", label: "Float-adj.", numeric: true },
+  { key: "yieldPct", label: "Div yield", numeric: true, hideOnMobile: true },
 ];
 
 /** Peso market cap, abbreviated — PSE caps run to the trillions, so a raw number is unreadable. */
@@ -40,6 +57,11 @@ function formatMarketCap(value: number): string {
   if (value >= 1e9) return `₱${(value / 1e9).toFixed(1)}B`;
   if (value >= 1e6) return `₱${(value / 1e6).toFixed(1)}M`;
   return `₱${value.toLocaleString("en-PH")}`;
+}
+
+/** Matches RankingsTable: sub-10% floats keep a decimal so 0.20% doesn't render as a flat "0%". */
+function formatFreeFloat(pct: number): string {
+  return `${pct < 10 ? pct.toFixed(1) : pct.toFixed(0)}%`;
 }
 
 function changeColor(pctChange: number): string {
@@ -58,7 +80,7 @@ function compare(a: ScreenerRow, b: ScreenerRow, { key, dir }: SortState): numbe
 }
 
 export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
-  const [sort, setSort] = useState<SortState>({ key: "marketCap", dir: "desc" });
+  const [sort, setSort] = useState<SortState>({ key: "investableMarketCap", dir: "desc" });
   const [query, setQuery] = useState("");
   const [sector, setSector] = useState<string>("all");
   const [watchedOnly, setWatchedOnly] = useState(false);
@@ -127,17 +149,19 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
 
       <div className="mt-2 overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="w-full text-xs sm:min-w-[840px] sm:text-sm">
             <thead>
               <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/68">
-                <th className="w-9 py-1.5 pl-3" aria-label="Watchlist" />
+                <th className="w-7 py-1.5 pl-2 sm:w-9 sm:pl-3" aria-label="Watchlist" />
                 {COLUMNS.map((col) => {
                   const isActive = sort.key === col.key;
                   return (
                     <th
                       key={col.key}
                       aria-sort={isActive ? (sort.dir === "asc" ? "ascending" : "descending") : undefined}
-                      className={`py-1.5 pr-4 font-medium ${col.numeric ? "text-right" : ""}`}
+                      className={`py-1.5 pr-2 font-medium sm:pr-4 ${col.numeric ? "text-right" : ""} ${
+                        col.hideOnMobile ? "hidden sm:table-cell" : ""
+                      }`}
                     >
                       <button
                         type="button"
@@ -159,27 +183,48 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
             <tbody className="divide-y divide-panel-border">
               {sorted.map((row) => (
                 <tr key={row.ticker} className="transition-colors hover:bg-panel-raised">
-                  <td className="py-2 pl-2">
+                  <td className="py-2 pl-1.5 sm:pl-2">
                     <WatchlistStarButton ticker={row.ticker} size={16} />
                   </td>
-                  <td className="py-2.5 pr-4">
-                    <Link href={`/stocks/${row.ticker}`} className="text-panel-fg hover:underline">
-                      <span className="font-mono text-xs font-semibold">{row.ticker}</span>
-                      <span className="ml-2 text-panel-fg/70">{row.companyName}</span>
+                  <td className="max-w-[110px] py-2 pr-2 sm:max-w-none sm:py-2.5 sm:pr-4">
+                    <Link
+                      href={`/stocks/${row.ticker}`}
+                      className="flex items-center gap-1.5 text-panel-fg hover:underline"
+                    >
+                      <span className="shrink-0 font-mono text-[10px] font-semibold sm:text-xs">{row.ticker}</span>
+                      <span className="min-w-0 flex-1 truncate text-panel-fg/70">{row.companyName}</span>
                     </Link>
                   </td>
-                  <td className="py-2.5 pr-4 whitespace-nowrap text-panel-fg/70">{row.sector}</td>
-                  <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">
+                  <td className="hidden whitespace-nowrap py-2.5 pr-4 text-panel-fg/70 sm:table-cell">
+                    {row.sector}
+                  </td>
+                  <td className="py-2 pr-2 text-right tabular-nums text-panel-fg sm:py-2.5 sm:pr-4">
                     {row.price == null ? <span className="text-panel-fg/65">N/A</span> : `₱${row.price.toFixed(2)}`}
                   </td>
-                  <td className="py-2.5 pr-4 text-right font-medium tabular-nums">
+                  <td className="py-2 pr-2 text-right font-medium tabular-nums sm:py-2.5 sm:pr-4">
                     <span className={changeColor(row.pctChange ?? 0)}>
                       {(row.pctChange ?? 0) >= 0 ? "+" : ""}
                       {(row.pctChange ?? 0).toFixed(2)}%
                     </span>
                   </td>
-                  <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">{formatMarketCap(row.marketCap)}</td>
-                  <td className="py-2.5 pr-4 text-right tabular-nums">
+                  {/* Both cap columns keep full-strength ink here, unlike
+                      RankingsTable where the raw one is muted: there the order
+                      is fixed, but here either column can be the active sort,
+                      and muting one meant sorting by Market cap greyed out the
+                      very column being sorted. The header arrow marks the
+                      active one. */}
+                  <td className="hidden py-2.5 pr-4 text-right tabular-nums text-panel-fg sm:table-cell">
+                    {formatMarketCap(row.marketCap)}
+                  </td>
+                  <td className="py-2 pr-2 text-right tabular-nums text-panel-fg sm:py-2.5 sm:pr-4">
+                    {formatMarketCap(row.investableMarketCap)}
+                    {row.freeFloatPct != null && (
+                      <span className="ml-1.5 hidden text-[11px] text-panel-fg/60 sm:inline">
+                        {formatFreeFloat(row.freeFloatPct)}
+                      </span>
+                    )}
+                  </td>
+                  <td className="hidden py-2.5 pr-4 text-right tabular-nums sm:table-cell">
                     {row.yieldPct == null ? (
                       <span className="text-panel-fg/65">—</span>
                     ) : (

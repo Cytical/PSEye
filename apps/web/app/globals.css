@@ -28,6 +28,15 @@
   --panel-fg: #16181d;
   --panel-canvas: #f7f4ee;
   --panel-grid: #ffffff;
+  /* The market map's sector header bar (TreemapChart.tsx). Its own token
+   * rather than --panel-bg-raised because that surface is defined by how it
+   * reads against --panel-bg, and the map needs it to read against
+   * --panel-canvas instead. The map wants three distinct steps —
+   * canvas < header < flat tile — and in light mode --panel-bg-raised
+   * (#f4f1ea) sat within a hair of --panel-canvas (#f7f4ee), so sector bands
+   * were all but invisible; dark mode already had the separation and keeps
+   * exactly the value it had. */
+  --treemap-header-bg: #efe9db;
   /* Darkened from #1c8a4b / #c23a2e. The old green measured 4.39:1 on
    * --panel-bg and 4.14:1 on --background, under the 4.5:1 AA floor for
    * normal text — and it's the color every gain figure, every `kicker`, and
@@ -77,6 +86,7 @@
   --panel-fg: #f6f5f1;
   --panel-canvas: #0d0f14;
   --panel-grid: #05060a;
+  --treemap-header-bg: #1c212b;
   --up: #3ddc84;
   --down: #ff6b5e;
   --accent: #3ddc84;

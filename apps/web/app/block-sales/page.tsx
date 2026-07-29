@@ -38,15 +38,17 @@ export default async function BlockSalesPage() {
       {trades.length > 0 ? (
         <div className="mt-8 overflow-hidden rounded-xl bg-panel shadow-sm shadow-black/5 ring-1 ring-panel-border">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-sm">
+            <table className="w-full text-xs sm:min-w-[560px] sm:text-sm">
               <thead>
                 <tr className="kicker border-b border-panel-border bg-panel-raised/50 text-left text-panel-fg/68">
-                  <th className="py-3 pl-4 pr-4 font-medium">Date</th>
-                  <th className="py-3 pr-4 font-medium">Ticker</th>
-                  <th className="py-3 pr-4 font-medium">Company</th>
-                  <th className="py-3 pr-4 text-right font-medium">Volume</th>
-                  <th className="py-3 pr-4 text-right font-medium">Price</th>
-                  <th className="py-3 pr-4 text-right font-medium">Value</th>
+                  <th className="py-3 pl-3 pr-2 font-medium sm:pl-4 sm:pr-4">Date</th>
+                  <th className="py-3 pr-2 font-medium sm:pr-4">Company</th>
+                  {/* Raw share volume is hidden below sm — Value already tells the
+                      trade's size in pesos, which is what makes a block sale
+                      notable, without also needing the share count on a phone. */}
+                  <th className="hidden py-3 pr-4 text-right font-medium sm:table-cell">Volume</th>
+                  <th className="hidden py-3 pr-4 text-right font-medium sm:table-cell">Price</th>
+                  <th className="py-3 pr-3 text-right font-medium sm:pr-4">Value</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-panel-border">
@@ -55,22 +57,25 @@ export default async function BlockSalesPage() {
                     key={`${t.ticker}-${t.tradeDate}-${t.volume}`}
                     className="transition-colors hover:bg-panel-raised"
                   >
-                    <td className="py-2.5 pl-4 pr-4 text-panel-fg/72">{formatDate(t.tradeDate)}</td>
-                    <td className="py-2.5 pr-4 font-mono text-xs">
-                      <Link href={`/stocks/${t.ticker}`} className="text-panel-fg hover:underline">
-                        {t.ticker}
+                    <td className="py-2 pl-3 pr-2 whitespace-nowrap text-panel-fg/72 sm:py-2.5 sm:pl-4 sm:pr-4">
+                      {formatDate(t.tradeDate)}
+                    </td>
+                    <td className="max-w-[130px] py-2 pr-2 sm:max-w-none sm:py-2.5 sm:pr-4">
+                      <Link
+                        href={`/stocks/${t.ticker}`}
+                        className="flex items-center gap-1.5 text-panel-fg hover:underline"
+                      >
+                        <span className="shrink-0 font-mono text-[10px] font-semibold sm:text-xs">{t.ticker}</span>
+                        <span className="min-w-0 flex-1 truncate text-panel-fg/70">{t.companyName}</span>
                       </Link>
                     </td>
-                    <td className="py-2.5 pr-4">
-                      <Link href={`/stocks/${t.ticker}`} className="text-panel-fg hover:underline">
-                        {t.companyName}
-                      </Link>
-                    </td>
-                    <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">
+                    <td className="hidden py-2.5 pr-4 text-right tabular-nums text-panel-fg sm:table-cell">
                       {t.volume.toLocaleString("en-PH")}
                     </td>
-                    <td className="py-2.5 pr-4 text-right tabular-nums text-panel-fg">₱{t.price.toFixed(2)}</td>
-                    <td className="py-2.5 pr-4 text-right font-medium tabular-nums text-panel-fg">
+                    <td className="hidden py-2.5 pr-4 text-right tabular-nums text-panel-fg sm:table-cell">
+                      ₱{t.price.toFixed(2)}
+                    </td>
+                    <td className="py-2 pr-3 text-right font-medium tabular-nums text-panel-fg sm:py-2.5 sm:pr-4">
                       {formatPeso(t.value)}
                     </td>
                   </tr>

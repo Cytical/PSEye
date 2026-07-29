@@ -45,6 +45,12 @@ export function StatTile({ label, value }: { label: string; value: string }) {
  * overflow instead of letting the list stretch the panel (and the page) —
  * that's what lets the whole recap sit in a fixed-height grid without the
  * page itself needing to scroll, only an individual overfull panel.
+ *
+ * From `sm` up only. On a phone the recap is a single stacked column with no
+ * fixed-height grid to preserve, so the cap buys nothing and costs the page
+ * scroll: a touch drag landing inside one of these panels scrolls the list
+ * within it instead of the page. Same fix as components/Panel.tsx, which has
+ * the longer write-up.
  */
 export function Panel({
   title,
@@ -91,7 +97,7 @@ export function Panel({
       <div
         className={
           scroll
-            ? "mt-2 max-h-64 overflow-y-auto pr-1"
+            ? "mt-2 pr-1 sm:max-h-64 sm:overflow-y-auto"
             : "mt-2 flex flex-1 flex-col justify-center"
         }
       >
