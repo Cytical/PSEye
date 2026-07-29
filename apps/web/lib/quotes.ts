@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createDb, getLatestDailyQuotes } from "@pseye/db";
 import { MockQuoteSource, type PseSector, type Quote } from "@pseye/source-quotes";
 
@@ -6,8 +7,20 @@ import { MockQuoteSource, type PseSector, type Quote } from "@pseye/source-quote
  * otherwise MockQuoteSource. Falls back to mock on any DB error too, so a
  * misconfigured or not-yet-migrated database never breaks the page — same
  * "swap source without a rewrite" contract as every other *Source in this repo.
+ *
+ * Wrapped in unstable_cache: this is a no-args, whole-table read called from
+ * ~11 call sites including /stocks/[ticker]'s page AND opengraph-image (282
+ * companies each) — without a shared cache, one `next build` reissues this
+ * same query 500+ times against Neon, which is real egress against the free
+ * tier's 5GB/month transfer cap. The 3600s window matches the hourly quotes
+ * ETL cadence every caller already assumes.
  */
-export async function getDailyQuotes(): Promise<Quote[]> {
+export const getDailyQuotes = unstable_cache(fetchDailyQuotes, ["daily-quotes"], {
+  revalidate: 3600,
+  tags: ["daily-quotes"],
+});
+
+async function fetchDailyQuotes(): Promise<Quote[]> {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) return new MockQuoteSource().getDailyQuotes();
 

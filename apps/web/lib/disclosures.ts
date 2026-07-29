@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createDb, getRecentDisclosures as getRecentDisclosuresQuery } from "@pseye/db";
 import { MockDisclosureSource, type Disclosure, type DisclosureType } from "@pseye/source-disclosures";
 
@@ -6,8 +7,16 @@ import { MockDisclosureSource, type Disclosure, type DisclosureType } from "@pse
  * (etl/jobs/fetch-disclosures.ts, PseEdgeDisclosureSource) has populated it,
  * otherwise MockDisclosureSource. Falls back on any DB error too — same
  * contract as getDailyQuotes.
+ *
+ * Wrapped in unstable_cache — same whole-table-read-fanned-out-across-282-
+ * ticker-pages reasoning as getDailyQuotes (see quotes.ts).
  */
-export async function getDisclosures(): Promise<Disclosure[]> {
+export const getDisclosures = unstable_cache(fetchDisclosures, ["disclosures"], {
+  revalidate: 3600,
+  tags: ["disclosures"],
+});
+
+async function fetchDisclosures(): Promise<Disclosure[]> {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) return new MockDisclosureSource().getRecent();
 

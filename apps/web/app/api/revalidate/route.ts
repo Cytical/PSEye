@@ -1,4 +1,4 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 /**
  * On-demand revalidation, called by etl/jobs/post-daily-tweet.ts right before
@@ -8,6 +8,16 @@ import { revalidatePath } from "next/cache";
  * not necessarily today's finalized close, which would undermine the whole
  * point of an end-of-day post. Gated by a shared secret (not auth) since this
  * only ever triggers a cache refresh, never exposes or mutates data.
+ *
+ * revalidateTag matters as much as revalidatePath here: getDailyQuotes/
+ * getCompanyProfiles (lib/quotes.ts, lib/companyProfiles.ts) are wrapped in
+ * unstable_cache with their own 3600s window, shared across every page that
+ * calls them — revalidatePath("/") alone re-renders the homepage's shell but
+ * can still read that same not-yet-expired cached data, defeating the point.
+ * Passed `{ expire: 0 }` (immediate expiry), not `"max"` — `"max"` is
+ * stale-while-revalidate, meaning the *next* visit (this same screenshot
+ * request) still gets served the stale entry while a fresh one loads in the
+ * background, which is exactly the staleness this route exists to prevent.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -17,6 +27,8 @@ export async function GET(request: Request) {
     return Response.json({ error: "Invalid secret" }, { status: 401 });
   }
 
+  revalidateTag("daily-quotes", { expire: 0 });
+  revalidateTag("company-profiles", { expire: 0 });
   revalidatePath("/");
 
   const date = searchParams.get("date");

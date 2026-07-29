@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createDb, getUpcomingCorporateActions as getUpcomingCorporateActionsQuery } from "@pseye/db";
 import {
   MockCorporateActionSource,
@@ -10,8 +11,16 @@ import {
  * (etl/jobs/fetch-corporate-actions.ts, PseEdgeCorporateActionSource) has
  * populated it, otherwise MockCorporateActionSource. Falls back on any DB
  * error too — same contract as getDailyQuotes.
+ *
+ * Wrapped in unstable_cache — same whole-table-read-fanned-out-across-282-
+ * ticker-pages reasoning as getDailyQuotes (see quotes.ts).
  */
-export async function getCorporateActions(): Promise<CorporateAction[]> {
+export const getCorporateActions = unstable_cache(fetchCorporateActions, ["corporate-actions"], {
+  revalidate: 3600,
+  tags: ["corporate-actions"],
+});
+
+async function fetchCorporateActions(): Promise<CorporateAction[]> {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) return new MockCorporateActionSource().getUpcoming();
 
