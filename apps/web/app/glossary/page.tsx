@@ -31,7 +31,7 @@ export default function GlossaryPage() {
           "@type": "DefinedTerm",
           name: t.term,
           description: t.definition,
-          url: `${siteUrl}/glossary#${t.id}`,
+          url: `${siteUrl}/glossary/${t.id}`,
         })),
       },
     ],
@@ -71,17 +71,22 @@ export default function GlossaryPage() {
       <dl className="mt-6 flex flex-col gap-6">
         {GLOSSARY_TERMS.map((t) => (
           <div key={t.id} id={t.id} className="scroll-mt-20 border-t border-panel-border pt-4 first:border-t-0 first:pt-0">
-            <dt className="font-serif text-lg font-semibold text-panel-fg">{t.term}</dt>
+            <dt className="font-serif text-lg font-semibold text-panel-fg">
+              <Link href={`/glossary/${t.id}`} className="hover:underline">
+                {t.term}
+              </Link>
+            </dt>
             <dd className="mt-1.5 text-sm leading-relaxed text-panel-fg/80">{t.definition}</dd>
-            {t.related && t.related.length > 0 && (
-              <dd className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
-                {t.related.map((r) => (
-                  <Link key={r.href} href={r.href} className="text-panel-fg/72 hover:text-panel-fg hover:underline">
-                    See {r.label} →
-                  </Link>
-                ))}
-              </dd>
-            )}
+            <dd className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+              <Link href={`/glossary/${t.id}`} className="font-medium text-panel-fg/80 hover:text-panel-fg hover:underline">
+                Full definition →
+              </Link>
+              {t.related?.map((r) => (
+                <Link key={r.href} href={r.href} className="text-panel-fg/72 hover:text-panel-fg hover:underline">
+                  See {r.label} →
+                </Link>
+              ))}
+            </dd>
           </div>
         ))}
       </dl>

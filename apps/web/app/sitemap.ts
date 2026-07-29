@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 import { getRecentRecapDates } from "@/lib/dailyRecap";
 import { sectorToSlug, VISIBLE_SECTORS } from "@/lib/sectorSlug";
+import { GLOSSARY_TERMS } from "@/lib/glossary";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -95,5 +96,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticEntries, ...stockEntries, ...recapEntries, ...sectorEntries];
+  // One entry per glossary term (see app/glossary/[term]/page.tsx) — `now`,
+  // not latestQuoteDate, since definitions don't change with the day's quotes.
+  const glossaryEntries = GLOSSARY_TERMS.map((t) => ({
+    url: `${SITE_URL}/glossary/${t.id}`,
+    lastModified: now,
+    changeFrequency: "monthly" as const,
+    priority: 0.4,
+  }));
+
+  return [...staticEntries, ...stockEntries, ...recapEntries, ...sectorEntries, ...glossaryEntries];
 }
