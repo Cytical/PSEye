@@ -50,12 +50,6 @@ export default function NewsPage() {
             The most relevant headlines, ranked by relevance to PSE-listed companies and linked
             back to the original outlet.
           </p>
-          <a
-            href="/feed.xml"
-            className="font-news-sans mt-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#990F3D] hover:underline dark:text-[#D75980]"
-          >
-            RSS feed
-          </a>
         </header>
 
         <div className="mt-5">

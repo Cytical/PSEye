@@ -6,7 +6,6 @@ const FOOTER_LINKS = [
   { href: "/sectors", label: "Sectors" },
   { href: "/news", label: "News" },
   { href: "/glossary", label: "Glossary" },
-  { href: "/feed.xml", label: "RSS" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];

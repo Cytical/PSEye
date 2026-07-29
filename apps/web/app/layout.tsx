@@ -61,9 +61,6 @@ export const metadata: Metadata = {
   },
   description:
     "Free Philippine Stock Exchange tracker: live PSEi heatmap, PSE stock prices, dividend yields, foreign flow, and daily market recaps — no login, no paywall.",
-  alternates: {
-    types: { "application/rss+xml": "/feed.xml" },
-  },
   openGraph: {
     siteName: "PSEye",
     type: "website",

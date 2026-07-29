@@ -54,7 +54,6 @@ export async function generateMetadata({
     description,
     alternates: {
       canonical: `/stocks/${company.ticker}`,
-      types: { "application/rss+xml": `/stocks/${company.ticker}/feed.xml` },
     },
     openGraph: { title, description },
   };
@@ -302,16 +301,6 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
                   } on the PSE — via PSEye`
             }
           />
-          <a
-            href={`/stocks/${company.ticker}/feed.xml`}
-            title={`RSS feed: ${company.ticker} disclosures, dividends & news`}
-            className="flex items-center gap-1.5 rounded-md border border-panel-border px-3 py-1.5 text-xs font-medium text-panel-fg transition-colors hover:bg-panel-raised"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M4 11a9 9 0 0 1 9 9h3A12 12 0 0 0 4 8v3zm0-7a16 16 0 0 1 16 16h3A19 19 0 0 0 4 1v3zm2 13a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z" />
-            </svg>
-            RSS
-          </a>
           <Link
             href={`/?ticker=${company.ticker}`}
             className="rounded-md border border-panel-border px-3 py-1.5 text-xs font-medium text-panel-fg transition-colors hover:bg-panel-raised"

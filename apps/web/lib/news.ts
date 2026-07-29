@@ -170,10 +170,9 @@ async function fetchRankedFromDb(databaseUrl: string): Promise<NewsItem[] | null
  * Mood" aggregate were two independent functions that each read the DB on
  * their own, for what was ultimately the same ranked list. `dbRanked` is
  * still only ever invoked once here no matter how many of `top`/`rest`/
- * `mood` a caller actually awaits (feed.xml's getRecentNewsFeed below only
- * uses `top`/`rest` and never awaits `mood` at all — that's fine, an
- * unawaited `.then()` derivation still runs, it's just not free-standing
- * expensive work, unlike a second DB round-trip would be).
+ * `mood` a caller actually awaits — an unawaited `.then()` derivation still
+ * runs, it's just not free-standing expensive work, unlike a second DB
+ * round-trip would be.
  */
 export function getNewsPageData(): NewsPageData {
   const databaseUrl = process.env.DATABASE_URL;
@@ -211,18 +210,6 @@ export async function getNewsForTicker(ticker: string, limit = 5): Promise<NewsI
     : await fetchLiveAll();
 
   return ranked.filter((item) => item.tickers.includes(ticker)).slice(0, limit);
-}
-
-/**
- * Flat, true-reverse-chronological headline list for the RSS feed
- * (feed.xml/route.ts) — unlike getNewsPageData's relevance-tiered top/rest
- * split (built for the front page's layout), a feed reader expects plain
- * newest-first order.
- */
-export async function getRecentNewsFeed(limit = 30): Promise<NewsItem[]> {
-  const { top, rest } = getNewsPageData();
-  const [topItems, restItems] = await Promise.all([top, rest]);
-  return sortByDate([...topItems, ...restItems]).slice(0, limit);
 }
 
 async function fetchLiveAll(): Promise<NewsItem[]> {
