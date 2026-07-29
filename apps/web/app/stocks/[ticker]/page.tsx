@@ -397,14 +397,14 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           )}
 
           {profile.wikipediaSummary && (
-            <div className="mt-4 rounded-lg bg-panel-raised p-3 ring-1 ring-panel-border">
-              <p className="text-sm leading-snug text-panel-fg/80">{profile.wikipediaSummary}</p>
+            <div className="mt-3 border-t border-panel-border pt-2.5">
+              <p className="line-clamp-3 text-xs leading-snug text-panel-fg/65">{profile.wikipediaSummary}</p>
               {profile.wikipediaUrl && (
                 <a
                   href={profile.wikipediaUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1.5 inline-block text-[11px] text-panel-fg/68 hover:underline"
+                  className="mt-1 inline-block text-[11px] text-panel-fg/60 hover:underline"
                 >
                   {profile.wikipediaTitle} on Wikipedia →
                 </a>
@@ -538,25 +538,31 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         </div>
       </div>
 
-      {news.length > 0 && (
-        <div className="[grid-area:news]">
-          <h2 className="kicker text-panel-fg/68">In the news</h2>
-          <ul className="mt-2 flex flex-col gap-2.5">
-            {news.map((item) => (
-              <li key={item.url} className="text-sm">
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-panel-fg hover:underline">
-                  {item.title}
-                </a>
-                <div className="text-[11px] text-panel-fg/72">
-                  {item.source} &middot; {formatRelative(item.publishedAt.toISOString())}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="[grid-area:recent]">
+      {/* News + Recently Viewed share one grid area (a flex column, not two
+          separately-positioned areas): on desktop they sit in the same
+          column as Sector Peers, which is naturally much shorter than the
+          chart/analytics/about column beside it — keeping these two as one
+          block lets whichever is present fill that leftover space as a unit
+          instead of each being stretched to its own separately-allocated
+          row. */}
+      <div className="[grid-area:news] flex flex-col gap-6">
+        {news.length > 0 && (
+          <div>
+            <h2 className="kicker text-panel-fg/68">In the news</h2>
+            <ul className="mt-2 flex flex-col gap-2.5">
+              {news.map((item) => (
+                <li key={item.url} className="text-sm">
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-panel-fg hover:underline">
+                    {item.title}
+                  </a>
+                  <div className="text-[11px] text-panel-fg/72">
+                    {item.source} &middot; {formatRelative(item.publishedAt.toISOString())}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <RecentlyViewed excludeTicker={ticker} />
       </div>
       </div>

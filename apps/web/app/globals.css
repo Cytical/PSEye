@@ -216,12 +216,18 @@ label[for] {
 /* /stocks/[ticker]'s main sections, named so each can be positioned
  * independently of DOM order per breakpoint — a plain reordered flex-col
  * can't do that (mobile order and desktop order are unrelated here: mobile
- * stays exactly the single-column order the page always had, desktop packs
- * a sidebar of Sector Peers + Recently Viewed alongside the chart/analytics/
- * stats/about column). Assign a section's area via the matching
- * `[grid-area:x]` Tailwind arbitrary class. Disclosures/corporate-actions and
- * News stay full-width below both columns on desktop — they're already
- * responsive multi-column sections in their own right. */
+ * stays exactly the single-column order the page always had). Assign a
+ * section's area via the matching `[grid-area:x]` Tailwind arbitrary class.
+ *
+ * Desktop is 3 columns, packed by height rather than by reading order, so the
+ * page fills the wide viewport instead of leaving two-thirds of it blank next
+ * to a single narrow column: `statistics` (risk-adjusted return + full return
+ * distribution + histogram + seasonality table) is by far the tallest single
+ * section, so it gets its own center column, flanked by two columns that each
+ * stack several shorter sections to roughly the same height — chart+analytics
+ * +about on the left, sector peers+news+recently-viewed on the right.
+ * Disclosures/corporate-actions stays full-width below all three — it's
+ * already its own responsive 2-up layout and doesn't fit a narrow column. */
 .stock-detail-grid {
   display: grid;
   /* minmax(0, 1fr), not a bare 1fr: a grid item's default min-width is auto,
@@ -238,20 +244,17 @@ label[for] {
     "about"
     "peers"
     "discl"
-    "news"
-    "recent";
+    "news";
   gap: 1.75rem;
 }
 
 @media (min-width: 1024px) {
   .stock-detail-grid {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(0, 1fr);
     grid-template-areas:
-      "chart peers"
-      "analytics peers"
-      "statistics recent"
-      "about recent"
-      "discl discl"
-      "news news";
+      "chart statistics peers"
+      "analytics statistics peers"
+      "about statistics news"
+      "discl discl discl";
   }
 }
