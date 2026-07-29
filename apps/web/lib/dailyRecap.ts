@@ -146,7 +146,10 @@ const PSEI_MONTH_TRADING_DAYS = 21;
 // specific listed company, which skews narrower than "what's actually
 // relevant in PH news today." getNewsBetween already orders by publishedAt
 // descending, so plain recency across every tracked outlet is enough.
-const NEWS_COUNT = 4;
+// 6, not the original 4 — News moved out of the share card's cramped 30%
+// column into its own full dashboard panel (see DailyRecapView.tsx), so it
+// has the room for a couple more headlines now.
+const NEWS_COUNT = 6;
 
 /**
  * Everything the site recorded for one trading day, joined from the tables the

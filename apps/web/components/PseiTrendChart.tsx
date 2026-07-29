@@ -5,9 +5,12 @@ import type { PseiHistoryPoint } from "@/lib/dailyRecap";
 
 // Internal SVG coordinate system — actual rendered size is controlled by the
 // wrapping element's CSS (className="w-full" below), same viewBox-scales
-// pattern as DcaChart.tsx, not a fixed pixel size.
+// pattern as DcaChart.tsx, not a fixed pixel size. HEIGHT (relative to WIDTH)
+// went from 220 to 280 when the share card that hosts this chart dropped its
+// 70/30 split with a news column — full card width at the old flatter aspect
+// ratio looked stretched and thin, this reads better at the wider size.
 const WIDTH = 640;
-const HEIGHT = 220;
+const HEIGHT = 280;
 const PAD_LEFT = 8;
 const PAD_RIGHT = 8;
 const PAD_TOP = 20;

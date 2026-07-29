@@ -74,14 +74,20 @@ function Panel({
   title,
   moreHref,
   scroll,
-  wide,
+  size = "normal",
   children,
 }: {
   title: string;
   moreHref?: string;
   scroll?: boolean;
-  /** For 2-panel rows: a wider basis/cap so two panels split the row evenly instead of hugging the left with a 3-per-row cap meant for the movers row. */
-  wide?: boolean;
+  /**
+   * "normal": the 3-per-row movers cap. "wide": a bigger basis/cap so 2
+   * panels split their row evenly. "full": no basis/cap at all — for panels
+   * stacked in their own column (see the Foreign Fund Flow/News two-column
+   * group below), where the column's own width should win outright rather
+   * than being capped short of it.
+   */
+  size?: "normal" | "wide" | "full";
   children: ReactNode;
 }) {
   return (
@@ -99,13 +105,11 @@ function Panel({
     // rather than left to stretch indefinitely. basis-[420px]/max-560 targets
     // 3 per row on a real desktop viewport (~1550px of content width); the
     // dashboard is now split into separate flex rows by panel count (3 movers,
-    // then 2+2 for the index/flow and breadth groups) rather than one big
-    // auto-wrapping bag, so a `wide` row's 2 panels get a bigger basis/cap to
-    // split the same row width evenly instead of leaving a gap where a third
-    // panel would have gone.
+    // then 2 wide, then a 2-column stack) rather than one big auto-wrapping
+    // bag, so each group can size its panels to actually fill it.
     <section
       className={`flex min-w-0 flex-1 flex-col rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border ${
-        wide ? "basis-[480px] max-w-[760px]" : "basis-[420px] max-w-[560px]"
+        size === "full" ? "w-full" : size === "wide" ? "basis-[480px] max-w-[760px]" : "basis-[420px] max-w-[560px]"
       }`}
     >
       <div className="flex items-baseline justify-between gap-2">
@@ -325,6 +329,55 @@ function SectorMoversList({ sectors }: { sectors: DailyRecap["sectorMoves"] }) {
   );
 }
 
+function NewsList({ news }: { news: DailyRecap["news"] }) {
+  return (
+    <ul className="flex flex-col gap-2.5">
+      {news.map((n) => (
+        <li key={n.url} className="text-[13px]">
+          <a
+            href={n.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="line-clamp-2 leading-snug text-panel-fg/85 hover:underline"
+          >
+            {n.title}
+          </a>
+          <span className="mt-0.5 block text-[11px] text-panel-fg/55">{n.source}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function DisclosuresList({ disclosures }: { disclosures: DailyRecap["disclosures"] }) {
+  return (
+    <ul className="flex flex-col gap-2.5">
+      {disclosures.map((d, i) => (
+        <li key={`${d.ticker}-${d.filedAt}-${i}`} className="text-[13px]">
+          {d.url ? (
+            <a
+              href={d.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="line-clamp-2 leading-snug text-panel-fg/85 hover:underline"
+            >
+              {d.headline}
+            </a>
+          ) : (
+            <span className="line-clamp-2 leading-snug text-panel-fg/85">{d.headline}</span>
+          )}
+          <span className="mt-0.5 flex items-baseline gap-1.5 text-[11px] text-panel-fg/55">
+            <Link href={`/stocks/${d.ticker}`} className="font-mono font-semibold text-panel-fg/70 hover:underline">
+              {d.ticker}
+            </Link>
+            <span className="truncate">{d.companyName}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function DailyRecapView({
   recap,
   availableDates,
@@ -383,21 +436,16 @@ export function DailyRecapView({
           snapshot={snapshot}
           breadth={breadth}
           pseiHistory={recap.pseiHistory}
-          news={recap.news}
         />
       </div>
 
-      {/* Three separate flex rows, grouped by what the panels are actually
-          about, rather than one big auto-wrapping bag. A single flat list of
-          7 possible panels wraps unpredictably as items come and go by date
-          (3 in a row, then a leftover row with just 1 panel and most of the
-          row empty) — splitting by group means each row's panel count is
-          known up front, so `wide` (see Panel) can size panels to actually
-          fill it. Disclosures and Block Sales are dropped entirely — both
-          have their own full pages (/disclosures, /block-sales) and
-          duplicating them here crowded out stats specific to a day's
-          session with content that's really a filtered view of a different,
-          longer-running feed. */}
+      {/* Movers row, then an index-stats row, then a two-column stack at the
+          bottom: quant/breadth panels on the left, text/reading panels
+          (news, disclosures) on the right — grouped by kind rather than one
+          big auto-wrapping bag, so no panel ever gets stranded alone in a
+          mostly-empty row. Block Sales is the one feed still left out
+          entirely — it has its own full page (/block-sales) and there
+          wasn't a natural pairing for it here. */}
       <div className="mt-3 flex flex-wrap gap-3">
         {recap.gainers.length > 0 && (
           <Panel title="Top Gainers">
@@ -416,55 +464,76 @@ export function DailyRecapView({
         )}
       </div>
 
-      {/* PSE-wide index stats and foreign fund flow are two different
-          questions ("where does the market stand" vs. "who's trading it")
-          that used to share one panel purely to avoid a short row — now each
-          gets its own title and card, side by side rather than merged. */}
       <div className="mt-3 flex flex-wrap gap-3">
         {recap.marketOverview.totalMarketCap > 0 && (
-          <Panel title="Market Overview" wide>
+          <Panel title="Market Overview" size="wide">
             <MarketOverviewGrid overview={recap.marketOverview} />
           </Panel>
         )}
-        {/* Shown whenever the day has quotes at all, not just when foreign
-            flow itself is populated — that's what lets it render the
-            explicit "no data" message below instead of just vanishing. */}
-        {(recap.foreignBuys.length > 0 || recap.foreignSells.length > 0 || recap.marketOverview.totalMarketCap > 0) && (
-          <Panel title="Foreign Fund Flow" moreHref="/foreign-flow" wide>
-            <ForeignFlowSummary buys={recap.foreignBuys} sells={recap.foreignSells} />
+        {recap.sectorMoves.length > 0 && (
+          <Panel title="Sector Movers" moreHref="/sectors" size="wide">
+            <SectorMoversList sectors={recap.sectorMoves} />
           </Panel>
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-3">
-        {recap.sectorMoves.length > 0 && (
-          <Panel title="Sector Movers" moreHref="/sectors" wide>
-            <SectorMoversList sectors={recap.sectorMoves} />
-          </Panel>
-        )}
-        {breadth && breadth.histogram.length > 1 && (
-          <Panel title="Breadth Detail" wide>
-            <div className="grid grid-cols-2 gap-2">
-              <StatTile label="Median move" value={pct2OrDash(breadth.medianMove)} />
-              <StatTile label="Average move" value={pct2OrDash(breadth.meanMove)} />
-              <StatTile
-                label="Dispersion (σ)"
-                value={breadth.moveStdev == null ? "—" : `${breadth.moveStdev.toFixed(2)}%`}
-              />
-              <StatTile
-                label="% advancing"
-                value={breadth.positivePct == null ? "—" : `${breadth.positivePct.toFixed(0)}%`}
-              />
-            </div>
-            <div className="mt-2">
-              <MarketHistogram
-                bins={breadth.histogram}
-                colorSplit={0}
-                formatX={(x) => `${x >= 0 ? "+" : ""}${x.toFixed(1)}%`}
-              />
-            </div>
-          </Panel>
-        )}
+      {/* Quant/breadth panels on the left, reading panels on the right —
+          each column stacks two panels rather than sitting in one flat row,
+          which is also what fixed news's old problem: it used to share a
+          70/30 row with the PSEi chart in the hero card above, where a
+          4-headline list left a permanent empty gap under a much taller
+          chart. Here it's paired with Disclosures, a peer of similar
+          length, in a column of its own instead of racing a chart for
+          height. */}
+      <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <div className="flex flex-col gap-3">
+          {/* Shown whenever the day has quotes at all, not just when foreign
+              flow itself is populated — that's what lets it render the
+              explicit "no data" message below instead of just vanishing. */}
+          {(recap.foreignBuys.length > 0 ||
+            recap.foreignSells.length > 0 ||
+            recap.marketOverview.totalMarketCap > 0) && (
+            <Panel title="Foreign Fund Flow" moreHref="/foreign-flow" size="full">
+              <ForeignFlowSummary buys={recap.foreignBuys} sells={recap.foreignSells} />
+            </Panel>
+          )}
+          {breadth && breadth.histogram.length > 1 && (
+            <Panel title="Breadth Detail" size="full">
+              <div className="grid grid-cols-2 gap-2">
+                <StatTile label="Median move" value={pct2OrDash(breadth.medianMove)} />
+                <StatTile label="Average move" value={pct2OrDash(breadth.meanMove)} />
+                <StatTile
+                  label="Dispersion (σ)"
+                  value={breadth.moveStdev == null ? "—" : `${breadth.moveStdev.toFixed(2)}%`}
+                />
+                <StatTile
+                  label="% advancing"
+                  value={breadth.positivePct == null ? "—" : `${breadth.positivePct.toFixed(0)}%`}
+                />
+              </div>
+              <div className="mt-2">
+                <MarketHistogram
+                  bins={breadth.histogram}
+                  colorSplit={0}
+                  formatX={(x) => `${x >= 0 ? "+" : ""}${x.toFixed(1)}%`}
+                />
+              </div>
+            </Panel>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {recap.news.length > 0 && (
+            <Panel title="In the News" moreHref="/news" size="full" scroll>
+              <NewsList news={recap.news} />
+            </Panel>
+          )}
+          {recap.disclosures.length > 0 && (
+            <Panel title="Disclosures" moreHref="/disclosures" size="full" scroll>
+              <DisclosuresList disclosures={recap.disclosures.slice(0, 8)} />
+            </Panel>
+          )}
+        </div>
       </div>
 
       <p className="mt-3 text-xs text-panel-fg/68">
