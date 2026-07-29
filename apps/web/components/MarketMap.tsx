@@ -3,16 +3,23 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { TreemapChart, type TreemapStock } from "./TreemapChart";
-import { MarketSummaryBar, changeColor } from "./MarketSummaryBar";
+import { MarketSummaryBar } from "./MarketSummaryBar";
+import { MobileMarketSummary } from "./MobileMarketSummary";
 import { TopMovers } from "./TopMovers";
 import { AddToWatchlistModal } from "./AddToWatchlistModal";
 import { ShareButton } from "./ShareButton";
 import { FullscreenButton } from "./FullscreenButton";
 import { CalendarDatePicker } from "@/components/CalendarDatePicker";
-import { MARKET_MAP_FILTERS, filterMarketMapStocks, type MarketMapFilter } from "@/lib/marketMapFilters";
+import {
+  MARKET_MAP_FILTERS,
+  NARROW_DEFAULT_FILTER,
+  filterMarketMapStocks,
+  type MarketMapFilter,
+} from "@/lib/marketMapFilters";
 import { NASDAQ_100_STOCKS } from "@/lib/nasdaq100";
 import { useWatchlist } from "@/lib/watchlist";
 import { useColorblindMode, setColorblindMode } from "@/lib/colorblindMode";
+import { useNarrowViewport } from "@/lib/useNarrowViewport";
 import type { CompanyProfile } from "@/lib/companyProfiles";
 import type { MarketSnapshot } from "@/lib/marketSnapshot";
 import type { LatestForeignFlow } from "@/lib/latestForeignFlow";
@@ -25,14 +32,19 @@ interface MarketMapProps {
   foreignFlow: LatestForeignFlow;
   /** Ticker -> real trailing-month closes for the hover sparkline (see lib/sparklines.ts); tickers without real history are absent. */
   sparklineByTicker?: Record<string, number[]>;
+  /** Most recent session that has a `/daily/[date]` recap, for MobileMarketSummary's link out. */
+  latestRecapDate: string;
 }
 
 const FILTER_KEYS = new Set(MARKET_MAP_FILTERS.map((f) => f.key));
 
 /** Reserved pixels below the canvas in fullscreen — the "Day change" legend
- * plus its gaps/padding — so the computed fill height doesn't push the
- * legend off the bottom of the screen. */
-const FULLSCREEN_CHROME_RESERVE = 140;
+ * and the fullscreen/share control bar, plus their gaps/padding — so the
+ * computed fill height doesn't push either off the bottom of the screen.
+ * (The control bar moved inside the fullscreen target so "Exit fullscreen"
+ * stays reachable without the Esc key; that's the extra ~50px over the
+ * legend-only reserve this used to be.) */
+const FULLSCREEN_CHROME_RESERVE = 190;
 
 /** Fired after history.replaceState so useSyncExternalStore knows to re-read the URL
  * (replaceState doesn't dispatch popstate on its own). */
@@ -50,6 +62,14 @@ function subscribeToFilterUrl(callback: () => void) {
 function getFilterFromUrl(): MarketMapFilter {
   const param = new URLSearchParams(window.location.search).get("filter");
   return param && FILTER_KEYS.has(param as MarketMapFilter) ? (param as MarketMapFilter) : "all";
+}
+
+/** Whether the URL names a filter at all. "No param" and "?filter=all" are the
+ * same map on desktop but not on mobile, where the absent case falls back to
+ * NARROW_DEFAULT_FILTER — so the two have to be distinguishable. */
+function hasFilterParamInUrl(): boolean {
+  const param = new URLSearchParams(window.location.search).get("filter");
+  return param !== null && FILTER_KEYS.has(param as MarketMapFilter);
 }
 
 const EMPTY_SHARED_TICKERS: string[] = [];
@@ -119,8 +139,24 @@ function formatPickerDate(iso: string): string {
  * pattern in TreemapChart.tsx (server snapshot "all" so hydration never mismatches
  * a client that might land on a deep-linked, non-default filter).
  */
-export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, sparklineByTicker }: MarketMapProps) {
+export function MarketMap({
+  stocks,
+  profileByTicker,
+  snapshot,
+  foreignFlow,
+  sparklineByTicker,
+  latestRecapDate,
+}: MarketMapProps) {
   const filter = useSyncExternalStore(subscribeToFilterUrl, getFilterFromUrl, (): MarketMapFilter => "all");
+  const filterIsExplicit = useSyncExternalStore(subscribeToFilterUrl, hasFilterParamInUrl, (): boolean => false);
+  const isNarrow = useNarrowViewport();
+  /** What the map actually renders. Identical to `filter` everywhere except a
+   * phone with no `?filter=` in the URL, which gets NARROW_DEFAULT_FILTER — see
+   * lib/marketMapFilters.ts for why. Everything downstream (the sidebar's
+   * active state, the share URL, the treemap itself) reads this, never
+   * `filter`, so the UI can't claim to be showing one thing while showing
+   * another. */
+  const effectiveFilter: MarketMapFilter = !filterIsExplicit && isNarrow ? NARROW_DEFAULT_FILTER : filter;
   const sharedTickers = useSyncExternalStore(
     subscribeToFilterUrl,
     getSharedTickersFromUrl,
@@ -210,11 +246,14 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
   // Viewing someone else's shared watchlist link, not the visitor's own —
   // takes priority over localStorage so opening a shared link never silently
   // shows (or worse, is confused with) the visitor's own picks.
-  const isSharedWatchlistView = filter === "watchlist" && sharedTickers.length > 0;
+  const isSharedWatchlistView = effectiveFilter === "watchlist" && sharedTickers.length > 0;
 
   function selectFilter(next: MarketMapFilter) {
     const url = new URL(window.location.href);
-    if (next === "all") url.searchParams.delete("filter");
+    // On a phone an absent `?filter=` means NARROW_DEFAULT_FILTER, so deleting
+    // the param on "All PSE" would bounce the visitor straight back to Top 30
+    // instead of showing them everything. Write it explicitly there.
+    if (next === "all" && !isNarrow) url.searchParams.delete("filter");
     else url.searchParams.set("filter", next);
     url.searchParams.delete("tickers");
     window.history.replaceState(null, "", url);
@@ -229,13 +268,13 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
   }
 
   const filteredStocks = useMemo(() => {
-    if (filter === "nasdaq100") return NASDAQ_100_STOCKS;
-    if (filter === "watchlist") {
+    if (effectiveFilter === "nasdaq100") return NASDAQ_100_STOCKS;
+    if (effectiveFilter === "watchlist") {
       const tickers = isSharedWatchlistView ? sharedTickers : watchedTickers;
       return baseStocks.filter((s) => tickers.includes(s.ticker));
     }
-    return filterMarketMapStocks(baseStocks, filter);
-  }, [baseStocks, filter, watchedTickers, isSharedWatchlistView, sharedTickers]);
+    return filterMarketMapStocks(baseStocks, effectiveFilter);
+  }, [baseStocks, effectiveFilter, watchedTickers, isSharedWatchlistView, sharedTickers]);
 
   /** Stock count per filter, shown as a badge so the choice between e.g. "Top 50" and "Top 100" is informed rather than a guess. */
   const countByFilter = useMemo((): Record<MarketMapFilter, number> => {
@@ -250,57 +289,36 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
 
   function getMarketMapShareUrl(): string {
     const url = new URL(window.location.href);
-    if (filter === "watchlist" && !isSharedWatchlistView && watchedTickers.length > 0) {
+    // A phone can be showing NARROW_DEFAULT_FILTER without the URL saying so —
+    // pin it, or the desktop recipient of a shared link opens a different map
+    // than the one that was shared.
+    if (effectiveFilter !== filter) url.searchParams.set("filter", effectiveFilter);
+    if (effectiveFilter === "watchlist" && !isSharedWatchlistView && watchedTickers.length > 0) {
       url.searchParams.set("filter", "watchlist");
       url.searchParams.set("tickers", watchedTickers.join(","));
     }
     return url.toString();
   }
 
+  // There is no toolbar row above the map anymore. The date picker moved into
+  // the filter sidebar (a data-scope control, same as the filters themselves —
+  // and the sidebar is sticky, so it costs no vertical space on desktop), and
+  // Fullscreen/Share moved to a strip *under* the canvas. Between them that
+  // reclaimed the empty band that used to sit between the headline and the
+  // first tile on every desktop load.
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          {availableDates.length > 0 ? (
-            <div className="flex items-center gap-2 text-xs font-medium text-panel-fg/72">
-              <span className="kicker">Time machine</span>
-              <CalendarDatePicker
-                value={viewDate}
-                availableDates={availableDates}
-                onSelect={(iso) => selectDateInUrl(iso)}
-                onClear={() => selectDateInUrl(null)}
-                clearLabel="Today"
-                triggerLabel={viewDate ? formatPickerDate(viewDate) : "Today"}
-              />
-            </div>
-          ) : (
-            <span />
-          )}
-          {/* Compact PSEi readout, beside the Today control — mobile only.
-              Desktop keeps the full MarketSummaryBar in the filter sidebar;
-              on mobile that sidebar now sits below the map (see nav's
-              order-2 below), so this keeps the index visible up top without
-              scrolling. */}
-          {!isPastView && (
-            <div className="flex items-center gap-1.5 text-xs sm:hidden">
-              <span className="font-semibold text-panel-fg/72">PSEi</span>
-              <span className="font-bold tabular-nums text-panel-fg">
-                {snapshot.pseiValue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-              <span
-                className={`flex items-center gap-0.5 font-semibold tabular-nums ${changeColor(snapshot.pseiPctChange)}`}
-              >
-                {snapshot.pseiPctChange >= 0 ? "▲" : "▼"}
-                {Math.abs(snapshot.pseiPctChange).toFixed(2)}%
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <FullscreenButton targetRef={mapAreaRef} />
-          <ShareButton getShareUrl={getMarketMapShareUrl} />
-        </div>
-      </div>
+      {/* Phone-only "today at a glance" card. Above the map deliberately: it's
+          the readable-on-a-phone content, and the map below it is the thing
+          worth scrolling to. Desktop gets the same numbers from the sidebar. */}
+      {!isPastView && (
+        <MobileMarketSummary
+          snapshot={snapshot}
+          foreignFlow={foreignFlow}
+          quotes={baseStocks}
+          recapHref={`/daily/${latestRecapDate}`}
+        />
+      )}
 
       {isPastView && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-panel px-4 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border">
@@ -338,16 +356,36 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
         </div>
       )}
       <div className="flex flex-col gap-4 sm:flex-row">
+        {/* `overflow-x-auto` is scoped to the filter chips rather than the whole
+            nav: the date picker below opens an absolutely-positioned 260px
+            popover, which a scroll container on the <nav> would clip on mobile
+            (the desktop nav already opted out via sm:overflow-visible, so this
+            only ever showed up at phone width). */}
         <nav
-          className="order-2 flex shrink-0 flex-col gap-2 overflow-x-auto rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:order-none sm:sticky sm:top-16 sm:w-48 sm:gap-0.5 sm:self-start sm:overflow-visible"
+          className="order-2 flex shrink-0 flex-col gap-2 rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:order-none sm:sticky sm:top-16 sm:w-48 sm:gap-0.5 sm:self-start"
           aria-label="Market map filters"
         >
+          {availableDates.length > 0 && (
+            <div className="border-b border-panel-border px-2 pb-2">
+              <span className="kicker text-panel-fg/68">Time machine</span>
+              <CalendarDatePicker
+                className="mt-1.5"
+                value={viewDate}
+                availableDates={availableDates}
+                onSelect={(iso) => selectDateInUrl(iso)}
+                onClear={() => selectDateInUrl(null)}
+                clearLabel="Today"
+                triggerLabel={viewDate ? formatPickerDate(viewDate) : "Today"}
+              />
+            </div>
+          )}
+
           <span className="kicker hidden border-b border-panel-border px-2 pb-2 text-panel-fg/68 sm:block">
             Filters
           </span>
-          <div className="flex gap-2 sm:flex-col sm:gap-0.5">
+          <div className="flex gap-2 overflow-x-auto sm:flex-col sm:gap-0.5 sm:overflow-visible">
             {MARKET_MAP_FILTERS.map((option) => {
-              const isActive = option.key === filter;
+              const isActive = option.key === effectiveFilter;
               return (
                 <button
                   key={option.key}
@@ -438,7 +476,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
             </div>
           )}
 
-          {filter === "watchlist" && !isSharedWatchlistView && filteredStocks.length === 0 ? (
+          {effectiveFilter === "watchlist" && !isSharedWatchlistView && filteredStocks.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 rounded-xl bg-panel py-24 text-center shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <button
                 type="button"
@@ -456,7 +494,7 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
                 </p>
               </div>
             </div>
-          ) : filter === "watchlist" && isSharedWatchlistView && filteredStocks.length === 0 ? (
+          ) : effectiveFilter === "watchlist" && isSharedWatchlistView && filteredStocks.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 rounded-xl bg-panel py-24 text-center shadow-sm shadow-black/5 ring-1 ring-panel-border">
               <p className="text-sm font-medium text-panel-fg/70">
                 This shared watchlist link didn&apos;t match any tracked stocks.
@@ -468,12 +506,25 @@ export function MarketMap({ stocks, profileByTicker, snapshot, foreignFlow, spar
               profileByTicker={profileByTicker}
               // The sparkline is the *current* trailing month — misleading next to a past-date view, so it's withheld there.
               sparklineByTicker={isPastView ? undefined : sparklineByTicker}
-              onAddTileClick={filter === "watchlist" && !isSharedWatchlistView ? () => setAddModalOpen(true) : undefined}
+              onAddTileClick={
+                effectiveFilter === "watchlist" && !isSharedWatchlistView ? () => setAddModalOpen(true) : undefined
+              }
               // Only overridden in fullscreen — the treemap's height is otherwise a
               // fixed constant that wouldn't grow to use the extra screen space.
               height={fullscreenTreemapHeight}
             />
           )}
+
+          {/* Map controls, below the canvas rather than above it — they're
+              actions on the view, not context for reading it, so they don't
+              earn a band between the headline and the first tile. Inside the
+              fullscreen target (mapAreaRef) on purpose: "Exit fullscreen" is
+              otherwise unreachable except via the Esc key, since the Fullscreen
+              API only paints the fullscreened element's own subtree. */}
+          <div className="mt-3 flex items-center justify-end gap-2">
+            <FullscreenButton targetRef={mapAreaRef} />
+            <ShareButton getShareUrl={getMarketMapShareUrl} />
+          </div>
 
           {addModalOpen && <AddToWatchlistModal onClose={() => setAddModalOpen(false)} />}
         </div>

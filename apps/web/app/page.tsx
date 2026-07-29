@@ -4,6 +4,8 @@ import { getCompanyProfiles } from "@/lib/companyProfiles";
 import { getMarketSnapshot } from "@/lib/marketSnapshot";
 import { getLatestForeignFlow } from "@/lib/latestForeignFlow";
 import { getRealSparklines } from "@/lib/sparklines";
+import { getRecentRecapDates } from "@/lib/dailyRecap";
+import { manilaToday } from "@/lib/manilaDate";
 import { MarketMap } from "@/components/MarketMap";
 import { MarketMapFaq } from "@/components/MarketMapFaq";
 import { MarketStatusBadge } from "@/components/MarketStatusBadge";
@@ -61,14 +63,22 @@ const FAQ_JSON_LD = {
 };
 
 export default async function MarketMapPage() {
-  const [quotes, profileByTicker, snapshot, foreignFlow] = await Promise.all([
+  const [quotes, profileByTicker, snapshot, foreignFlow, recapDates] = await Promise.all([
     getDailyQuotes(),
     getCompanyProfiles(),
     getMarketSnapshot(),
     getLatestForeignFlow(),
+    // Newest first. Resolved server-side rather than reusing the client's
+    // /api/market-map date list so the mobile summary's "Full daily recap"
+    // link is present in the first paint instead of popping in after a fetch.
+    getRecentRecapDates(1),
   ]);
   const sparklineByTicker = await getRealSparklines(quotes.map((q) => q.ticker));
   const status = getMarketStatus();
+  // Falls back to today only when no session has been recorded at all (no DB /
+  // empty table) — the same "never break the page" contract every lib/* reader
+  // here follows.
+  const latestRecapDate = recapDates[0] ?? manilaToday();
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-8 sm:py-10">
@@ -108,13 +118,17 @@ export default async function MarketMapPage() {
         >
           Skip the market map
         </a>
-        <div className="mt-7">
+        {/* Was mt-7. With the map's own toolbar row gone (see MarketMap.tsx),
+            that gap was the last of the dead band between the headline and the
+            first tile. */}
+        <div className="mt-4">
           <MarketMap
             stocks={quotes}
             profileByTicker={profileByTicker}
             snapshot={snapshot}
             foreignFlow={foreignFlow}
             sparklineByTicker={sparklineByTicker}
+            latestRecapDate={latestRecapDate}
           />
         </div>
       </div>
