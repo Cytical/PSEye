@@ -6,7 +6,7 @@ import {
   estimateTweetLength,
 } from "./tweetCopy";
 
-const SITE_URL = "https://pseye.vercel.app";
+const SITE_URL = "https://pseye.site";
 
 describe("buildMapTweetText", () => {
   it("includes PSEi level, breadth, the link, and hashtags when everything is present", () => {
@@ -104,7 +104,7 @@ describe("buildRecapReplyText", () => {
 
 describe("estimateTweetLength", () => {
   it("counts a URL as exactly 23 chars regardless of its real length", () => {
-    const longUrl = "https://pseye.vercel.app/daily/2026-07-27?some=extra&query=params";
+    const longUrl = "https://pseye.site/daily/2026-07-27?some=extra&query=params";
     expect(estimateTweetLength(longUrl)).toBe(23);
     expect(estimateTweetLength(`abc ${longUrl}`)).toBe(4 + 23);
   });

@@ -116,7 +116,7 @@ export function DailyRecapShareCard({
         )}
       </div>
 
-      <p className="mt-2 text-[11px] text-panel-fg/55">pseye.vercel.app</p>
+      <p className="mt-2 text-[11px] text-panel-fg/55">pseye.site</p>
     </div>
   );
 }

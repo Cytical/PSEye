@@ -280,50 +280,6 @@ export function TreemapChart({
   const canvasBoxRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState({ zoom: 1, pan: { x: 0, y: 0 } });
   const { zoom, pan } = view;
-
-  /**
-   * Sector -> tickers whose box is currently too small to carry its own
-   * ticker label (`!shouldShowLabel`, the same test the label itself uses,
-   * zoom-aware for the same reason: zooming in can grow a box past the
-   * threshold and it should rejoin its sector's normal single-box hover).
-   * A visitor can't reliably aim at one specific sliver among a cluster of
-   * tiny small-cap boxes, and a single-box tooltip for whichever one
-   * happens to be under the cursor isn't much use anyway — so instead of
-   * trying to hit-test more precisely, hovering *any* box in this set shows
-   * every stock in the set together (see hoveredCluster below).
-   */
-  const tinyTickersBySector = useMemo(() => {
-    const map = new Map<string, string[]>();
-    for (const box of layout.stocks) {
-      if (box.ticker === ADD_TILE_TICKER) continue;
-      const w = box.x1 - box.x0;
-      const h = box.y1 - box.y0;
-      if (shouldShowLabel(w * zoom, h * zoom)) continue;
-      const tickers = map.get(box.sector) ?? [];
-      tickers.push(box.ticker);
-      map.set(box.sector, tickers);
-    }
-    return map;
-  }, [layout, zoom]);
-
-  /**
-   * The stocks to list in the hover tooltip when the hovered box belongs to
-   * a tiny-box cluster (see tinyTickersBySector above) — every stock in that
-   * sector's cluster, not just the one box under the cursor, sorted the same
-   * way the rest of the site ranks by size. Null (not an empty array) when
-   * the hovered box isn't part of a cluster, or is the only tiny box in its
-   * sector, so callers can tell "show the single-stock tooltip instead"
-   * apart from "cluster of exactly one."
-   */
-  const hoveredCluster = useMemo(() => {
-    if (!hovered) return null;
-    const tickers = tinyTickersBySector.get(hovered.sector);
-    if (!tickers || tickers.length <= 1) return null;
-    const clusterStocks = tickers
-      .map((ticker) => byTicker.get(ticker))
-      .filter((s): s is TreemapStock => s != null);
-    return clusterStocks.length > 1 ? clusterStocks.sort(byInvestableCapDesc) : null;
-  }, [hovered, tinyTickersBySector, byTicker]);
   // Disables the transition while actively dragging, so panning tracks the
   // pointer 1:1 instead of visibly lagging behind it; only zoom changes (wheel,
   // buttons, reset) should glide.
@@ -453,19 +409,12 @@ export function TreemapChart({
     setView((prev) => ({ ...prev, pan: nextPan }));
   }
 
-  // The cluster tooltip (unlike the single-stock one) is tall enough to need
-  // its own scrollbar, so it can't stay pointer-events-none the way the rest
-  // of the hover UI does — but a tile's onMouseLeave firing the instant the
-  // pointer crosses from the tile onto the tooltip (to scroll it) would
-  // otherwise clear `hovered` and unmount the tooltip out from under the
-  // cursor. Checking the event's relatedTarget (the element the pointer is
-  // *entering*) against the tooltip's own DOM node sidesteps that: moving
-  // onto the tooltip doesn't count as leaving the hover interaction.
-  const clusterTooltipRef = useRef<HTMLDivElement>(null);
-  function handleTileMouseLeave(e: React.MouseEvent) {
-    const enteringNode = e.relatedTarget as Node | null;
-    if (enteringNode && clusterTooltipRef.current?.contains(enteringNode)) return;
-    setHovered(null);
+  /** Stock tile onClick guard — a drag that ends on top of a tile shouldn't
+   * also select it, since the pointerup after a pan is otherwise indistinguishable
+   * from a click. */
+  function selectTickerUnlessDragged(ticker: string) {
+    if (didDragRef.current) return;
+    selectTickerInUrl(ticker);
   }
 
   const ARROW_KEY_DIRECTION: Record<string, Direction> = {
@@ -562,8 +511,8 @@ export function TreemapChart({
                 // onPointerDown above) — without stopping propagation here, a
                 // zoomed-in drag that starts on a header would still fire this
                 // link's navigation on pointerup instead of being treated as a
-                // pan, since headers never opted into the drag-threshold guard
-                // the "+" add-watchlist tile uses (see didDragRef below).
+                // pan, since headers never opted into the drag-threshold logic
+                // tiles get via selectTickerUnlessDragged.
                 onPointerDown={(e) => e.stopPropagation()}
                 className="absolute flex items-center gap-1 overflow-hidden whitespace-nowrap px-2.5 text-xs font-semibold uppercase tracking-wide text-panel-fg/80 transition-colors hover:bg-panel-active hover:text-panel-fg"
                 style={headerStyle}
@@ -630,14 +579,7 @@ export function TreemapChart({
           // staying permanently blank the way a fixed layout-time decision would.
           const showLabel = shouldShowLabel(w * zoom, h * zoom);
           const stock = byTicker.get(box.ticker);
-          // While a tiny-box cluster tooltip is showing (see hoveredCluster
-          // above), the ring highlights every box the tooltip is describing,
-          // not just the one literal box the pointer happens to be over —
-          // otherwise the ring would visually contradict a tooltip that's
-          // listing a dozen other companies too.
-          const isHovered = hoveredCluster
-            ? hoveredCluster.some((s) => s.ticker === box.ticker)
-            : hovered?.ticker === box.ticker;
+          const isHovered = hovered?.ticker === box.ticker;
           // The whole transform layer (including this text) is scaled by
           // `zoom` via CSS, so a font-size computed from the raw (unzoomed)
           // box would get magnified right along with the box — fine for a
@@ -666,7 +608,7 @@ export function TreemapChart({
               // of exactly the tile being pointed at. Light mode deepens
               // instead, and outlines with ink rather than the white ring
               // that was near-invisible on a pale tile.
-              className={`absolute flex flex-col items-center justify-center overflow-hidden text-center hover:z-10 ${
+              className={`absolute flex flex-col items-center justify-center overflow-hidden text-center hover:z-10 active:scale-[0.97] ${
                 colorTheme === "light" ? "hover:brightness-90" : "hover:brightness-125"
               }`}
               style={{
@@ -684,11 +626,12 @@ export function TreemapChart({
                 transition: TILE_TRANSITION,
               }}
               onMouseEnter={() => stock && setHovered(stock)}
-              onMouseLeave={handleTileMouseLeave}
+              onMouseLeave={() => setHovered(null)}
               onFocus={() => stock && setHovered(stock)}
               onBlur={() => setHovered(null)}
+              onClick={() => stock && selectTickerUnlessDragged(stock.ticker)}
               onKeyDown={(e) => onTileKeyDown(e, box.ticker)}
-              title={`${box.ticker} ${formatPctChange(box.pctChange)}`}
+              title={`${box.ticker} ${formatPctChange(box.pctChange)}: click for details`}
               aria-label={`${box.ticker}${stock ? `, ${stock.companyName}` : ""}, ${formatPctChange(box.pctChange)} today`}
             >
               {showLabel && (
@@ -727,42 +670,7 @@ export function TreemapChart({
           </button>
         )}
 
-        {hovered && !selected && hoveredCluster && (
-          // pointer-events-auto (unlike the single-stock tooltip below) so a
-          // long list can actually be scrolled — see handleTileMouseLeave's
-          // comment for how that's kept from fighting the hover-out logic.
-          <div
-            ref={clusterTooltipRef}
-            onMouseLeave={() => setHovered(null)}
-            className="absolute bottom-3 left-3 flex max-h-80 w-[240px] animate-tooltip-in flex-col overflow-hidden rounded-xl border border-panel-border bg-panel/95 text-xs text-panel-fg shadow-xl shadow-black/20 backdrop-blur-sm"
-          >
-            <div className="flex shrink-0 items-baseline justify-between gap-3 border-b border-panel-border px-3.5 pt-3 pb-2">
-              <span className="text-sm font-bold tracking-tight">{hovered.sector}</span>
-              <span className="text-[10px] uppercase tracking-wide text-panel-fg/72">
-                {hoveredCluster.length} small caps
-              </span>
-            </div>
-            <ul className="flex flex-col gap-1 overflow-y-auto px-3.5 py-2">
-              {hoveredCluster.map((s) => (
-                <li key={s.ticker} className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate">
-                    <span className="font-semibold">{s.ticker}</span>{" "}
-                    <span className="text-panel-fg/68">{s.companyName}</span>
-                  </span>
-                  <span
-                    className={`shrink-0 font-semibold tabular-nums ${
-                      (s.pctChange ?? 0) >= 0 ? "text-up" : "text-down"
-                    }`}
-                  >
-                    {formatPctChange(s.pctChange)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {hovered && !selected && !hoveredCluster && (
+        {hovered && !selected && (
           <div className="pointer-events-none absolute bottom-3 left-3 min-w-[190px] animate-tooltip-in rounded-xl border border-panel-border bg-panel/95 px-3.5 py-3 text-xs text-panel-fg shadow-xl shadow-black/20 backdrop-blur-sm">
             <div className="flex items-baseline justify-between gap-3">
               <span className="text-sm font-bold tracking-tight">{hovered.ticker}</span>
@@ -783,6 +691,7 @@ export function TreemapChart({
                 <span className="text-[10px] text-panel-fg/68">1M</span>
               </div>
             )}
+            <div className="mt-1.5 text-[10px] text-panel-fg/72">Click for company info</div>
           </div>
         )}
       </div>

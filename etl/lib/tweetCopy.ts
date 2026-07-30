@@ -54,9 +54,20 @@ export interface MapTweetInput {
   breadth: { advancers: number; decliners: number; unchanged: number } | null;
 }
 
-const MAP_HASHTAGS = ["#PSE", "#PSEi", "#StockMarket", "#Philippines", "#Investing"];
+// Deliberately just 2: X's ranking model treats 3+ hashtags as a spam signal
+// and measurably suppresses reach past that point, while 1-2 relevant tags
+// still earn a small boost. Kept to the two highest-intent/most-searched tags
+// rather than a broad spread.
+const MAP_HASHTAGS = ["#PSEi", "#PSE"];
 
-/** The main post: the market-map screenshot's caption. */
+/**
+ * The main post: the market-map screenshot's caption, with a direct link.
+ * X's pre-Oct-2025 algorithm heavily suppressed off-platform links in the
+ * main post body; X's head of product announced that penalty lifted Oct 14,
+ * 2025 (paired with an in-app link-preview webview so the click doesn't fully
+ * exit the app) — confirmed by real before/after reach data, not just the
+ * announcement itself. Link kept here rather than reply-only.
+ */
 export function buildMapTweetText({ dateLabel, siteUrl, snapshot, breadth }: MapTweetInput): string {
   const lines = [`🇵🇭 PSE Market Map — ${dateLabel}`];
 
@@ -91,9 +102,12 @@ export interface RecapReplyInput {
   topForeignSell: { ticker: string; netValue: number } | null;
 }
 
-const RECAP_HASHTAGS = ["#PSEi", "#PhilippineStocks", "#PSE"];
+const RECAP_HASHTAGS = ["#PSEi", "#PSE"];
 
-/** The reply: the day's recap, with a link to the full /daily/[date] page. */
+/**
+ * The reply: the day's recap, with a link to the full /daily/[date] page.
+ * The link belongs here, not on the parent post — see buildMapTweetText.
+ */
 export function buildRecapReplyText({
   date,
   siteUrl,

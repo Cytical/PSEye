@@ -44,7 +44,7 @@ const fraunces = Fraunces({
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.NODE_ENV === "production" ? "https://pseye.vercel.app" : "http://localhost:3000");
+  (process.env.NODE_ENV === "production" ? "https://pseye.site" : "http://localhost:3000");
 
 // Google Search Console verification token (HTML-tag method). Hardcoded to the
 // verified property's token so the meta tag renders in production without a

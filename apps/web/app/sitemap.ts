@@ -6,7 +6,7 @@ import { GLOSSARY_TERMS } from "@/lib/glossary";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.NODE_ENV === "production" ? "https://pseye.vercel.app" : "http://localhost:3000");
+  (process.env.NODE_ENV === "production" ? "https://pseye.site" : "http://localhost:3000");
 
 /** `quoteDated: true` routes get the actual latest trade date on record as
  * lastModified instead of build time — real freshness signal for the pages

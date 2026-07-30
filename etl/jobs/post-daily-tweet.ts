@@ -37,7 +37,9 @@ async function main() {
   }
 
   const dryRun = process.env.DRY_RUN === "1" || process.env.DRY_RUN === "true";
-  const siteUrl = (process.env.SITE_URL ?? "https://pseye.vercel.app").replace(/\/$/, "");
+  // "||" not "??": an unset SITE_URL secret in GitHub Actions comes through
+  // as an empty string, not undefined/null, so "??" wouldn't fall back here.
+  const siteUrl = (process.env.SITE_URL || "https://pseye.site").replace(/\/$/, "");
 
   if (!dryRun) {
     for (const key of ["TWITTER_API_KEY", "TWITTER_API_SECRET", "TWITTER_ACCESS_TOKEN", "TWITTER_ACCESS_TOKEN_SECRET"]) {
