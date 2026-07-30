@@ -6,12 +6,9 @@ export type ColorTheme = "light" | "dark";
 /**
  * finviz's actual map (confirmed live) is not a smooth gradient — it's a
  * handful of discrete color steps, one per whole percent, clamped at +/-3%
- * so a few outliers don't wash out the range for everything else. Rather
- * than hand-author 7 more hex values per palette, `pctChangeToColor` snaps
- * the input to the nearest whole percent first (see `bandFor` below) and
- * then evaluates this same continuous d3 scale — so the 7 discrete colors
- * actually used are exactly what this scale already produces at
- * -3/-2/-1/0/1/2/3, just no longer blended for anything in between.
+ * so a few outliers don't wash out the range for everything else.
+ * `pctChangeToColor` snaps the input to the nearest whole percent first (see
+ * `bandFor` below), so only the 7 values at -3/-2/-1/0/1/2/3 are ever read.
  *
  * finviz's own map is always dark, so a near-black 0% center reads as "flat"
  * against its dark canvas. Once the site's own canvas started following the
@@ -25,6 +22,15 @@ export type ColorTheme = "light" | "dark";
  * tokens, so a big mover still reads as unmistakably red/green either way.
  */
 const COLOR_DOMAIN = [-3, -1, 0, 1, 3];
+
+/**
+ * finviz has no light-mode map (confirmed live: its own light/dark toggle
+ * only recolors the site chrome, not the heatmap or its legend), so the
+ * dark scales below are the only ones with a real finviz target to match —
+ * LIGHT_COLOR_RANGE/LIGHT_COLORBLIND_RANGE further down stay hand-tuned to
+ * this site's own light theme.
+ */
+const DARK_COLOR_DOMAIN = [-3, -2, -1, 0, 1, 2, 3];
 
 /** The 7 discrete bands the map actually renders — see `bandFor`. Also used
  * to draw the legend as discrete swatches instead of a gradient bar. */
@@ -41,12 +47,21 @@ export function bandFor(pctChange: number): number {
   return Math.max(-3, Math.min(3, Math.round(pctChange)));
 }
 
+/**
+ * Sampled directly from finviz.com/map on 2026-07-30 via
+ * `getComputedStyle(legendSwatch).backgroundColor` on each of its 7 legend
+ * swatches (-3% through +3%) — an exact read of the literal color finviz
+ * renders, not an eyedropper approximation or an interpolated guess at the
+ * -2%/+2% steps.
+ */
 const DARK_COLOR_RANGE = [
-  "#f6362f", // <= -3% (bright red)
-  "#7a1f27", // -1%
-  "#33363d", // 0% (flat, near-black/gray)
-  "#1a5c34", // +1%
-  "#30cc5a", // >= +3% (bright green)
+  "#f63538", // -3% (bright red)
+  "#bf4045", // -2%
+  "#8b444e", // -1%
+  "#414554", // 0% (flat, near-black/gray)
+  "#35764e", // +1%
+  "#2f9e4f", // +2%
+  "#30cc5a", // +3% (bright green)
 ];
 
 /**
@@ -64,32 +79,40 @@ const DARK_COLOR_RANGE = [
  *   the old pair's mint reading noticeably lighter and cooler than its salmon
  *   counterpart, which is what made the light map look washed out and
  *   unbalanced against the warm-paper canvas.
- * - The flat center is a step below --panel-canvas (#f7f4ee) rather than a
- *   near-match of it, so the large mass of tiles that sit within +/-0.5% on
- *   any given day still reads as tiles on a canvas rather than as holes in it.
+ * - The flat center is a step below --panel-canvas (#f7f4ee), darkened enough
+ *   to read as its own tile rather than negative space: #e8e2d1 (contrast
+ *   ~1.18 against canvas — confirmed live, tiles were nearly invisible once
+ *   TreemapChart.tsx stopped drawing a border between tiles) was replaced
+ *   with #d2c8ac (~1.52), roughly the midpoint between the old value and the
+ *   -1%/+1% washes' own ~1.9 — distinct enough that the large mass of tiles
+ *   sitting within +/-0.5% on any given day reads as tiles on a canvas, not
+ *   holes in it, while still sitting visibly quieter than an actual mover.
  */
 const LIGHT_COLOR_RANGE = [
   "#b8382c", // <= -3% (--down, light theme)
   "#e5a294", // -1% (warm red wash; dark ink at ~9:1)
-  "#e8e2d1", // 0% (flat, warm-paper neutral one step below --panel-canvas)
+  "#d2c8ac", // 0% (flat, warm-paper neutral, darkened for contrast against --panel-canvas)
   "#7cc296", // +1% (green wash, luminance-matched to the -1% red)
   "#16743f", // >= +3% (--up, light theme)
 ];
 
 /**
  * finviz's own "Colorblind Mode" checkbox swaps its red/green map for an
- * orange/blue diverging scale (confirmed by toggling it live) — orange/blue
- * is the standard red-green-colorblindness-safe substitute (deuteranopia/
- * protanopia both collapse red and green toward each other; blue and orange
- * stay distinguishable). Same domain/shape as the normal palettes, same flat
- * neutral centers, just the hue swapped at the two ends.
+ * orange/blue diverging scale (confirmed by toggling it live, `?colorscale=
+ * colorblind`) — orange/blue is the standard red-green-colorblindness-safe
+ * substitute (deuteranopia/protanopia both collapse red and green toward
+ * each other; blue and orange stay distinguishable). Same 7 finviz legend
+ * swatches sampled the same way as DARK_COLOR_RANGE above; the 0% center is
+ * the identical neutral finviz uses in both its normal and colorblind maps.
  */
 const DARK_COLORBLIND_RANGE = [
-  "#e0812a", // <= -3% (vivid orange)
-  "#7a4a20", // -1%
-  "#33363d", // 0% (flat, same neutral as DARK_COLOR_RANGE)
-  "#1c4a6b", // +1%
-  "#2f8fd6", // >= +3% (vivid blue)
+  "#f5820f", // -3% (vivid orange)
+  "#b66d27", // -2%
+  "#805a3c", // -1%
+  "#414554", // 0% (flat, same neutral as DARK_COLOR_RANGE)
+  "#3b5f8a", // +1%
+  "#3575b7", // +2%
+  "#2f8fed", // +3% (vivid blue)
 ];
 
 /** Same tuning pass as LIGHT_COLOR_RANGE above: the mid tints are
@@ -101,20 +124,20 @@ const DARK_COLORBLIND_RANGE = [
 const LIGHT_COLORBLIND_RANGE = [
   "#ad5c1c", // <= -3% (vivid orange)
   "#e5a877", // -1% (orange wash, dark ink stays legible)
-  "#e8e2d1", // 0% (flat, same neutral as LIGHT_COLOR_RANGE)
+  "#d2c8ac", // 0% (flat, same neutral as LIGHT_COLOR_RANGE)
   "#8cbcd8", // +1% (blue wash, luminance-matched to the -1% orange)
   "#1c6ea4", // >= +3% (vivid blue)
 ];
 
-function buildScale(range: string[]) {
-  return scaleLinear<string>().domain(COLOR_DOMAIN).range(range).interpolate(interpolateRgb).clamp(true);
+function buildScale(domain: number[], range: string[]) {
+  return scaleLinear<string>().domain(domain).range(range).interpolate(interpolateRgb).clamp(true);
 }
 
 const scales = {
-  dark: buildScale(DARK_COLOR_RANGE),
-  light: buildScale(LIGHT_COLOR_RANGE),
-  "dark-colorblind": buildScale(DARK_COLORBLIND_RANGE),
-  "light-colorblind": buildScale(LIGHT_COLORBLIND_RANGE),
+  dark: buildScale(DARK_COLOR_DOMAIN, DARK_COLOR_RANGE),
+  light: buildScale(COLOR_DOMAIN, LIGHT_COLOR_RANGE),
+  "dark-colorblind": buildScale(DARK_COLOR_DOMAIN, DARK_COLORBLIND_RANGE),
+  "light-colorblind": buildScale(COLOR_DOMAIN, LIGHT_COLORBLIND_RANGE),
 };
 
 /**

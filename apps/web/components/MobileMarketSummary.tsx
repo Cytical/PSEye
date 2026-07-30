@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { changeColor } from "./MarketSummaryBar";
+import { UpdatedAtStatus } from "./UpdatedAtStatus";
 import type { MarketSnapshot } from "@/lib/marketSnapshot";
 import type { LatestForeignFlow } from "@/lib/latestForeignFlow";
+import type { MarketStatus } from "@/lib/marketStatus";
 
 interface SummaryQuote {
   ticker: string;
@@ -18,6 +20,8 @@ interface MobileMarketSummaryProps {
   quotes: SummaryQuote[];
   /** `/daily/[date]` for the most recent recorded session. */
   recapHref: string;
+  /** Server's reading of market open/closed — see UpdatedAtStatus. */
+  status: MarketStatus;
 }
 
 function formatPeso(n: number): string {
@@ -25,14 +29,6 @@ function formatPeso(n: number): string {
   const sign = n < 0 ? "−" : "+";
   if (abs >= 1_000_000_000) return `${sign}₱${(abs / 1_000_000_000).toFixed(2)}B`;
   return `${sign}₱${(abs / 1_000_000).toFixed(0)}M`;
-}
-
-function formatUpdatedAt(capturedAt: string): string {
-  return new Date(capturedAt).toLocaleTimeString("en-PH", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "Asia/Manila",
-  });
 }
 
 /**
@@ -51,7 +47,7 @@ function formatUpdatedAt(capturedAt: string): string {
  * always today's readings, and the time-machine banner already offers that
  * day's own recap link.
  */
-export function MobileMarketSummary({ snapshot, foreignFlow, quotes, recapHref }: MobileMarketSummaryProps) {
+export function MobileMarketSummary({ snapshot, foreignFlow, quotes, recapHref, status }: MobileMarketSummaryProps) {
   const withChange = quotes.filter((q): q is SummaryQuote & { pctChange: number } => q.pctChange !== null);
   const advancers = withChange.filter((q) => q.pctChange > 0).length;
   const decliners = withChange.filter((q) => q.pctChange < 0).length;
@@ -80,9 +76,11 @@ export function MobileMarketSummary({ snapshot, foreignFlow, quotes, recapHref }
             {snapshot.pseiChange.toFixed(2)} ({snapshot.pseiPctChange >= 0 ? "+" : ""}
             {snapshot.pseiPctChange.toFixed(2)}%)
           </div>
-          <div className="text-[10px] tabular-nums text-panel-fg/65">
-            Updated {formatUpdatedAt(snapshot.capturedAt)} PHT
-          </div>
+          <UpdatedAtStatus
+            capturedAt={snapshot.capturedAt}
+            initialStatus={status}
+            className="block text-[10px] tabular-nums text-panel-fg/65"
+          />
         </div>
       </div>
 

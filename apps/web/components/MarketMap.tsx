@@ -346,7 +346,7 @@ export function MarketMap({
             The Philippine Stock Market, <span className="italic text-accent">Visualized.</span>
           </h1>
         </div>
-        <div className="flex shrink-0 items-center gap-2 pt-1">
+        <div className="flex shrink-0 items-center gap-2 pt-3">
           <FullscreenButton targetRef={mapAreaRef} />
           <ShareButton getShareUrl={getMarketMapShareUrl} />
         </div>
@@ -361,6 +361,7 @@ export function MarketMap({
           foreignFlow={foreignFlow}
           quotes={baseStocks}
           recapHref={`/daily/${latestRecapDate}`}
+          status={status}
         />
       )}
 
@@ -474,7 +475,7 @@ export function MarketMap({
               view rather than shown next to a different day's map. */}
           {!isPastView && (
             <div className="hidden border-t border-panel-border pt-2 sm:block">
-              <MarketSummaryBar snapshot={snapshot} foreignFlow={foreignFlow} />
+              <MarketSummaryBar snapshot={snapshot} foreignFlow={foreignFlow} status={status} />
             </div>
           )}
 

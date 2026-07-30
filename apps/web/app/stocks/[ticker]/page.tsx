@@ -510,15 +510,15 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {/* Dashboard row 1 — price action and where this stock sits among peers. */}
       <div className={`mt-3 ${DASH_ROW}`}>
-        {closes.length >= 2 && (
+        {yearCloses.length >= 2 && (
           <Panel
             title="Closing price"
-            meta={`last ${HISTORY_LOOKBACK_DAYS} days`}
+            meta="1M – 1Y · hover to inspect"
             className={SPAN_WIDE}
             bodyClassName="flex items-center p-2"
             flush
           >
-            <StockPriceChart closes={closes} />
+            <StockPriceChart closes={yearCloses} />
           </Panel>
         )}
 

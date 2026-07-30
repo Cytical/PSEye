@@ -1,9 +1,13 @@
 import type { MarketSnapshot } from "@/lib/marketSnapshot";
 import type { LatestForeignFlow } from "@/lib/latestForeignFlow";
+import type { MarketStatus } from "@/lib/marketStatus";
+import { UpdatedAtStatus } from "./UpdatedAtStatus";
 
 interface MarketSummaryBarProps {
   snapshot: MarketSnapshot;
   foreignFlow: LatestForeignFlow;
+  /** Server's reading of market open/closed — see UpdatedAtStatus. */
+  status: MarketStatus;
 }
 
 export function changeColor(n: number): string {
@@ -39,7 +43,7 @@ export function formatUpdatedAt(capturedAt: string): string {
 }
 
 /** Lives at the bottom of the market map's filter sidebar (see MarketMap.tsx), styled with the same panel-* vars so it matches whichever theme is active. */
-export function MarketSummaryBar({ snapshot, foreignFlow }: MarketSummaryBarProps) {
+export function MarketSummaryBar({ snapshot, foreignFlow, status }: MarketSummaryBarProps) {
   return (
     <div className="group relative cursor-default px-3 py-2">
       <div className="kicker text-panel-fg/72">PSEi</div>
@@ -51,9 +55,11 @@ export function MarketSummaryBar({ snapshot, foreignFlow }: MarketSummaryBarProp
         {snapshot.pseiChange.toFixed(2)} ({snapshot.pseiPctChange >= 0 ? "+" : ""}
         {snapshot.pseiPctChange.toFixed(2)}%)
       </div>
-      <div className="mt-0.5 text-[10px] tabular-nums text-panel-fg/65">
-        Updated {formatUpdatedAt(snapshot.capturedAt)} PHT
-      </div>
+      <UpdatedAtStatus
+        capturedAt={snapshot.capturedAt}
+        initialStatus={status}
+        className="mt-0.5 block text-[10px] tabular-nums text-panel-fg/65"
+      />
 
       <div className="pointer-events-none absolute bottom-full left-3 z-10 mb-2 w-max max-w-[220px] rounded-xl border border-panel-border bg-panel-raised px-3 py-2 opacity-0 shadow-xl shadow-black/20 transition-opacity duration-100 group-hover:opacity-100">
         <div className="kicker text-panel-fg/72">

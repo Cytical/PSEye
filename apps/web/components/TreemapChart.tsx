@@ -86,13 +86,26 @@ const BOX_GLIDE_TRANSITION = "left 200ms cubic-bezier(0.22, 1, 0.36, 1), top 200
 const TILE_TRANSITION = `${BOX_GLIDE_TRANSITION}, filter 100ms ease, box-shadow 100ms ease, transform 75ms ease-out, opacity 150ms ease`;
 
 const MIN_ZOOM = 1;
-const MAX_ZOOM = 4;
+/** Absolute floor for the zoom cap, regardless of layout — a board with no
+ * tiny boxes at all (e.g. a handful of watchlist stocks) shouldn't cap zoom
+ * below this just because the "smallest box" math has nothing small to find. */
+const MAX_ZOOM_FLOOR = 4;
+/**
+ * The on-screen size (px) the *smallest* box on the current board should
+ * reach at max zoom — comfortably past shouldShowLabel's MIN_LABEL_WIDTH/
+ * MIN_LABEL_HEIGHT thresholds (40/24) so zooming all the way in doesn't just
+ * enlarge a tiny box, it reveals its ticker too. A fixed MAX_ZOOM couldn't
+ * do this for every board: ~282 All-PSE stocks include boxes a couple px
+ * wide that need a much higher cap to become legible, while a small filter
+ * (PSEi's 30) never has boxes that tiny and doesn't need one.
+ */
+const TARGET_MIN_TILE_PX = 64;
 /** How much a wheel tick changes zoom — tuned so a normal scroll gesture feels
  * gradual rather than jumping several steps at once. */
 const ZOOM_WHEEL_SENSITIVITY = 0.0015;
 
-function clampZoom(z: number): number {
-  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
+function clampZoom(z: number, maxZoom: number): number {
+  return Math.min(maxZoom, Math.max(MIN_ZOOM, z));
 }
 /** Below this pointer movement (px), a mousedown+mouseup is treated as a click
  * on the stock tile underneath rather than a pan drag. */
@@ -238,6 +251,15 @@ export function TreemapChart({
   // boxes) on every hover — the component's most frequent re-render trigger —
   // was pure waste, since layout only actually depends on layoutInput/width/height.
   const layout = useMemo(() => computeTreemapLayout(layoutInput, width, height), [layoutInput, width, height]);
+  // See TARGET_MIN_TILE_PX above — the add-tile is excluded since its size
+  // tracks the average market cap on screen, not a real (possibly tiny) stock,
+  // and would otherwise understate how far zoom actually needs to go.
+  const maxZoom = useMemo(() => {
+    const realBoxes = layout.stocks.filter((box) => box.ticker !== ADD_TILE_TICKER);
+    if (realBoxes.length === 0) return MAX_ZOOM_FLOOR;
+    const smallestDim = Math.min(...realBoxes.map((box) => Math.min(box.x1 - box.x0, box.y1 - box.y0)));
+    return Math.max(MAX_ZOOM_FLOOR, TARGET_MIN_TILE_PX / smallestDim);
+  }, [layout]);
   // Sector headers link out to /sectors/[slug] — but that route only knows
   // real PSE sectors (see lib/sectorSlug.ts), and this same component also
   // renders the Nasdaq 100 mock map (NASDAQ_100_STOCKS, currency "USD"),
@@ -316,7 +338,7 @@ export function TreemapChart({
    * the canvas's center regardless of where the pointer is. */
   function zoomAtPoint(factor: number, cx: number, cy: number) {
     setView((prev) => {
-      const nextZoom = clampZoom(prev.zoom * factor);
+      const nextZoom = clampZoom(prev.zoom * factor, maxZoom);
       if (nextZoom === prev.zoom) return prev;
       const ratio = nextZoom / prev.zoom;
       const rawPan = {
@@ -363,8 +385,8 @@ export function TreemapChart({
     }
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- zoomAtPoint is a plain function redefined each render but only closes over stable setState/clampZoom/clampPan (which in turn close over width/height, already listed below).
-  }, [width, height]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- zoomAtPoint is a plain function redefined each render but only closes over stable setState/clampZoom/clampPan (which in turn close over width/height, already listed below) plus maxZoom, also listed.
+  }, [width, height, maxZoom]);
 
   function zoomBy(factor: number) {
     // No cursor position for a button click — zoom toward the canvas center.
@@ -592,6 +614,13 @@ export function TreemapChart({
           // on-screen size and dividing back out by zoom sizes the text to
           // the box the user actually sees, at any zoom level.
           const fontSize = tickerFontSize(w * zoom, h * zoom) / zoom;
+          // A flat 2px ring drawn in the same local coordinate space as w/h
+          // (the whole layer, ring included, is what gets CSS-scaled by zoom)
+          // used to be thicker than the box itself for the smallest slivers —
+          // at min(w,h) under 8px the ring alone would cover more of the tile
+          // than its own fill color. Scaling it down below that size keeps the
+          // hover ring readable as a highlight instead of a solid block.
+          const hoverRingWidth = Math.min(2, Math.min(w, h) / 4);
 
           return (
             <button
@@ -618,10 +647,9 @@ export function TreemapChart({
                 height: h,
                 backgroundColor: fill,
                 color: ink,
-                border: `1px solid ${GRID_LINE}`,
                 opacity: isDimmedByBand ? 0.32 : 1,
                 boxShadow: isHovered
-                  ? `inset 0 0 0 2px ${colorTheme === "light" ? "rgba(11,11,11,0.55)" : "rgba(255,255,255,0.85)"}`
+                  ? `inset 0 0 0 ${hoverRingWidth}px ${colorTheme === "light" ? "rgba(11,11,11,0.55)" : "rgba(255,255,255,0.85)"}`
                   : undefined,
                 transition: TILE_TRANSITION,
               }}
@@ -768,7 +796,7 @@ export function TreemapChart({
         {/* Zoom controls — moved here from an absolute overlay inside the
             canvas so they no longer float on top of tiles near the bottom-right
             corner of the map. */}
-        <div className="flex shrink-0 items-center overflow-hidden rounded-lg ring-1 ring-panel-border shadow-sm shadow-black/10">
+        <div className="mb-2 flex shrink-0 items-center overflow-hidden rounded-lg ring-1 ring-panel-border shadow-sm shadow-black/10">
           <button
             type="button"
             onClick={() => zoomBy(1 / 1.4)}
@@ -781,7 +809,7 @@ export function TreemapChart({
           <button
             type="button"
             onClick={() => zoomBy(1.4)}
-            disabled={zoom >= MAX_ZOOM}
+            disabled={zoom >= maxZoom}
             aria-label="Zoom in"
             className="flex h-7 w-7 items-center justify-center border-l border-panel-border bg-panel text-sm font-semibold text-panel-fg/70 transition-colors hover:bg-panel-raised hover:text-panel-fg disabled:opacity-40"
           >

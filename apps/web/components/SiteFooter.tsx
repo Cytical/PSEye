@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
-import { formatUpdatedAt } from "./MarketSummaryBar";
+import { UpdatedAtStatus } from "./UpdatedAtStatus";
 import { getMarketSnapshot } from "@/lib/marketSnapshot";
+import { getMarketStatus } from "@/lib/marketStatus";
 
 const FOOTER_LINKS = [
   { href: "/stocks", label: "All Stocks" },
@@ -23,6 +24,12 @@ const FOOTER_LINKS = [
  */
 export async function SiteFooter() {
   const snapshot = await getMarketSnapshot();
+  // Server's reading, same as app/page.tsx's — just the seed for
+  // UpdatedAtStatus's client-side state, since this layout is itself
+  // ISR-cached (see root layout's `revalidate = 3600`) and would otherwise
+  // freeze whichever open/closed reading happened to be true when the page
+  // was last rebuilt.
+  const status = getMarketStatus();
 
   return (
     <footer className="border-t border-foreground/10 bg-panel-raised/40">
@@ -46,9 +53,11 @@ export async function SiteFooter() {
             is this" reads them together instead of hunting for a clock
             somewhere else on the page. */}
         <div className="sm:max-w-md sm:text-right">
-          <p className="text-[11px] tabular-nums text-foreground/55">
-            Last updated {formatUpdatedAt(snapshot.capturedAt)} PHT
-          </p>
+          <UpdatedAtStatus
+            capturedAt={snapshot.capturedAt}
+            initialStatus={status}
+            className="block text-[11px] tabular-nums text-foreground/55"
+          />
           <p className="mt-1">
             PSEye is a free, community-first project, not a brokerage. Data is delayed/EOD, not
             real-time, and nothing here is financial advice, a stock pick, or a buy/sell signal.
