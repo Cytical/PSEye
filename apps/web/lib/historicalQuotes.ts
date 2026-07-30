@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createDb, getHistoricalQuotes as getHistoricalQuotesQuery } from "@pseye/db";
 import { MockHistoricalQuoteSource, type HistoricalClose, type Quote } from "@pseye/source-quotes";
 
@@ -7,6 +8,38 @@ export interface HistoricalQuotesResult {
   source: "real" | "mock";
   history: Record<string, HistoricalClose[]>;
 }
+
+/**
+ * Raw DB read, cached: /stocks/[ticker] alone calls this once per company
+ * (282 generateStaticParams pages, a year-deep window each) and
+ * marketStats/marketAnalytics/marketUniverse each call it again for their
+ * own large-cap subset — every one of those was, uncached, a fresh Neon
+ * round-trip on every build/revalidate, and a year of OHLC per ticker is
+ * heavier than any of the whole-table reads unstable_cache already covers in
+ * quotes.ts/companyProfiles.ts. Same 3600s window (matches the hourly quotes
+ * ETL) so repeat builds within that window hit Next's Data Cache — which
+ * persists across Vercel deployments — instead of Neon.
+ */
+const fetchHistoricalQuotesRows = unstable_cache(
+  async (tickers: string[], fromDate: string): Promise<Record<string, HistoricalClose[]> | null> => {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) return null;
+    try {
+      const db = createDb(databaseUrl);
+      const rows = await getHistoricalQuotesQuery(db, tickers, fromDate);
+      const byTicker: Record<string, HistoricalClose[]> = {};
+      for (const r of rows) {
+        (byTicker[r.ticker] ??= []).push({ date: r.tradeDate, close: Number(r.close) });
+      }
+      return byTicker;
+    } catch (err) {
+      console.error("fetchHistoricalQuotesRows: DB read failed, falling back to mock data", err);
+      return null;
+    }
+  },
+  ["historical-quotes"],
+  { revalidate: 3600, tags: ["historical-quotes"] }
+);
 
 /**
  * DB-backed when DATABASE_URL is configured and the daily ETL job
@@ -36,16 +69,9 @@ export async function getHistoricalQuotes(
 ): Promise<HistoricalQuotesResult> {
   const databaseUrl = process.env.DATABASE_URL;
   if (databaseUrl) {
-    try {
-      const db = createDb(databaseUrl);
-      const rows = await getHistoricalQuotesQuery(db, tickers, fromDate);
-      const byTicker: Record<string, HistoricalClose[]> = {};
-      for (const r of rows) {
-        (byTicker[r.ticker] ??= []).push({ date: r.tradeDate, close: Number(r.close) });
-      }
-      if (tickers.every((t) => byTicker[t]?.length)) return { source: "real", history: byTicker };
-    } catch (err) {
-      console.error("getHistoricalQuotes: DB read failed, falling back to mock data", err);
+    const byTicker = await fetchHistoricalQuotesRows(tickers, fromDate);
+    if (byTicker && tickers.every((t) => byTicker[t]?.length)) {
+      return { source: "real", history: byTicker };
     }
   }
 
@@ -74,18 +100,9 @@ export async function getHistoricalQuotesLenient(
 ): Promise<HistoricalQuotesResult> {
   const databaseUrl = process.env.DATABASE_URL;
   if (databaseUrl) {
-    try {
-      const db = createDb(databaseUrl);
-      const rows = await getHistoricalQuotesQuery(db, tickers, fromDate);
-      if (rows.length > 0) {
-        const byTicker: Record<string, HistoricalClose[]> = {};
-        for (const r of rows) {
-          (byTicker[r.ticker] ??= []).push({ date: r.tradeDate, close: Number(r.close) });
-        }
-        return { source: "real", history: byTicker };
-      }
-    } catch (err) {
-      console.error("getHistoricalQuotesLenient: DB read failed", err);
+    const byTicker = await fetchHistoricalQuotesRows(tickers, fromDate);
+    if (byTicker && Object.keys(byTicker).length > 0) {
+      return { source: "real", history: byTicker };
     }
   }
   return { source: "mock", history: {} };

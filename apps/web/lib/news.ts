@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createDb, getRecentNews as getRecentNewsQuery, getNewsOutletLogos } from "@pseye/db";
 import {
   RELIABLE_NEWS_SOURCES,
@@ -122,30 +123,47 @@ function fetchLiveProgressive(): NewsPageData {
   return { top, rest, mood };
 }
 
+/** Same shape as NewsItem, but publishedAt as an ISO string — unstable_cache
+ * round-trips its return value through JSON, so a raw Date would come back
+ * as a string on a cache hit anyway while still claiming the `Date` type;
+ * storing it as a string explicitly (like Disclosure.filedAt in
+ * disclosures.ts) avoids a silent `.getTime()`-is-not-a-function break. */
+type CachedNewsRow = Omit<NewsItem, "publishedAt"> & { publishedAt: string };
+
 /**
  * DB-backed when DATABASE_URL is configured and the hourly ETL job
  * (etl/jobs/fetch-news.ts) has populated it, otherwise null (triggering the
  * live-fetch fallback) — same contract as getDailyQuotes. Returning null
  * rather than [] on empty/error distinguishes "nothing to show" from
  * "couldn't read the table", both of which should fall back the same way.
+ *
+ * Wrapped in unstable_cache: getNewsForTicker below calls fetchRankedFromDb
+ * once per ticker (282 generateStaticParams pages) for what's always the
+ * same DB_FETCH_LIMIT-row read — same whole-table-fanned-out-across-282-
+ * pages shape as quotes.ts/companyProfiles.ts, just reached through a
+ * different caller. 3600s window matches the hourly news ETL cadence.
+ * Ranking is deliberately done outside the cache (in fetchRankedFromDb
+ * below), not in here — rankByRelevance's MAX_AGE_MS cutoff reads
+ * Date.now(), which should stay live on every call rather than freeze at
+ * whatever moment the cache entry was written.
  */
-async function fetchRankedFromDb(databaseUrl: string): Promise<NewsItem[] | null> {
-  try {
-    const db = createDb(databaseUrl);
-    const [rows, outletLogos] = await Promise.all([
-      getRecentNewsQuery(db, DB_FETCH_LIMIT),
-      getNewsOutletLogos(db),
-    ]);
-    if (rows.length === 0) return null;
+const fetchCachedNewsRows = unstable_cache(
+  async (databaseUrl: string): Promise<CachedNewsRow[] | null> => {
+    try {
+      const db = createDb(databaseUrl);
+      const [rows, outletLogos] = await Promise.all([
+        getRecentNewsQuery(db, DB_FETCH_LIMIT),
+        getNewsOutletLogos(db),
+      ]);
+      if (rows.length === 0) return null;
 
-    return rankByRelevance(
-      rows.map((r) => ({
+      return rows.map((r) => ({
         source: r.source,
         title: r.title,
         snippet: r.snippet,
         imageUrl: r.imageUrl,
         url: r.url,
-        publishedAt: r.publishedAt,
+        publishedAt: r.publishedAt.toISOString(),
         tickers: r.tickers,
         // fetch-news.ts's third-choice image fallback stores the outlet's
         // own cached logo straight into imageUrl (see news_outlet_logos'
@@ -154,12 +172,20 @@ async function fetchRankedFromDb(databaseUrl: string): Promise<NewsItem[] | null
         // render it with object-contain instead of a cropping object-cover.
         imageIsLogo: r.imageUrl != null && outletLogos.get(r.source) === r.imageUrl,
         sentiment: isNewsSentiment(r.sentiment) ? r.sentiment : null,
-      }))
-    );
-  } catch (err) {
-    console.error("getNewsPageData: DB read failed, falling back to live RSS fetch", err);
-    return null;
-  }
+      }));
+    } catch (err) {
+      console.error("fetchCachedNewsRows: DB read failed, falling back to live RSS fetch", err);
+      return null;
+    }
+  },
+  ["news-rows"],
+  { revalidate: 3600, tags: ["news"] }
+);
+
+async function fetchRankedFromDb(databaseUrl: string): Promise<NewsItem[] | null> {
+  const rows = await fetchCachedNewsRows(databaseUrl);
+  if (!rows) return null;
+  return rankByRelevance(rows.map((r) => ({ ...r, publishedAt: new Date(r.publishedAt) })));
 }
 
 /**

@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import {
   createDb,
   getBlockSalesByDate,
@@ -158,8 +159,21 @@ const NEWS_COUNT = 6;
  * (callers 404). No mock fallback, deliberately: a recap page frames itself as
  * "what actually happened on this date", the same honesty bar as
  * StockPriceChart only rendering real closes.
+ *
+ * Wrapped in unstable_cache: /daily/[date] prerenders 60 dates via
+ * generateStaticParams, each running 8 parallel whole-day queries — every
+ * build reissued all of them against Neon even though a past date's recap
+ * never changes (only the most recent 1-2 dates can still gain late
+ * disclosures/news). Same 3600s window as the page's own `revalidate` so a
+ * rebuild within that hour of a previous one reuses Next's Data Cache
+ * instead.
  */
-export async function getDailyRecap(date: string): Promise<DailyRecap | null> {
+export const getDailyRecap = unstable_cache(fetchDailyRecap, ["daily-recap"], {
+  revalidate: 3600,
+  tags: ["daily-recap"],
+});
+
+async function fetchDailyRecap(date: string): Promise<DailyRecap | null> {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) return null;
 
