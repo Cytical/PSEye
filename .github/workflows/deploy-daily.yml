@@ -1,0 +1,41 @@
+name: Daily Deploy
+
+# apps/web/vercel.json disables Vercel's default deploy-on-every-push (which
+# previously meant every commit re-ran `next build`, and every static page
+# it prerenders — 282 /stocks/[ticker] pages, 60 /daily/[date] pages — hits
+# Neon for real data; see lib/{historicalQuotes,news,dailyRecap}.ts's
+# unstable_cache comments). This workflow replaces that with one deploy/day,
+# only when master actually moved, via the "daily-cron" Deploy Hook
+# (Vercel project settings -> Git -> Deploy Hooks) instead.
+#
+# 09:00 UTC (~5pm PHT) is chosen to land after the day's ETL jobs —
+# market-data-hourly.yml's last run (08:16 UTC) and fetch-daily.yml/
+# post-daily-tweet.yml (~08:20-08:35 UTC) — so the one daily build picks up
+# the finalized close. Like every other once-a-day cron in this repo (see
+# fetch-daily.yml/post-daily-tweet.yml's own doc comments), GitHub has been
+# observed to run scheduled workflows 1h40m-2h15m late elsewhere in this
+# project; this cron hasn't run long enough yet to know if it's affected the
+# same way — if it is, shift it earlier to compensate, same as those did.
+on:
+  schedule:
+    - cron: "0 9 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for commits in the last 24h
+        id: check
+        run: |
+          if [ -n "$(git log --since='24 hours ago' --oneline)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger Vercel deploy
+        if: steps.check.outputs.changed == 'true'
+        run: curl -fsS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
