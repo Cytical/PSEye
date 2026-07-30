@@ -346,7 +346,7 @@ export function MarketMap({
             The Philippine Stock Market, <span className="italic text-accent">Visualized.</span>
           </h1>
         </div>
-        <div className="flex shrink-0 items-center gap-2 pt-3">
+        <div className="flex shrink-0 items-center gap-2 pt-5">
           <FullscreenButton targetRef={mapAreaRef} />
           <ShareButton getShareUrl={getMarketMapShareUrl} />
         </div>

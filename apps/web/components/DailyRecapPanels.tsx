@@ -293,13 +293,13 @@ export function SectorMoversList({ sectors }: { sectors: DailyRecap["sectorMoves
               <div className="absolute inset-y-0 left-1/2 w-px bg-panel-border" />
               {isUp ? (
                 <div
-                  className="absolute inset-y-0 rounded-l-full"
-                  style={{ right: "50%", width: `${halfWidthPct}%`, background: UP }}
+                  className="absolute inset-y-0 rounded-r-full"
+                  style={{ left: "50%", width: `${halfWidthPct}%`, background: UP }}
                 />
               ) : (
                 <div
-                  className="absolute inset-y-0 rounded-r-full"
-                  style={{ left: "50%", width: `${halfWidthPct}%`, background: DOWN }}
+                  className="absolute inset-y-0 rounded-l-full"
+                  style={{ right: "50%", width: `${halfWidthPct}%`, background: DOWN }}
                 />
               )}
             </div>

@@ -621,6 +621,19 @@ export function TreemapChart({
           // than its own fill color. Scaling it down below that size keeps the
           // hover ring readable as a highlight instead of a solid block.
           const hoverRingWidth = Math.min(2, Math.min(w, h) / 4);
+          // Tiles butt up against each other with only d3's 1px paddingInner
+          // gap between them (computeTreemapLayout.ts), which round(true)
+          // rounds top-down per split — a sector's row (horizontal) splits
+          // are usually much shorter than its column (vertical) splits, so
+          // that 1px gap is far more likely to round away to 0 on a
+          // horizontal seam than a vertical one. The result: vertical
+          // borders between side-by-side tiles read as a solid line while
+          // horizontal borders between stacked tiles vanish, most visibly on
+          // gray/neutral tiles with no fill-color contrast to fall back on.
+          // Drawing an explicit inset border here (independent of that
+          // geometric gap) makes both directions equally visible regardless
+          // of how the layout rounded.
+          const borderWidth = Math.min(1, Math.min(w, h) / 6);
 
           return (
             <button
@@ -650,7 +663,7 @@ export function TreemapChart({
                 opacity: isDimmedByBand ? 0.32 : 1,
                 boxShadow: isHovered
                   ? `inset 0 0 0 ${hoverRingWidth}px ${colorTheme === "light" ? "rgba(11,11,11,0.55)" : "rgba(255,255,255,0.85)"}`
-                  : undefined,
+                  : `inset 0 0 0 ${borderWidth}px ${GRID_LINE}`,
                 transition: TILE_TRANSITION,
               }}
               onMouseEnter={() => stock && setHovered(stock)}
@@ -796,7 +809,7 @@ export function TreemapChart({
         {/* Zoom controls — moved here from an absolute overlay inside the
             canvas so they no longer float on top of tiles near the bottom-right
             corner of the map. */}
-        <div className="mb-2 flex shrink-0 items-center overflow-hidden rounded-lg ring-1 ring-panel-border shadow-sm shadow-black/10">
+        <div className="mb-4 flex shrink-0 items-center overflow-hidden rounded-lg ring-1 ring-panel-border shadow-sm shadow-black/10">
           <button
             type="button"
             onClick={() => zoomBy(1 / 1.4)}
