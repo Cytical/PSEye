@@ -1,6 +1,6 @@
 <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PSEye">
   <rect width="48" height="48" rx="10" fill="#0d0f14" />
-  <path d="M8,24 Q24,8 40,24 Q24,40 8,24 Z" fill="#ffffff" />
-  <circle cx="24" cy="24" r="7.5" fill="#30cc5a" />
-  <polygon points="24,19.4 28.6,24 24,28.6 19.4,24" fill="#0d0f14" />
+  <path d="M8.74,21.74 Q24,13 39.26,21.74 A3.2,3.2 0 0,1 39.26,26.26 Q24,35 8.74,26.26 A3.2,3.2 0 0,1 8.74,21.74 Z" fill="#ffffff" />
+  <circle cx="24" cy="24" r="7" fill="#30cc5a" />
+  <polygon points="24,20 27.5,26.5 20.5,26.5" fill="#e8b923" />
 </svg>
