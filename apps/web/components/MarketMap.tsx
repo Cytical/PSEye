@@ -415,6 +415,7 @@ export function MarketMap({
               <span className="kicker text-panel-fg/68">Time machine</span>
               <CalendarDatePicker
                 className="mt-1.5"
+                align="right"
                 value={viewDate}
                 availableDates={availableDates}
                 onSelect={(iso) => selectDateInUrl(iso)}

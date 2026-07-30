@@ -28,6 +28,7 @@ export function CalendarDatePicker({
   clearLabel = "Today",
   triggerLabel,
   className = "",
+  align = "left",
 }: {
   /** Selected date, ISO yyyy-mm-dd, or null if nothing/"today" is selected. */
   value: string | null;
@@ -40,6 +41,15 @@ export function CalendarDatePicker({
   /** Text shown on the trigger button, e.g. "Jul 24, 2026" or "Today". */
   triggerLabel: string;
   className?: string;
+  /**
+   * Which edge of the trigger the popover hangs from. Default "left" grows
+   * the 260px popover rightward from the trigger's left edge — fine for a
+   * full-width nav, but inside Market Map's narrow (192px) sidebar it
+   * overflowed past the sidebar into the treemap next to it. "right" anchors
+   * the popover's right edge to the trigger instead, so it grows leftward
+   * and stays clear of the map.
+   */
+  align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -140,7 +150,7 @@ export function CalendarDatePicker({
         <div
           role="dialog"
           aria-label="Choose a date"
-          className="absolute left-0 top-full z-30 mt-2 w-[260px] rounded-xl bg-panel p-3 shadow-lg shadow-black/10 ring-1 ring-panel-border"
+          className={`absolute top-full z-30 mt-2 w-[260px] rounded-xl bg-panel p-3 shadow-lg shadow-black/10 ring-1 ring-panel-border ${align === "right" ? "right-0" : "left-0"}`}
         >
           <div className="flex items-center justify-between">
             <button

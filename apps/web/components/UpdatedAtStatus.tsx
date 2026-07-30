@@ -13,14 +13,14 @@ interface UpdatedAtStatusProps {
 }
 
 /**
- * Pairs the last real fetch timestamp with live market open/closed context,
- * instead of just a bare "Updated 4:16 PM PHT" that sits unchanged all
- * evening and looks stale to a visitor who doesn't know PSE's hours. The
- * timestamp itself is never faked forward to the current clock — that would
- * hide a genuinely broken ETL job behind a reassuring "just updated" label —
- * so the fix is framing, not a synthetic clock: "Market closed · last close
- * 4:16 PM PHT" explains *why* the time isn't moving instead of pretending it
- * is.
+ * Pairs the last real fetch timestamp with live market open/closed context.
+ * The timestamp itself is never faked forward to the current clock — that
+ * would hide a genuinely broken ETL job behind a reassuring "just updated"
+ * label. While the market is open, showing it ("Last updated at 2:47 PM
+ * PHT") conveys real freshness. Once closed, `capturedAt` is always the
+ * day's final close snapshot — it's the same value "last updated" would
+ * show, so pairing "Market closed" with a redundant timestamp added nothing;
+ * just "Market closed" says everything the closed state needs to.
  *
  * Client-side and re-synced on an interval for the same reason
  * MarketStatusBadge is: every page this renders on is ISR-cached for up to an
@@ -37,9 +37,11 @@ export function UpdatedAtStatus({ capturedAt, initialStatus, className }: Update
     return () => window.clearInterval(id);
   }, []);
 
+  if (!status.open) {
+    return <span className={className}>Market closed</span>;
+  }
+
   const time = formatUpdatedAt(capturedAt);
 
-  return (
-    <span className={className}>{status.open ? `Updated ${time} PHT` : `Market closed · last close ${time} PHT`}</span>
-  );
+  return <span className={className}>{`Last updated at ${time} PHT`}</span>;
 }

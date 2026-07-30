@@ -16,9 +16,20 @@ name: Post daily tweet (market map + recap)
 # same way. If it is, compensate the same way fetch-daily.yml did: move the
 # cron earlier by roughly the observed delay so the *actual* run lands near
 # the intended ~4:35pm PHT time.
+#
+# 2026-07-30: schedule trigger commented out — the X Developer Portal
+# project's Pay-Per-Use credits are depleted (confirmed live: client.v2.tweet()
+# throws ApiResponseError code 402, type: credits-depleted), and there's no
+# plan to add a payment method right now (posting with a link costs $0.20/
+# request on this tier — a full day's post+reply, both linking to pseye.site,
+# would run ~$9-13/month). Posting happens manually instead via the
+# `post-to-x` skill (.claude/skills/post-to-x/SKILL.md), which drives a
+# browser to post directly, no API/billing involved. This job, its code, and
+# its secrets are left intact — re-enable the schedule below if billing is
+# ever resolved. workflow_dispatch still works for a one-off manual run.
 on:
-  schedule:
-    - cron: "35 8 * * 1-5"
+  # schedule:
+  #   - cron: "35 8 * * 1-5"
   workflow_dispatch: {}
 
 jobs:
