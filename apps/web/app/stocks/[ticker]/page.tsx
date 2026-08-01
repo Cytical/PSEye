@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
+import { PSE_EDGE_COMPANIES, PSEI_TICKERS } from "@pseye/source-quotes";
 import { DISCLOSURE_TYPE_LABELS, DISCLOSURE_TYPE_ACCENT } from "@pseye/source-disclosures";
 import { CORPORATE_ACTION_LABELS, CORPORATE_ACTION_TYPE_ACCENT } from "@pseye/source-corporate-actions";
 import { getDailyQuotes } from "@/lib/quotes";
@@ -64,8 +64,18 @@ function findCompany(tickerParam: string) {
   return PSE_EDGE_COMPANIES.find((c) => c.ticker === upper);
 }
 
+/**
+ * Only the PSEi30 constituents are prerendered at build time. Every deploy
+ * writes every path returned here into the ISR cache (that's what pushed
+ * Vercel's "ISR Writes" metric to 75% of the free-tier quota with all 282
+ * companies here — full roster × several deploys/day added up fast). The
+ * other ~250 tickers still work identically: `dynamicParams` defaults to
+ * true, so an unlisted ticker renders on its first real visit and is cached
+ * from then on, same as any other ISR page — just written once, on demand,
+ * instead of on every deploy regardless of whether anyone looks.
+ */
 export function generateStaticParams() {
-  return PSE_EDGE_COMPANIES.map((c) => ({ ticker: c.ticker }));
+  return PSEI_TICKERS.map((ticker) => ({ ticker }));
 }
 
 export async function generateMetadata({

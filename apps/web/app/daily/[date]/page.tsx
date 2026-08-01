@@ -13,7 +13,14 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
  * overwhelmingly common "today" and "yesterday" — paid a cold DB round trip
  * before anything rendered. These are the only dates with meaningful traffic
  * (the homepage's mobile summary and the daily X post both link to the latest
- * one), and each is a handful of small reads, so 60 of them is cheap.
+ * one).
+ *
+ * 2026-08-01: trimmed from 60 to 14. Every path returned here gets rewritten
+ * into the ISR cache on every single deploy regardless of traffic, and this
+ * project deploys many times a day (direct pushes to master) — 60 stale-dated
+ * pages nobody revisits was a real contributor to Vercel's ISR Writes climbing
+ * to 75% of the free-tier quota (see /stocks/[ticker]'s PSEi30 trim, same
+ * cause). Two weeks covers everything actually linked to.
  *
  * Deliberately NOT the full `getRecentRecapDates(400)` the date picker offers:
  * this route stays dynamic-capable, so an older date is still served on demand
@@ -21,7 +28,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
  * rolling window rather than a fixed roster.
  */
 export async function generateStaticParams() {
-  const dates = await getRecentRecapDates(60);
+  const dates = await getRecentRecapDates(14);
   return dates.map((date) => ({ date }));
 }
 
