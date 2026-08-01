@@ -4,7 +4,7 @@ import { getRankings } from "@/lib/rankings";
 import { SectorSwitcher } from "@/components/SectorSwitcher";
 import { sectorToSlug, VISIBLE_SECTORS } from "@/lib/sectorSlug";
 
-export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as /rankings
+export const revalidate = 21600; // 6h safety-net ceiling; real refresh is on-demand via revalidateTag/revalidatePath from the ETL jobs (see app/api/revalidate/route.ts) — the wall-clock value only kicks in if that call ever fails.
 
 export const metadata: Metadata = {
   title: "PSE Sectors: Browse Philippine Stocks by Industry",

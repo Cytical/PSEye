@@ -2,10 +2,13 @@ import "../lib/loadEnv";
 import { sql } from "drizzle-orm";
 import { createDb, disclosures } from "@pseye/db";
 import { PseEdgeDisclosureSource } from "@pseye/source-disclosures";
+import { triggerRevalidate } from "../lib/triggerRevalidate";
 
 /**
- * Runs hourly (see .github/workflows/disclosures-hourly.yml), matching the
- * cadence of the news ETL job.
+ * Runs daily as a step in .github/workflows/fetch-daily.yml — the
+ * disclosures-hourly.yml this comment used to reference doesn't exist
+ * anymore (folded into fetch-daily.yml in the 2026-07 consolidation, same as
+ * news — see fetch-news.ts's own doc comment for that history).
  */
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -54,6 +57,7 @@ async function main() {
     });
 
   console.log(`Upserted up to ${items.length} disclosures.`);
+  await triggerRevalidate(["disclosures"], ["/disclosures"]);
 }
 
 main().catch((err) => {

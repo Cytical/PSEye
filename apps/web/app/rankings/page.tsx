@@ -4,7 +4,7 @@ import { getRankings } from "@/lib/rankings";
 import { RankingsTable } from "@/components/RankingsTable";
 import { VISIBLE_SECTORS } from "@/lib/sectorSlug";
 
-export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as the screener/market map
+export const revalidate = 21600; // 6h safety-net ceiling; real refresh is on-demand via revalidateTag/revalidatePath from the ETL jobs (see app/api/revalidate/route.ts) — the wall-clock value only kicks in if that call ever fails.
 
 export const metadata: Metadata = {
   title: "Top 100 PSE Stocks by Market Cap: Company Rankings",

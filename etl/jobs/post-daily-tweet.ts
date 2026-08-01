@@ -12,6 +12,7 @@ import {
   getStockForeignFlowByDate,
 } from "@pseye/db";
 import { buildMapAltText, buildMapTweetText, buildRecapReplyText } from "../lib/tweetCopy";
+import { triggerRevalidate } from "../lib/triggerRevalidate";
 
 const CAPTURE_SELECTOR = "#market-map-capture";
 
@@ -102,7 +103,7 @@ async function main() {
       }
     : null;
 
-  await triggerRevalidate(siteUrl, process.env.REVALIDATE_SECRET, today);
+  await triggerRevalidate(["daily-quotes", "company-profiles"], ["/", `/daily/${today}`]);
 
   const dateLabel = formatDateLabel(today);
   const mapText = buildMapTweetText({ dateLabel, siteUrl, snapshot, breadth });
@@ -158,29 +159,6 @@ function formatDateLabel(iso: string): string {
     year: "numeric",
     timeZone: "UTC",
   });
-}
-
-/**
- * Forces a fresh render before screenshotting — app/page.tsx is
- * `revalidate = 3600`, so without this the screenshot could capture whatever
- * the cache last happened to regenerate, not necessarily today's finalized
- * close. Best-effort: a failure here shouldn't block the post, just risk a
- * slightly stale screenshot.
- */
-async function triggerRevalidate(siteUrl: string, secret: string | undefined, date: string): Promise<void> {
-  if (!secret) {
-    console.warn("post-daily-tweet: REVALIDATE_SECRET not set — skipping cache revalidation before screenshot.");
-    return;
-  }
-  try {
-    const url = `${siteUrl}/api/revalidate?secret=${encodeURIComponent(secret)}&date=${date}`;
-    const res = await fetch(url);
-    if (!res.ok) {
-      console.warn(`post-daily-tweet: revalidate call returned HTTP ${res.status}`);
-    }
-  } catch (err) {
-    console.warn("post-daily-tweet: revalidate call failed", err);
-  }
 }
 
 /** Screenshots the live market map's #market-map-capture element (see app/page.tsx) at 2x scale for a crisp X image. */

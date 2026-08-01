@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getStockClusters, type StockCluster } from "@/lib/stockClusters";
 import { ClusterScatter, CLUSTER_COLORS, type ScatterPoint } from "@/components/ClusterScatter";
 
-export const revalidate = 3600;
+export const revalidate = 21600; // 6h safety-net ceiling; real refresh is on-demand via revalidateTag/revalidatePath from the ETL jobs (see app/api/revalidate/route.ts) — the wall-clock value only kicks in if that call ever fails.
 
 export const metadata: Metadata = {
   title: "PSE Stock Clusters: Grouped by Return Behavior (k-means)",

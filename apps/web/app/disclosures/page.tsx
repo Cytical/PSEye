@@ -3,7 +3,7 @@ import Link from "next/link";
 import { DISCLOSURE_TYPE_LABELS, DISCLOSURE_TYPE_ACCENT, type Disclosure } from "@pseye/source-disclosures";
 import { getDisclosures } from "@/lib/disclosures";
 
-export const revalidate = 3600;
+export const revalidate = 21600; // 6h safety-net ceiling; real refresh is on-demand via revalidateTag/revalidatePath from the ETL jobs (see app/api/revalidate/route.ts) — the wall-clock value only kicks in if that call ever fails.
 
 export const metadata: Metadata = {
   title: "PSE Disclosures: Filings Digest",

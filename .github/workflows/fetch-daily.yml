@@ -56,26 +56,39 @@ jobs:
       # each step gets an id and the "Fail job if any step failed" step below
       # re-surfaces it. Without that, GitHub's built-in failed-workflow email
       # (Settings > Notifications > Actions) would never fire.
+      # SITE_URL/REVALIDATE_SECRET (2026-08-01): these four steps now call
+      # apps/web/app/api/revalidate/route.ts on success (see
+      # etl/lib/triggerRevalidate.ts) so their pages refresh right when new
+      # data lands instead of waiting on a wall-clock ISR window — not added
+      # to foreignFlow below, which has no page-level cache tag to target.
       - id: news
         run: pnpm --filter @pseye/etl fetch-news
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
       - id: disclosures
         run: pnpm --filter @pseye/etl fetch-disclosures
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
       - id: corporateActions
         run: pnpm --filter @pseye/etl fetch-corporate-actions
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
       - id: historicalQuotes
         run: pnpm --filter @pseye/etl fetch-historical-quotes
         continue-on-error: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
       - id: foreignFlow
         run: pnpm --filter @pseye/etl fetch-foreign-flow
         continue-on-error: true

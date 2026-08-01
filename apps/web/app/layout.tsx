@@ -9,10 +9,24 @@ import { DevToolsLink } from "@/components/DevToolsLink";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
-// 1h; MarketTicker reads live quotes on every route via this layout, so this
-// sets the floor for the whole site — matches quotes' hourly ETL cadence
-// (market-data-hourly.yml), same reasoning as every page's own `revalidate = 3600`.
-export const revalidate = 3600;
+// MarketTicker reads live quotes on every route via this layout, and this
+// Next version takes the LOWEST `revalidate` across a route's whole
+// layout+page tree (confirmed against node_modules/next/dist/docs/01-app/
+// 02-guides/caching-without-cache-components.md) — so whatever this is set
+// to becomes the floor under every single page on the site, no matter what
+// each page declares. It was 3600 (1h) to match quotes' hourly ETL cadence.
+//
+// 2026-08-01: raised to 21600 (6h). The real freshness signal is now
+// on-demand: fetch-quotes.ts calls app/api/revalidate/route.ts right after
+// each successful run, which revalidateTag("daily-quotes")s the data this
+// component reads — since every route shares this layout, that one call
+// invalidates every route's rendered output, not just "/". The wall-clock
+// value here is only a safety net for if that call ever fails; it was left
+// at 1h, meaning EVERY page on the site — including static ones like /about
+// that have no data dependency of their own — was silently capped at hourly
+// regeneration by this layout alone, a real contributor to Vercel's ISR
+// Writes quota (see the memory on the 2026-08-01 ISR writes fix).
+export const revalidate = 21600;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

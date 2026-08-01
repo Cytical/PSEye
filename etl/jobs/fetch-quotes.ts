@@ -2,6 +2,7 @@ import "../lib/loadEnv";
 import { sql } from "drizzle-orm";
 import { createDb, dailyQuotes } from "@pseye/db";
 import { PseEdgeQuoteSource } from "@pseye/source-quotes";
+import { triggerRevalidate } from "../lib/triggerRevalidate";
 
 /**
  * Runs hourly during PSE trading hours as a step in
@@ -98,6 +99,35 @@ async function main() {
   if (failed.length > 0) {
     console.warn(
       `Skipped ${failed.length} ticker(s) whose fetch failed this run (kept prior data): ${failed.map((f) => f.quote.ticker).join(", ")}`
+    );
+  }
+
+  if (rows.length > 0) {
+    // Also covers market-snapshot: this step runs second in
+    // market-data-hourly.yml (after fetch-market-snapshot), so one combined
+    // call here catches both of that job's writes. Only the static
+    // list/dashboard pages are listed — not /stocks/[ticker] or
+    // /sectors/[sector] (282 and ~7 dynamic paths respectively): a
+    // revalidatePath per path there would itself add writes back, working
+    // against the point of this call. Those stay on their own wall-clock
+    // window.
+    await triggerRevalidate(
+      ["daily-quotes", "market-snapshot"],
+      [
+        "/",
+        "/stocks",
+        "/rankings",
+        "/screener",
+        "/sectors",
+        "/most-active",
+        "/portfolio",
+        "/compare",
+        "/market-stats",
+        "/analytics",
+        "/clusters",
+        "/regime",
+        "/dividends",
+      ]
     );
   }
 }

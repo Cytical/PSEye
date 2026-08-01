@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getDailyQuotes } from "@/lib/quotes";
 import { PortfolioTracker } from "@/components/PortfolioTracker";
 
-export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as the market map
+export const revalidate = 21600; // 6h safety-net ceiling; real refresh is on-demand via revalidateTag/revalidatePath from the ETL jobs (see app/api/revalidate/route.ts) — the wall-clock value only kicks in if that call ever fails.
 
 export const metadata: Metadata = {
   title: "PSE Portfolio Tracker: Track Your Holdings' Gain/Loss",

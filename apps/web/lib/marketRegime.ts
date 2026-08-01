@@ -57,7 +57,17 @@ const VOL_WINDOW = 30;
 const SMOOTH = 5;
 
 export async function getMarketRegime(): Promise<MarketRegimeResult> {
-  const { source, benchmark, asOf } = await loadUniverse({ size: 100, minCloses: 250, lookbackDays: 1600 });
+  // size: 40, not 100 — loadUniverse's underlying read (historicalQuotes.ts's
+  // fetchHistoricalQuotesRows) is a single unstable_cache entry per (tickers,
+  // fromDate) call, and Next's Data Cache rejects any entry over 2MB. 100
+  // tickers x ~1600 days serialized to ~3.7MB, confirmed live via a real
+  // `next build` ("Failed to set Next.js data cache for unstable_cache
+  // /regime ... items over 2MB can not be cached") — so this specific call
+  // was silently never cached, re-querying Neon on every render instead of
+  // reusing the same 3600s window every other page gets. 40 tickers keeps the
+  // same lookbackDays (regime detection wants the years of history, not
+  // breadth) while landing well under the limit (~1.5MB).
+  const { source, benchmark, asOf } = await loadUniverse({ size: 40, minCloses: 250, lookbackDays: 1600 });
   if (source !== "real" || benchmark.size < MA_LONG + VOL_WINDOW + 30) {
     return { source: "mock", asOf: null, points: [], current: null, stats: [] };
   }

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PSE_EDGE_COMPANIES, PSE_SECTORS } from "@pseye/source-quotes";
 import { getDailyQuotes } from "@/lib/quotes";
 
-export const revalidate = 3600; // hourly; matches the quotes ETL cadence
+export const revalidate = 21600; // 6h safety-net ceiling; real refresh is on-demand via revalidateTag/revalidatePath from the ETL jobs (see app/api/revalidate/route.ts) — the wall-clock value only kicks in if that call ever fails.
 
 export const metadata: Metadata = {
   title: "All PSE-Listed Stocks: Prices by Sector",

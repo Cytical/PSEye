@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getDailyRecap, getRecentRecapDates } from "@/lib/dailyRecap";
 import { DailyRecapView } from "@/components/DailyRecapView";
 
-export const revalidate = 3600;
+export const revalidate = 21600; // 6h safety-net ceiling; real refresh is on-demand via revalidateTag/revalidatePath from the ETL jobs (see app/api/revalidate/route.ts) — the wall-clock value only kicks in if that call ever fails.
 
 /** The newest trading day on record, or null without a database / before the
  * pipeline's first session. Both `generateMetadata` and the page itself need it;

@@ -2,12 +2,15 @@ import "../lib/loadEnv";
 import { sql } from "drizzle-orm";
 import { createDb, historicalQuotes } from "@pseye/db";
 import { PSE_EDGE_COMPANIES, PseEdgeHistoricalQuoteSource } from "@pseye/source-quotes";
+import { triggerRevalidate } from "../lib/triggerRevalidate";
 
 /**
- * Runs daily (see .github/workflows/historical-quotes-daily.yml). Backs the
- * DCA calculator's real HistoricalQuoteSource (see apps/web/lib/historicalQuotes.ts
- * and app/api/history/route.ts) instead of MockHistoricalQuoteSource's
- * synthetic price walk.
+ * Runs daily as a step in .github/workflows/fetch-daily.yml — the
+ * historical-quotes-daily.yml this comment used to reference doesn't exist
+ * anymore (folded into fetch-daily.yml, same 2026-07 consolidation as news
+ * and disclosures). Backs the DCA calculator's real HistoricalQuoteSource
+ * (see apps/web/lib/historicalQuotes.ts and app/api/history/route.ts)
+ * instead of MockHistoricalQuoteSource's synthetic price walk.
  *
  * Always re-fetches a fixed multi-year window per ticker (~750 trading days,
  * verified well within what PSE Edge's chart endpoint returns in one request)
@@ -45,6 +48,9 @@ async function main() {
   }
 
   console.log(`Upserted ${upserted} historical quote rows across ${PSE_EDGE_COMPANIES.length} companies.`);
+  if (upserted > 0) {
+    await triggerRevalidate(["historical-quotes"], ["/market-stats", "/analytics", "/clusters", "/regime"]);
+  }
 }
 
 function yearsAgo(years: number): string {

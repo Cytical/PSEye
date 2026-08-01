@@ -27,6 +27,11 @@ name: Post daily tweet (market map + recap)
 # browser to post directly, no API/billing involved. This job, its code, and
 # its secrets are left intact — re-enable the schedule below if billing is
 # ever resolved. workflow_dispatch still works for a one-off manual run.
+#
+# 2026-08-01: the workflow itself is also disabled (`gh workflow disable`,
+# GitHub's own pause mechanism — no YAML change) at the user's request
+# ("remove all actions regarding twitter for now"). Re-enable with
+# `gh workflow enable post-daily-tweet.yml` when it should run again.
 on:
   # schedule:
   #   - cron: "35 8 * * 1-5"

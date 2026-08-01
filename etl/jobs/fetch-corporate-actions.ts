@@ -1,6 +1,7 @@
 import "../lib/loadEnv";
 import { createDb, corporateActions } from "@pseye/db";
 import { PseEdgeCorporateActionSource } from "@pseye/source-corporate-actions";
+import { triggerRevalidate } from "../lib/triggerRevalidate";
 
 /**
  * Runs daily (see .github/workflows/fetch-daily.yml).
@@ -38,6 +39,7 @@ async function main() {
     });
 
   console.log(`Upserted up to ${actions.length} corporate actions.`);
+  await triggerRevalidate(["corporate-actions"], ["/calendar", "/dividends"]);
 }
 
 main().catch((err) => {

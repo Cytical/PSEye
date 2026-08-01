@@ -2,6 +2,7 @@ import "../lib/loadEnv";
 import { sql } from "drizzle-orm";
 import { createDb, newsItems, getNewsOutletLogos, upsertNewsOutletLogo } from "@pseye/db";
 import { NEWS_SOURCES, fetchOgImage, fetchOutletLogo } from "@pseye/source-news";
+import { triggerRevalidate } from "../lib/triggerRevalidate";
 
 /**
  * Runs once/day via .github/workflows/fetch-daily.yml (see that file's
@@ -141,6 +142,7 @@ async function main() {
     });
 
   console.log(`Upserted up to ${rows.length} news items.`);
+  await triggerRevalidate(["news"], ["/news"]);
 }
 
 function sleep(ms: number): Promise<void> {

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getVolumeLeaders } from "@/lib/volumeLeaders";
 import { VolumeLeadersTable } from "@/components/VolumeLeadersTable";
 
-export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as /rankings
+export const revalidate = 21600; // 6h safety-net ceiling; real refresh is on-demand via revalidateTag/revalidatePath from the ETL jobs (see app/api/revalidate/route.ts) — the wall-clock value only kicks in if that call ever fails.
 
 export const metadata: Metadata = {
   title: "Most Active PSE Stocks by Trading Value",
