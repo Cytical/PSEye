@@ -4,13 +4,15 @@ import { notFound } from "next/navigation";
 import { getRankings } from "@/lib/rankings";
 import { RankingsTable } from "@/components/RankingsTable";
 import { SectorSwitcher } from "@/components/SectorSwitcher";
-import { sectorToSlug, slugToSector, VISIBLE_SECTORS } from "@/lib/sectorSlug";
+import { slugToSector } from "@/lib/sectorSlug";
 
-export const revalidate = 21600; // 6h safety-net ceiling, matching the rest of the site (was 3600 — left at 1h on 2026-08-01, but real traffic across all 7 sectors every hour was a meaningful chunk of the 2026-08-03 ISR Writes quota exhaustion)
-
-export function generateStaticParams() {
-  return VISIBLE_SECTORS.map((sector) => ({ sector: sectorToSlug(sector) }));
-}
+// 2026-08-03: switched off ISR entirely (was revalidate = 3600, briefly 21600) —
+// see /stocks/[ticker]'s page for the full rationale (same fix, same cause: real
+// traffic across all 7 sectors every hour was a meaningful chunk of that day's
+// ISR Writes quota exhaustion). force-dynamic renders fresh on every request
+// instead of writing a page-level cache entry, so this route contributes zero
+// ISR Writes now — getRankings' underlying DB reads stay cheap independently.
+export const dynamic = "force-dynamic";
 
 /** Peso market cap, abbreviated — same formatter as RankingsTable/ScreenerTable. */
 function formatMarketCap(value: number): string {

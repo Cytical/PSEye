@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PSE_EDGE_COMPANIES, PSEI_TICKERS } from "@pseye/source-quotes";
+import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 import { DISCLOSURE_TYPE_LABELS, DISCLOSURE_TYPE_ACCENT } from "@pseye/source-disclosures";
 import { CORPORATE_ACTION_LABELS, CORPORATE_ACTION_TYPE_ACCENT } from "@pseye/source-corporate-actions";
 import { getDailyQuotes } from "@/lib/quotes";
@@ -30,7 +30,16 @@ import { Kpi } from "@/components/Kpi";
 import { Panel } from "@/components/Panel";
 import { RangeBar } from "@/components/RangeBar";
 
-export const revalidate = 21600; // 6h safety-net ceiling, matching the rest of the site (was 3600 — 282 possible tickers × real/crawler traffic every hour was the single biggest driver of the 2026-08-03 ISR Writes quota exhaustion, confirmed via runtime logs showing 88+ distinct requestPaths hit in 3 days with zero deploys in that window)
+// 2026-08-03: switched off ISR entirely (was revalidate = 3600, briefly 21600)
+// after 282 possible tickers × real/crawler traffic every hour turned out to be
+// the single biggest driver of that day's ISR Writes quota exhaustion (confirmed
+// via runtime logs showing 88+ distinct requestPaths hit in 3 days with zero
+// deploys in that window). force-dynamic renders fresh on every request instead
+// of writing a page-level cache entry, so this route now contributes zero ISR
+// Writes — the actual DB reads stay cheap since getDailyQuotes/getCompanyProfiles/
+// getDisclosures/getCorporateActions/getHistoricalQuotes (lib/*.ts) already sit
+// behind their own unstable_cache (~1h window), independent of this page setting.
+export const dynamic = "force-dynamic";
 
 /** Chart window — a quarter reads best at this page width. */
 const HISTORY_LOOKBACK_DAYS = 90;
@@ -74,10 +83,6 @@ function findCompany(tickerParam: string) {
  * from then on, same as any other ISR page — just written once, on demand,
  * instead of on every deploy regardless of whether anyone looks.
  */
-export function generateStaticParams() {
-  return PSEI_TICKERS.map((ticker) => ({ ticker }));
-}
-
 export async function generateMetadata({
   params,
 }: {
