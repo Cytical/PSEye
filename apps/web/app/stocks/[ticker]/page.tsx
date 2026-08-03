@@ -30,7 +30,7 @@ import { Kpi } from "@/components/Kpi";
 import { Panel } from "@/components/Panel";
 import { RangeBar } from "@/components/RangeBar";
 
-export const revalidate = 3600; // hourly; matches the quotes ETL cadence
+export const revalidate = 21600; // 6h safety-net ceiling, matching the rest of the site (was 3600 — 282 possible tickers × real/crawler traffic every hour was the single biggest driver of the 2026-08-03 ISR Writes quota exhaustion, confirmed via runtime logs showing 88+ distinct requestPaths hit in 3 days with zero deploys in that window)
 
 /** Chart window — a quarter reads best at this page width. */
 const HISTORY_LOOKBACK_DAYS = 90;

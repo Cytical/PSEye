@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getDailyRecap, getRecentRecapDates } from "@/lib/dailyRecap";
 import { DailyRecapView, formatLongDate } from "@/components/DailyRecapView";
 
-export const revalidate = 3600; // late disclosures/news can still land on "today's" page
+export const revalidate = 21600; // 6h safety-net ceiling, matching the rest of the site (was 3600 for late-landing disclosures/news, but the dynamicParams long tail of recap dates at 1h was a meaningful chunk of the 2026-08-03 ISR Writes quota exhaustion)
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 

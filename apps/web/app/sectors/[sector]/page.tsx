@@ -6,7 +6,7 @@ import { RankingsTable } from "@/components/RankingsTable";
 import { SectorSwitcher } from "@/components/SectorSwitcher";
 import { sectorToSlug, slugToSector, VISIBLE_SECTORS } from "@/lib/sectorSlug";
 
-export const revalidate = 3600; // matches quotes' hourly ETL cadence — same window as /rankings
+export const revalidate = 21600; // 6h safety-net ceiling, matching the rest of the site (was 3600 — left at 1h on 2026-08-01, but real traffic across all 7 sectors every hour was a meaningful chunk of the 2026-08-03 ISR Writes quota exhaustion)
 
 export function generateStaticParams() {
   return VISIBLE_SECTORS.map((sector) => ({ sector: sectorToSlug(sector) }));
