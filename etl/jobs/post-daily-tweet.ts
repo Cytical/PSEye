@@ -50,6 +50,14 @@ async function main() {
 
   const db = createDb(databaseUrl);
   const today = manilaToday();
+  // DATE lets a dry run recap a prior trading day (e.g. the current day's
+  // ETL hasn't landed yet) — restricted to dry runs since the real posting
+  // path's bot_posts idempotency key must stay tied to the actual calendar
+  // day, not the trading day being recapped. See the post-to-x skill.
+  if (process.env.DATE && !dryRun) {
+    throw new Error("DATE override is only supported with DRY_RUN=1");
+  }
+  const tradingDate = dryRun && process.env.DATE ? process.env.DATE : today;
 
   const alreadyPosted = await getBotPostByDate(db, today);
   if (alreadyPosted) {
@@ -58,17 +66,17 @@ async function main() {
   }
 
   const [snapshotRow, quoteRows, flowRows] = await Promise.all([
-    getMarketSnapshotByDate(db, today),
-    getDailyQuotesByDate(db, today),
-    getStockForeignFlowByDate(db, today),
+    getMarketSnapshotByDate(db, tradingDate),
+    getDailyQuotesByDate(db, tradingDate),
+    getStockForeignFlowByDate(db, tradingDate),
   ]);
 
-  // No snapshot AND no quotes recorded for today — a holiday/weekend
-  // workflow_dispatch, or the hourly ETL job hasn't landed yet. Same
-  // soft-skip shape as fetch-market-snapshot.ts's blank-widget case: log and
-  // exit green rather than fail, since this isn't an error.
+  // No snapshot AND no quotes recorded for the trading date — a
+  // holiday/weekend workflow_dispatch, or the hourly ETL job hasn't landed
+  // yet. Same soft-skip shape as fetch-market-snapshot.ts's blank-widget
+  // case: log and exit green rather than fail, since this isn't an error.
   if (!snapshotRow && quoteRows.length === 0) {
-    console.warn(`post-daily-tweet: no market data recorded for ${today} yet — skipping this run.`);
+    console.warn(`post-daily-tweet: no market data recorded for ${tradingDate} yet — skipping this run.`);
     return;
   }
 
@@ -103,11 +111,11 @@ async function main() {
       }
     : null;
 
-  await triggerRevalidate(["daily-quotes", "company-profiles"], ["/", `/daily/${today}`]);
+  await triggerRevalidate(["daily-quotes", "company-profiles"], ["/", `/daily/${tradingDate}`]);
 
-  const dateLabel = formatDateLabel(today);
+  const dateLabel = formatDateLabel(tradingDate);
   const mapText = buildMapTweetText({ dateLabel, siteUrl, snapshot, breadth });
-  const recapText = buildRecapReplyText({ date: today, siteUrl, topGainer, topLoser, topForeignBuy, topForeignSell });
+  const recapText = buildRecapReplyText({ date: tradingDate, siteUrl, topGainer, topLoser, topForeignBuy, topForeignSell });
   const altText = buildMapAltText(dateLabel);
 
   console.log("post-daily-tweet: tweet 1 (map) —\n" + mapText);

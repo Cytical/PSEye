@@ -54,11 +54,16 @@ export interface MapTweetInput {
   breadth: { advancers: number; decliners: number; unchanged: number } | null;
 }
 
-// Deliberately just 2: X's ranking model treats 3+ hashtags as a spam signal
-// and measurably suppresses reach past that point, while 1-2 relevant tags
-// still earn a small boost. Kept to the two highest-intent/most-searched tags
-// rather than a broad spread.
-const MAP_HASHTAGS = ["#PSEi", "#PSE"];
+// X's ranking model treats 3+ hashtags as a spam signal and measurably
+// suppresses reach past that point, while 1-2 relevant tags still earn a
+// small boost — that tradeoff is why this used to be capped at 2. Kept at 2
+// on 2026-08-05 (account owner considered widening to 4 for discoverability
+// but preferred staying under that spam-signal threshold, dropping #PSE and
+// #StockMarketPH in favor of #PHStocks alongside #PSEi). Deliberately still
+// topically relevant — no off-topic trending tags — since hijacking
+// irrelevant trending hashtags reads as spam to X's ranking model and to
+// real followers, on top of being against X's own hashtag-misuse guidance.
+const MAP_HASHTAGS = ["#PSEi", "#PHStocks"];
 
 /**
  * The main post: the market-map screenshot's caption, with a direct link.
@@ -102,7 +107,8 @@ export interface RecapReplyInput {
   topForeignSell: { ticker: string; netValue: number } | null;
 }
 
-const RECAP_HASHTAGS = ["#PSEi", "#PSE"];
+// See MAP_HASHTAGS above for the reach-vs-discoverability tradeoff rationale.
+const RECAP_HASHTAGS = ["#PSEi", "#PHStocks"];
 
 /**
  * The reply: the day's recap, with a link to the full /daily/[date] page.
