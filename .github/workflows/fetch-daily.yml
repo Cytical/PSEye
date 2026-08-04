@@ -13,14 +13,18 @@ name: Fetch daily (news, disclosures, corporate actions, historical quotes, fore
 # up to t+2 days for revisions, so running it in this ~4:20pm PHT batch (vs.
 # its own separate daily cron) loses nothing and is one fewer scheduled fire.
 #
-# 2026-07-26: cron fires at 06:20 UTC, not 08:20 — GitHub was confirmed live
-# to delay this job's scheduled runs by ~1h40m-2h15m every single day (5
-# consecutive runs landed 10:00-10:35 UTC instead of 08:20), so news/
-# disclosures/corp-actions/historical-quotes were only ever actually
-# refreshing once around 6-6:30pm PHT, ~2 hours later than intended. Firing
-# the cron 2 hours earlier compensates for that observed delay so the real
-# run lands close to the original 4:20pm PHT target. Still off the exact
-# :15/:00/:30/:45 marks GitHub flags as congested.
+# 2026-08-04: no more `schedule:` trigger. The 06:20 UTC "-2h compensation"
+# cron this comment used to describe never actually solved the problem — the
+# 08:20 UTC target sits inside a 06:00-10:00 UTC band that's congested on
+# GitHub's shared scheduled-run queue regardless of what exact minute you
+# pick inside it, so even the compensated fire kept landing 2-4h late (up to
+# 3h47m observed). Compensating further would mean firing before PSE's
+# 3:30pm close, losing the day's EOD data entirely. So this workflow is now
+# triggered externally instead: a cron-job.org job calls this workflow's
+# `workflow_dispatch` REST endpoint directly at 08:20 UTC (4:20pm PHT, the
+# original real target), which isn't subject to GitHub's `schedule:` queue
+# delay at all. If cron-job.org goes down, this workflow simply stops firing
+# — see market-data-hourly.yml's doc comment for the same tradeoff.
 #
 # Block sales is deliberately NOT here — it's extracted from PSE's Daily
 # Quotation Report PDF, which PSE only publishes ~9:30pm PHT, so it has its
@@ -34,8 +38,6 @@ name: Fetch daily (news, disclosures, corporate actions, historical quotes, fore
 # daily job cut that dramatically; block sales was split back out 2026-07-21
 # only because its source publishes hours later than the rest.
 on:
-  schedule:
-    - cron: "20 6 * * *" # targets ~4:20pm PHT actual arrival, see comment above
   workflow_dispatch: {}
 
 jobs:

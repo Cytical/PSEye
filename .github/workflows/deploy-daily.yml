@@ -11,14 +11,17 @@ name: Daily Deploy
 # 09:00 UTC (~5pm PHT) is chosen to land after the day's ETL jobs —
 # market-data-hourly.yml's last run (08:16 UTC) and fetch-daily.yml/
 # post-daily-tweet.yml (~08:20-08:35 UTC) — so the one daily build picks up
-# the finalized close. Like every other once-a-day cron in this repo (see
-# fetch-daily.yml/post-daily-tweet.yml's own doc comments), GitHub has been
-# observed to run scheduled workflows 1h40m-2h15m late elsewhere in this
-# project; this cron hasn't run long enough yet to know if it's affected the
-# same way — if it is, shift it earlier to compensate, same as those did.
+# the finalized close.
+#
+# 2026-08-04: no more `schedule:` trigger. This cron was confirmed to suffer
+# the same 06:00-10:00 UTC GitHub-queue delay as the other once-daily
+# workflows in this repo (2h-3h17m late observed — see fetch-daily.yml's doc
+# comment for the root cause). Triggered externally instead: a cron-job.org
+# job calls this workflow's `workflow_dispatch` REST endpoint at 08:45 UTC
+# (25min after fetch-daily's cron-job.org trigger, so any code picked up by
+# the build has had time to land), bypassing GitHub's queue delay entirely.
+# If cron-job.org goes down, this workflow simply stops firing.
 on:
-  schedule:
-    - cron: "0 9 * * 1-5"
   workflow_dispatch:
 
 jobs:

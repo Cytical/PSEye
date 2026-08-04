@@ -9,17 +9,21 @@ name: Fetch block sales (daily, post-report)
 # ~15 minutes of the close, not hours after. Moved to 08:00 UTC, a 15-minute
 # buffer past the latest observed upload, which also means this can now land
 # in roughly the same evening window as fetch-daily.yml (~4:20pm PHT) instead
-# of ~5 hours later. If GitHub's documented scheduled-run delay for this
-# repo's daily crons (see fetch-daily.yml's own doc comment — observed
-# 1h40m-2h15m) shows up here too, compensate by shifting the cron earlier,
-# same fix applied there. Split out of fetch-daily.yml 2026-07-21 so that job
+# of ~5 hours later. Split out of fetch-daily.yml 2026-07-21 so that job
 # could move earlier without waiting on this PDF — still true, just less of a
 # gap now. Still populates the SAME Manila-day recap either way: block sales
 # are keyed by the report's own trade date (parsed from the PDF filename),
 # not by when this job runs.
+#
+# 2026-08-04: no more `schedule:` trigger. GitHub's own scheduled-run delay
+# on this cron was observed at 2h22m-3h19m (06:00-10:00 UTC is a congested
+# band on GitHub's shared queue — see fetch-daily.yml's doc comment), and
+# there's no room to compensate by firing earlier since the PDF itself isn't
+# up until ~07:45 UTC. Triggered externally instead: a cron-job.org job
+# calls this workflow's `workflow_dispatch` REST endpoint at 08:00 UTC (the
+# original real target), bypassing GitHub's queue delay entirely. If
+# cron-job.org goes down, this workflow simply stops firing.
 on:
-  schedule:
-    - cron: "0 8 * * 1-5" # ~4:00pm PHT (UTC+8), weekdays
   workflow_dispatch: {}
 
 jobs:

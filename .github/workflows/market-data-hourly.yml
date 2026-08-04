@@ -11,29 +11,19 @@ name: Fetch market data (hourly during trading)
 # (:16 vs :17) to land the PSEi snapshot just before the quotes board —
 # sequential steps guarantee that ordering outright, no race possible.
 on:
-  schedule:
-    # :16 past, 01:16-08:16 UTC (9:16am-4:16pm PHT) on weekdays — covers PSE's
-    # 9:30-3:30 session plus a settle run after close (the 4:16pm PHT run
-    # captures each ticker's FINAL close once the market has finalized). Off
-    # the exact :15 quarter-hour, which GitHub's docs warn is congested/dropped.
-    - cron: "16 1-8 * * 1-5"
-    # 2026-08-04: two extra buffer fires before market open. Actual run
-    # history (`gh run list`) shows GitHub's scheduled-run delay isn't
-    # uniform through the day — fires in the 01:16-04:16 UTC band land
-    # 3-30min late (reliable), but the 08:16 UTC fire alone has landed
-    # 2h17m-2h34m late on multiple days. That's not this workflow's fault;
-    # 06:00-10:00 UTC is apparently a globally congested band for GitHub's
-    # shared scheduled-run queue (fetch-daily.yml/block-sales-daily.yml/
-    # deploy-daily.yml, all scheduled in that same band for unrelated
-    # PHT-afternoon reasons, show the identical 2-4h delay — see their own
-    # doc comments). These two fires sit in the reliable early band so the
-    # board has a real shot at being populated before PSE's 9:30am PHT open
-    # even in the average case, not just when GitHub happens to be quiet:
-    # 23:16 UTC prior day = 7:16am PHT (day-of-week 0-4 = Sun-Thu UTC, since
-    # the +8h offset rolls into the next PHT calendar day/weekday), plus
-    # 00:16 UTC = 8:16am PHT (no day-of-week shift needed).
-    - cron: "16 23 * * 0-4"
-    - cron: "16 0 * * 1-5"
+  # 2026-08-04: GitHub's native `schedule:` trigger is gone from this file —
+  # even after the early-buffer fires added the same day, actual run history
+  # kept showing 2h+ delays (06:00-10:00 UTC is a congested band on GitHub's
+  # shared scheduled-run queue; see fetch-daily.yml's doc comment for the
+  # same finding). `schedule:` fires are deprioritized best-effort in a way
+  # `workflow_dispatch` isn't, so every fire that used to be a `- cron: ...`
+  # line here is now an external cron-job.org job hitting this workflow's
+  # `workflow_dispatch` REST endpoint directly instead — same wall-clock
+  # times as before (:16 past, 00:16-08:16 UTC weekdays for the trading-day
+  # cadence, plus 23:16 UTC Sun-Thu as the pre-open buffer), just triggered
+  # externally so GitHub's queue delay no longer applies. If cron-job.org
+  # itself ever goes down, this workflow simply stops firing — there is no
+  # GitHub-native fallback anymore. See CLAUDE.md for the full history.
   workflow_dispatch: {}
 
 jobs:
