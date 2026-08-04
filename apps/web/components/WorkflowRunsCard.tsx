@@ -17,9 +17,10 @@ export function WorkflowRunsCard({ data }: { data: WorkflowRunsResult }) {
         </span>
       </div>
       <p className="mt-1 text-xs text-black/50 dark:text-white/50">
-        Every scheduled ETL run and its outcome, straight from the GitHub Actions API. The database
-        only shows successful writes, so this is where a failed or skipped fetch actually surfaces.
-        Times are Manila time; each square links to its run log.
+        Every ETL run and its outcome, straight from the GitHub Actions API — now triggered
+        externally by cron-job.org (workflow_dispatch) rather than GitHub&apos;s own schedule queue.
+        The database only shows successful writes, so this is where a failed or skipped fetch
+        actually surfaces. Times are Manila time; each square links to its run log.
       </p>
 
       {!data.ok ? (

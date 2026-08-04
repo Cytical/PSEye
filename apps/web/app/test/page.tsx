@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { getDailyQuotes } from "@/lib/quotes";
 import { NASDAQ_100_STOCKS } from "@/lib/nasdaq100";
 import { validateStocks } from "@/lib/dataValidation";
@@ -9,6 +9,8 @@ import { ValidationReportCard } from "@/components/ValidationReportCard";
 import { PhComparisonTable } from "@/components/PhComparisonTable";
 import { getWorkflowRuns } from "@/lib/workflowRuns";
 import { WorkflowRunsCard } from "@/components/WorkflowRunsCard";
+import { TestPasswordPrompt } from "@/components/TestPasswordPrompt";
+import { TEST_DASHBOARD_COOKIE, TEST_DASHBOARD_PASSWORD } from "./auth";
 
 export const revalidate = 0;
 
@@ -21,35 +23,50 @@ export const metadata: Metadata = {
  * Dev-only dashboard (linked from the Dev Tools indicator, hidden in
  * production). Shows live data-validation results for the PH quote API
  * (DB-backed getDailyQuotes(), same data the market map renders) and the
- * US/Nasdaq 100 mock dataset, plus an opt-in line-by-line comparison of PH
- * quotes against a fresh PSE Edge re-scrape. Unit test results are a planned
- * addition here, not yet wired up.
+ * US/Nasdaq 100 mock dataset, the last 7 days of ETL run history (see below),
+ * plus an opt-in line-by-line comparison of PH quotes against a fresh PSE
+ * Edge re-scrape. Unit test results are a planned addition here, not yet
+ * wired up.
  *
  * "Hidden in production" used to describe only DevToolsLink, which is the
  * button — the route itself was reachable by URL on the deployed site, and
- * `robots: noindex` keeps it out of search results but is not access control.
- * That mattered because `?compare=1` re-scrapes *every* ticker in the roster
- * (282 outbound requests to edge.pse.com.ph per hit, by the page's own
- * description below) on an uncached route. Anyone hitting it in a loop could
- * get the site's egress IPs throttled or blocked by PSE Edge — taking down the
- * ETL that every page depends on, not just this one. It also spends the
+ * `robots: noindex` (+ robots.ts's disallow) keeps it out of search results
+ * but is not access control. That mattered because `?compare=1` re-scrapes
+ * *every* ticker in the roster (282 outbound requests to edge.pse.com.ph per
+ * hit) on an uncached route. Anyone hitting it in a loop could get the
+ * site's egress IPs throttled or blocked by PSE Edge — taking down the ETL
+ * that every page depends on, not just this one. It also spends the
  * unauthenticated GitHub API budget via getWorkflowRuns on each load.
  *
- * Production access is therefore closed unless DEV_DASHBOARD_SECRET is set and
- * matched by `?secret=`, mirroring app/api/revalidate/route.ts's gate. With no
- * env var configured the route simply 404s in production, which is what the
- * comment above always claimed.
+ * 2026-08-04: production access changed from a `?secret=` query param
+ * (matched against a DEV_DASHBOARD_SECRET env var, 404ing if unset — easy to
+ * forget to configure and easy to leak in a shared URL) to an actual
+ * password prompt (TestPasswordPrompt), gated behind a cookie set by
+ * app/test/actions.ts once "1024" is entered. Not real security — same
+ * threat model as before, just a deliberately low-friction speed bump
+ * instead of an all-or-nothing env var. Data fetching only happens *after*
+ * the cookie check below, so an unauthenticated hit still can't trigger the
+ * re-scrape/GitHub-API cost described above.
+ *
+ * The ETL run history below now reflects that market-data-hourly.yml,
+ * fetch-daily.yml, and block-sales-daily.yml are triggered externally by
+ * cron-job.org calling each workflow's workflow_dispatch REST endpoint
+ * (GitHub's own `schedule:` trigger was removed from all three the same
+ * day — see CLAUDE.md) rather than firing on GitHub's schedule queue
+ * directly; the GitHub Actions API still records these as normal runs
+ * either way, just with event: "workflow_dispatch" instead of "schedule".
  */
 export default async function TestPage({
   searchParams,
 }: {
-  searchParams: Promise<{ compare?: string; secret?: string }>;
+  searchParams: Promise<{ compare?: string }>;
 }) {
-  const { compare, secret } = await searchParams;
+  const { compare } = await searchParams;
 
   if (process.env.NODE_ENV === "production") {
-    const expected = process.env.DEV_DASHBOARD_SECRET;
-    if (!expected || secret !== expected) notFound();
+    const cookieStore = await cookies();
+    const authed = cookieStore.get(TEST_DASHBOARD_COOKIE)?.value === TEST_DASHBOARD_PASSWORD;
+    if (!authed) return <TestPasswordPrompt />;
   }
 
   const runComparison = compare === "1";
@@ -77,9 +94,7 @@ export default async function TestPage({
             <h2 className="text-base font-semibold">PH stocks — DB vs. live PSE Edge</h2>
             {!runComparison && (
               <Link
-                // Carries ?secret= through so the gated production flow still
-                // works in one click when DEV_DASHBOARD_SECRET is configured.
-                href={secret ? `/test?compare=1&secret=${encodeURIComponent(secret)}` : "/test?compare=1"}
+                href="/test?compare=1"
                 className="rounded-full border border-black/10 px-3 py-1.5 text-xs font-medium hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
               >
                 Run live comparison

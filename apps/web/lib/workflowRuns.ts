@@ -8,6 +8,14 @@
  *
  * The ETL workflows are the "data was fetched" jobs; CI / db-push / backfill are
  * categorized separately so the dashboard can foreground the data pipelines.
+ *
+ * 2026-08-04: these three ETL workflows no longer have a GitHub `schedule:`
+ * trigger at all — cron-job.org calls each one's workflow_dispatch REST
+ * endpoint directly instead (GitHub's own scheduled-run queue was observed
+ * delaying them 2-4h regardless of cron tuning). The Actions API still
+ * returns these runs identically either way; only `event` differs
+ * ("workflow_dispatch" now, was "schedule"), which this module doesn't
+ * currently surface but each run's `htmlUrl` shows on hover in the UI.
  */
 
 const REPO = process.env.GITHUB_REPO ?? "Cytical/PSEye";
