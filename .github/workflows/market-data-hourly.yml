@@ -17,6 +17,23 @@ on:
     # captures each ticker's FINAL close once the market has finalized). Off
     # the exact :15 quarter-hour, which GitHub's docs warn is congested/dropped.
     - cron: "16 1-8 * * 1-5"
+    # 2026-08-04: two extra buffer fires before market open. Actual run
+    # history (`gh run list`) shows GitHub's scheduled-run delay isn't
+    # uniform through the day — fires in the 01:16-04:16 UTC band land
+    # 3-30min late (reliable), but the 08:16 UTC fire alone has landed
+    # 2h17m-2h34m late on multiple days. That's not this workflow's fault;
+    # 06:00-10:00 UTC is apparently a globally congested band for GitHub's
+    # shared scheduled-run queue (fetch-daily.yml/block-sales-daily.yml/
+    # deploy-daily.yml, all scheduled in that same band for unrelated
+    # PHT-afternoon reasons, show the identical 2-4h delay — see their own
+    # doc comments). These two fires sit in the reliable early band so the
+    # board has a real shot at being populated before PSE's 9:30am PHT open
+    # even in the average case, not just when GitHub happens to be quiet:
+    # 23:16 UTC prior day = 7:16am PHT (day-of-week 0-4 = Sun-Thu UTC, since
+    # the +8h offset rolls into the next PHT calendar day/weekday), plus
+    # 00:16 UTC = 8:16am PHT (no day-of-week shift needed).
+    - cron: "16 23 * * 0-4"
+    - cron: "16 0 * * 1-5"
   workflow_dispatch: {}
 
 jobs:
