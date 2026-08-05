@@ -102,7 +102,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       {(rsiValue != null || macdResult != null) && (
         <div className="flex flex-wrap items-center gap-3">
           {rsiValue != null && (
-            <div className="flex items-center gap-2.5 rounded-lg bg-panel-raised px-2.5 py-1.5">
+            <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg bg-panel-raised px-2.5 py-1.5">
               <RadialGauge value={rsiValue} tone={rsiTone} />
               <div className="min-w-0">
                 <div className="flex items-center gap-0.5 text-[10.5px] leading-tight text-panel-fg/60">
@@ -118,7 +118,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
           )}
 
           {macdResult != null && macdLabel != null && (
-            <div className="flex items-center gap-2.5 rounded-lg bg-panel-raised px-2.5 py-1.5">
+            <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg bg-panel-raised px-2.5 py-1.5">
               <MacdBars histogram={macdResult.recentHistogram} />
               <div className="min-w-0">
                 <div className="flex items-center gap-0.5 text-[10.5px] leading-tight text-panel-fg/60">

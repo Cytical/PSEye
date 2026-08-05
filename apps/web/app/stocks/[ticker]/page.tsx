@@ -17,6 +17,7 @@ import { StockAnalytics } from "@/components/StockAnalytics";
 import { CompanyFinancials, hasAnyFinancialData } from "@/components/CompanyFinancials";
 import { CompanyLeadership, hasAnyLeadershipData } from "@/components/CompanyLeadership";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { MatchHeight } from "@/components/MatchHeight";
 import {
   StockStatistics,
   StockSeasonality,
@@ -686,67 +687,83 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       </div>
 
       {/* Below the fold: reference material rather than live market state. */}
-      <div className="mt-3 flex flex-col items-stretch gap-3 lg:flex-row">
-        {/* Capped only from `lg`: this row's panels stretch to match the tallest
-            sibling (About), so unlike the rows above it needs an explicit
-            desktop height for its body to have something to scroll within. */}
-        {profile && (
-          <Panel
-            title={`About ${company.ticker}`}
-            meta={profile.source}
-            className="min-w-0 lg:basis-2/3 lg:grow-[2]"
-            bodyClassName="flex flex-col gap-3"
-          >
-            {/* Block flow, not flex: CSS multi-column has no effect on a flex
-                container, so `columns-2` silently did nothing when this was a
-                `flex flex-col`. Paragraph spacing is margins for the same
-                reason — `gap` doesn't apply here either. */}
-            <div className="text-sm leading-snug text-panel-fg/80 [&>p]:mb-2 [&>p:last-child]:mb-0 sm:columns-2 sm:gap-5">
-              {profile.description.split("\n\n").map((paragraph, i) => (
-                <p key={i}>{paragraph}</p>
-              ))}
-            </div>
+      {/* items-stretch stays for the mobile flex-col layout (cross-axis there
+          is width, and panels should fill it), but flips to items-start at
+          `lg` where the axis becomes height: MatchHeight needs to measure
+          About at its own natural height there, unaffected by Balance
+          sheet's — stretch would size both to the taller of the two
+          regardless, which is exactly the "wrong side driving the height"
+          MatchHeight exists to avoid. Balance sheet still gets its height
+          explicitly (via --match-height); this just stops it also happening
+          implicitly. */}
+      <div className="mt-3 flex flex-col items-stretch gap-3 lg:flex-row lg:items-start">
+        {profile ? (
+          <MatchHeight
+            referenceClassName="min-w-0 lg:basis-2/3 lg:grow-[2]"
+            reference={
+              <Panel title={`About ${company.ticker}`} meta={profile.source} bodyClassName="flex flex-col gap-3">
+                {/* Block flow, not flex: CSS multi-column has no effect on a flex
+                    container, so `columns-2` silently did nothing when this was a
+                    `flex flex-col`. Paragraph spacing is margins for the same
+                    reason — `gap` doesn't apply here either. */}
+                <div className="text-sm leading-snug text-panel-fg/80 [&>p]:mb-2 [&>p:last-child]:mb-0 sm:columns-2 sm:gap-5">
+                  {profile.description.split("\n\n").map((paragraph, i) => (
+                    <p key={i}>{paragraph}</p>
+                  ))}
+                </div>
 
-            {companyFacts.length > 0 && (
-              <dl className="grid grid-cols-2 gap-x-5 gap-y-2 border-t border-panel-border pt-2.5 sm:grid-cols-3 xl:grid-cols-6">
-                {companyFacts.map((f) => (
-                  <div key={f.label} className="min-w-0">
-                    <dt className="text-[10.5px] leading-tight text-panel-fg/60">{f.label}</dt>
-                    <dd className="mt-0.5 text-xs leading-snug text-panel-fg/85">{f.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-
-            {profile.wikipediaSummary && (
-              <div className="border-t border-panel-border pt-2.5">
-                <p className="line-clamp-2 text-xs leading-snug text-panel-fg/65">{profile.wikipediaSummary}</p>
-                {profile.wikipediaUrl && (
-                  <a
-                    href={profile.wikipediaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 inline-block text-[11px] text-panel-fg/60 hover:underline"
-                  >
-                    {profile.wikipediaTitle} on Wikipedia →
-                  </a>
+                {companyFacts.length > 0 && (
+                  <dl className="grid grid-cols-2 gap-x-5 gap-y-2 border-t border-panel-border pt-2.5 sm:grid-cols-3 xl:grid-cols-6">
+                    {companyFacts.map((f) => (
+                      <div key={f.label} className="min-w-0">
+                        <dt className="text-[10.5px] leading-tight text-panel-fg/60">{f.label}</dt>
+                        <dd className="mt-0.5 text-xs leading-snug text-panel-fg/85">{f.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
                 )}
-              </div>
+
+                {profile.wikipediaSummary && (
+                  <div className="border-t border-panel-border pt-2.5">
+                    <p className="line-clamp-2 text-xs leading-snug text-panel-fg/65">{profile.wikipediaSummary}</p>
+                    {profile.wikipediaUrl && (
+                      <a
+                        href={profile.wikipediaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-block text-[11px] text-panel-fg/60 hover:underline"
+                      >
+                        {profile.wikipediaTitle} on Wikipedia →
+                      </a>
+                    )}
+                  </div>
+                )}
+              </Panel>
+            }
+            matchedClassName="min-w-0 lg:basis-1/3 lg:grow lg:h-[var(--match-height)]"
+            matched={
+              <Panel title="Balance sheet & income statement" meta="PSE Edge · Annual" className="lg:h-full" scroll>
+                {hasFinancials ? (
+                  <CompanyFinancials data={companyFinancials!} />
+                ) : (
+                  <PanelEmpty>No annual financial report on file for {company.ticker} yet.</PanelEmpty>
+                )}
+              </Panel>
+            }
+          />
+        ) : (
+          <Panel
+            title="Balance sheet & income statement"
+            meta="PSE Edge · Annual"
+            className="min-w-0 lg:basis-1/3 lg:grow"
+          >
+            {hasFinancials ? (
+              <CompanyFinancials data={companyFinancials!} />
+            ) : (
+              <PanelEmpty>No annual financial report on file for {company.ticker} yet.</PanelEmpty>
             )}
           </Panel>
         )}
-
-        <Panel
-          title="Balance sheet & income statement"
-          meta="PSE Edge · Annual"
-          className="min-w-0 lg:basis-1/3 lg:grow"
-        >
-          {hasFinancials ? (
-            <CompanyFinancials data={companyFinancials!} />
-          ) : (
-            <PanelEmpty>No annual financial report on file for {company.ticker} yet.</PanelEmpty>
-          )}
-        </Panel>
       </div>
 
       {profile && hasAnyLeadershipData(profile.boardOfDirectors, profile.managementOfficers) && (
