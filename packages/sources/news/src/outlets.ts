@@ -36,7 +36,7 @@ export const UNVERIFIED_NEWS_SOURCES: NewsSource[] = [
   // re-verified since. Re-enabling for real would need a different HTTP
   // client with a browser-matching TLS fingerprint (e.g. curl-impersonate),
   // not a header change - not worth the added dependency weight for one
-  // outlet when four others already work.
+  // outlet when seven others already work.
   createRssSource("Inquirer Business", "https://business.inquirer.net/feed"),
 
   // UNVERIFIED when this comment was first written ("philstar.com blocks
@@ -53,6 +53,33 @@ export const UNVERIFIED_NEWS_SOURCES: NewsSource[] = [
   // 2026-07-27 as working (51 real DB rows, all with images) - same caveat
   // as Philstar above about not promoting off a single successful check.
   createRssSource("Manila Bulletin Business", "https://mb.com.ph/rss/business/"),
+
+  // Added 2026-08-05 to broaden outlet coverage beyond the original four —
+  // all three verified live via both a raw curl (browser User-Agent) and
+  // the actual rss-parser code path with this file's real request headers
+  // before being added, same bar as every other entry here. UNVERIFIED
+  // rather than RELIABLE per this file's own policy: one clean check is a
+  // starting point, not "sustained confirmation."
+  //
+  // Manila Times' /feed endpoint 404s; /business/feed is the real one and
+  // is easily the highest-volume outlet checked (50 items per fetch vs.
+  // 10-30 for everything else here).
+  createRssSource("Manila Times Business", "https://www.manilatimes.net/business/feed"),
+  // Rappler — one of the most-cited independent PH news outlets; its
+  // business vertical has its own dedicated feed rather than needing a
+  // category filter applied to the site-wide one.
+  createRssSource("Rappler Business", "https://www.rappler.com/business/feed/"),
+  createRssSource("Malaya Business Insight", "https://malaya.com.ph/feed/"),
+
+  // NOT added despite a working feed: BusinessMirror
+  // (businessmirror.com.ph/feed/) is behind a Cloudflare Turnstile
+  // JS-challenge ("Just a moment...") that a plain HTTP client can't clear
+  // — same class of failure as Inquirer Business above, confirmed live via
+  // curl before attempting rss-parser. ABS-CBN News
+  // (news.abs-cbn.com/rss/*) returns a flat 403 on every path tried. Both
+  // would need a different HTTP client (e.g. curl-impersonate) to work,
+  // not a header change — revisit only if that becomes worth the added
+  // dependency weight for two outlets when seven others already work.
 ];
 
 export const NEWS_SOURCES: NewsSource[] = [

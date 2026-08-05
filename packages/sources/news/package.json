@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0",
-    "rss-parser": "^3.13.0"
+    "rss-parser": "^3.13.0",
+    "@pseye/source-quotes": "workspace:*"
   },
   "devDependencies": {
     "@pseye/config": "workspace:*",

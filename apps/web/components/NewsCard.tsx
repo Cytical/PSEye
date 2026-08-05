@@ -160,8 +160,9 @@ function SecondaryCard({ item }: { item: NewsItem }) {
 function CompactCard({ item }: { item: NewsItem }) {
   return (
     <article className="group">
-      <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">
-        <h3 className="font-news-serif text-[15px] font-semibold leading-snug group-hover:underline">
+      <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex gap-3">
+        <NewsThumbnail item={item} className="h-16 w-16" />
+        <h3 className="font-news-serif min-w-0 flex-1 text-[15px] font-semibold leading-snug group-hover:underline">
           {item.title}
         </h3>
       </a>

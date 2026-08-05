@@ -21,15 +21,19 @@ function isNewsSentiment(value: string | null): value is NewsSentiment {
 // Front page: 1 hero + 4 secondary stories. Kept small on purpose — a wall of
 // headlines is what this redesign is replacing.
 const FEATURED_COUNT = 5;
-// "More headlines" below the fold. Also capped, rather than dumping every
-// item every outlet published this hour.
-const MORE_COUNT = 10;
+// "More headlines" below the fold. Bumped from 10 (2026-08-05) once outlet
+// count grew from 4 to 7 (see outlets.ts) — 10 read thin against real news
+// front pages the moment there was enough real volume to fill more.
+const MORE_COUNT = 24;
 // A no-trade-today window is generous; a week is plenty for "recent" news
 // and keeps stale wire-service reposts out of the front page.
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 // Enough rows for FEATURED_COUNT + MORE_COUNT to survive rankByRelevance's
-// age filter and tag-tier sort with room to spare.
-const DB_FETCH_LIMIT = 80;
+// age filter and tag-tier sort with room to spare. Raised alongside
+// MORE_COUNT — Manila Times Business alone can contribute up to 50 items a
+// single fetch, so the old 80-row cap could already be trimming content the
+// larger MORE_COUNT now has room to show.
+const DB_FETCH_LIMIT = 200;
 
 function sortByDate(items: NewsItem[]): NewsItem[] {
   return [...items].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());

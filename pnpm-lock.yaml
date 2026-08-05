@@ -216,6 +216,9 @@ importers:
 
   packages/sources/news:
     dependencies:
+      '@pseye/source-quotes':
+        specifier: workspace:*
+        version: link:../quotes
       cheerio:
         specifier: ^1.0.0
         version: 1.2.0

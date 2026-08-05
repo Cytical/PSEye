@@ -32,11 +32,16 @@ export function NewsFrontSkeleton() {
 export function NewsMoreSkeleton() {
   return (
     <ul className="mt-5 grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 9 }).map((_, i) => (
+      {Array.from({ length: 24 }).map((_, i) => (
         <li key={i} className="animate-pulse border-b border-[#1A1210]/10 pb-5 dark:border-[#F2E9E2]/10">
-          <div className="h-4 w-3/4 bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
-          <div className="mt-2 h-3 w-full bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
-          <div className="mt-1 h-3 w-1/3 bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
+          <div className="flex gap-3">
+            <div className="h-16 w-16 shrink-0 bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
+            <div className="min-w-0 flex-1">
+              <div className="h-4 w-full bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
+              <div className="mt-2 h-4 w-2/3 bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
+            </div>
+          </div>
+          <div className="mt-2 h-3 w-1/3 bg-[#1A1210]/10 dark:bg-[#F2E9E2]/10" />
         </li>
       ))}
     </ul>
