@@ -4,7 +4,7 @@ import { createDb, marketSnapshot } from "@pseye/db";
 import { parseIndexSummaryHtml } from "@pseye/source-quotes";
 
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching public EOD/delayed stock data pages";
+  "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching public EOD/delayed stock data pages";
 
 /**
  * Runs hourly during PSE trading hours as the first step in

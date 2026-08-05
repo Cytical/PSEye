@@ -16,14 +16,37 @@ on:
   # kept showing 2h+ delays (06:00-10:00 UTC is a congested band on GitHub's
   # shared scheduled-run queue; see fetch-daily.yml's doc comment for the
   # same finding). `schedule:` fires are deprioritized best-effort in a way
-  # `workflow_dispatch` isn't, so every fire that used to be a `- cron: ...`
-  # line here is now an external cron-job.org job hitting this workflow's
-  # `workflow_dispatch` REST endpoint directly instead — same wall-clock
-  # times as before (:16 past, 00:16-08:16 UTC weekdays for the trading-day
-  # cadence, plus 23:16 UTC Sun-Thu as the pre-open buffer), just triggered
-  # externally so GitHub's queue delay no longer applies. If cron-job.org
-  # itself ever goes down, this workflow simply stops firing — there is no
-  # GitHub-native fallback anymore. See CLAUDE.md for the full history.
+  # `workflow_dispatch` isn't, so every fire is now an external cron-job.org
+  # job hitting this workflow's `workflow_dispatch` REST endpoint directly
+  # instead, triggered externally so GitHub's queue delay no longer applies.
+  #
+  # 2026-08-05: retimed from a flat hourly grid (9 fires, 8am-4pm PHT) to 10
+  # fires tracking PSE's actual session boundaries instead of the clock —
+  # official session times are 9:00 pre-open, 9:30 open, 12:00-1:00 lunch
+  # recess (no trading), 2:45-3:00 pre-close/run-off/VWAP, 3:15 close. The
+  # old hourly grid wasted fires before open and during the dead lunch hour
+  # while never landing near the close.
+  #
+  # 2026-08-05 (later same day): doubled to 20 fires (~15 min cadence,
+  # denser near session boundaries) at the user's request. Doing this safely
+  # required decoupling ISR cost from fire count first — see fetch-quotes.ts's
+  # triggerRevalidate call, which used to force revalidatePath on 13 pages
+  # every run (13 forced writes x 20 fires/day would have ~doubled the ISR
+  # Writes usage that already hit 75% of quota once, see
+  # project memory / commit history around 2026-08-01). Trimmed to just "/"
+  # — every other page now gets fresh data via the daily-quotes/market-snapshot
+  # tags (lazy, write-on-next-visit, per Vercel's own recommended pattern)
+  # instead of a forced eager regen on every fire.
+  #
+  # Each fire is its own cron-job.org job (mixed hour:minute pairs can't be
+  # expressed in one cron schedule), all named
+  # "PSEye - dispatch market-data-hourly (HH:MM ...)" on cron-job.org:
+  # 9:35 (open+5), 9:50, 10:05, 10:20, 10:35, 10:50, 11:05, 11:20, 11:40,
+  # 11:55 (pre-lunch), 13:05 (resume+5), 13:20, 13:35, 13:50, 14:05, 14:20,
+  # 14:35, 14:55 (run-off/VWAP), 15:18 (post-close), 15:30 (settle) PHT, all
+  # Mon-Fri. If cron-job.org itself ever goes down, this workflow simply
+  # stops firing — there is no GitHub-native fallback anymore. See CLAUDE.md
+  # for the full history.
   workflow_dispatch: {}
 
 jobs:

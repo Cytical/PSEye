@@ -3,7 +3,7 @@ import { fetchWithRetry } from "../fetchWithRetry";
 import { parseMarketWatchPdf } from "./parseMarketWatchPdf";
 
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching public weekly market report PDFs";
+  "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching public weekly market report PDFs";
 
 /**
  * pse.com.ph's WAF 500s a request with no `Accept` header at all, regardless

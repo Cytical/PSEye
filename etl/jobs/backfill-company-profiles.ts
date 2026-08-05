@@ -5,7 +5,7 @@ import { PSE_EDGE_COMPANIES, parseCompanyInfoHtml } from "@pseye/source-quotes";
 import { fetchWikipediaSummary } from "../lib/wikipediaSummary";
 
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching public company information pages";
+  "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching public company information pages";
 
 /**
  * One-time backfill, not a scheduled job (no .github/workflows entry): a

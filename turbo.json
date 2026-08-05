@@ -3,7 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**", "dist/**"],
       "env": ["DATABASE_URL", "DATABASE_URL_UNPOOLED", "NEXT_PUBLIC_SITE_URL", "REVALIDATE_SECRET"]
     },
     "dev": {

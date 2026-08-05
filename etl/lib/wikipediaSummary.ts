@@ -1,4 +1,4 @@
-const USER_AGENT = "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching a company's Wikipedia summary";
+const USER_AGENT = "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching a company's Wikipedia summary";
 
 /** Confirmed live against Wikidata for several PSE-listed companies (banks,
  * conglomerates, a REIT) — Q4830453/Q783794/Q6881511 cover the general

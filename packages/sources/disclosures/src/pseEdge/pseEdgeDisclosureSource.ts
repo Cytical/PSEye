@@ -2,7 +2,7 @@ import type { Disclosure, DisclosureSource } from "../types";
 import { parseAnnouncementsHtml, parseTotalPages } from "./parseAnnouncements";
 
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching public disclosure listings";
+  "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching public disclosure listings";
 
 const SEARCH_URL = "https://edge.pse.com.ph/announcements/search.ax";
 

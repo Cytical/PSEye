@@ -29,7 +29,7 @@ const DEFAULT_TIMEOUT_MS = 8_000;
 // null and the existing placeholder-card fallback in NewsThumbnail.tsx
 // covers it, same as an outlet with no image field in its feed at all.
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching a public article page for its og:image preview tag";
+  "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching a public article page for its og:image preview tag";
 
 /**
  * Fetches one article's own page and extracts its og:image (or twitter:image)

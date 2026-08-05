@@ -75,7 +75,7 @@ export function extractOutletLogo(html: string, pageUrl: string): string | null 
 const DEFAULT_TIMEOUT_MS = 8_000;
 
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching a public outlet homepage for its logo, cached once per outlet";
+  "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching a public outlet homepage for its logo, cached once per outlet";
 
 /**
  * Fetches an outlet's homepage and extracts its logo (see extractOutletLogo)

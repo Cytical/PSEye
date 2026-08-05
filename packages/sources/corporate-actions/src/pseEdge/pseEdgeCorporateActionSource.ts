@@ -2,7 +2,7 @@ import type { CorporateAction, CorporateActionSource } from "../types";
 import { parseDividendsHtml, parseTotalPages } from "./parseDividends";
 
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching public dividend listings";
+  "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching public dividend listings";
 
 const LIST_URL = "https://edge.pse.com.ph/disclosureData/dividends_and_rights_info_list.ax?DividendsOrRights=Dividends";
 

@@ -3,7 +3,7 @@ import { PSE_EDGE_COMPANIES } from "./pseEdgeCompanyDirectory";
 import { parseChartDataJson, parseSecurityId } from "./parseChartData";
 
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching public EOD/delayed stock data pages";
+  "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching public EOD/delayed stock data pages";
 
 /**
  * Real HistoricalQuoteSource: PSE Edge's own per-company "Stock Data" page

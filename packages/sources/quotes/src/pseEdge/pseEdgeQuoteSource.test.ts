@@ -48,7 +48,7 @@ describe("PseEdgeQuoteSource", () => {
     });
 
     const requestInit = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
-    expect(requestInit?.headers).toMatchObject({ "User-Agent": expect.stringContaining("PSEyeBot") });
+    expect(requestInit?.headers).toMatchObject({ "User-Agent": expect.stringContaining("PHMarketEyeBot") });
   });
 
   it("reports a quote with null price/pctChange instead of throwing when a request fails", async () => {

@@ -7,7 +7,7 @@ import {
 } from "./parseQuotationReportPdf";
 
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; PSEyeBot/1.0; +https://github.com/pseye) fetching public daily EOD report PDFs";
+  "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching public daily EOD report PDFs";
 
 /**
  * pse.com.ph's WAF 500s a request with no `Accept` header at all, regardless

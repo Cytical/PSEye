@@ -105,30 +105,27 @@ async function main() {
   if (rows.length > 0) {
     // Also covers market-snapshot: this step runs second in
     // market-data-hourly.yml (after fetch-market-snapshot), so one combined
-    // call here catches both of that job's writes. Only the static
-    // list/dashboard pages are listed — not /stocks/[ticker] or
-    // /sectors/[sector] (282 and ~7 dynamic paths respectively): a
-    // revalidatePath per path there would itself add writes back, working
-    // against the point of this call. Those stay on their own wall-clock
-    // window.
-    await triggerRevalidate(
-      ["daily-quotes", "market-snapshot"],
-      [
-        "/",
-        "/stocks",
-        "/rankings",
-        "/screener",
-        "/sectors",
-        "/most-active",
-        "/portfolio",
-        "/compare",
-        "/market-stats",
-        "/analytics",
-        "/clusters",
-        "/regime",
-        "/dividends",
-      ]
-    );
+    // call here catches both of that job's writes.
+    //
+    // 2026-08-05: trimmed from 13 explicit paths down to just "/". Per
+    // Vercel's ISR docs, revalidateTag only invalidates the *data* cache —
+    // a page using that tag regenerates (and incurs a write) lazily, on its
+    // next real visit — while revalidatePath forces an eager regeneration of
+    // that exact route right away, an unconditional write every call
+    // regardless of traffic. With the cadence going from 10 to 20 fires/day,
+    // 13 forced paths x 20 fires would have ~doubled forced writes from
+    // ~130/day to ~260/day; listing only the homepage here caps the *forced*
+    // side at 20/day (worth it — highest-traffic page, and the OG/share
+    // surface) while every other page (/stocks, /rankings, /screener,
+    // /sectors, /most-active, /portfolio, /compare, /market-stats,
+    // /analytics, /clusters, /regime, /dividends) still gets fresh data
+    // immediately via the daily-quotes/market-snapshot tags — it just only
+    // pays a write when a visitor actually loads it, per Vercel's own
+    // recommended pattern ("tag-based revalidation ... instead of
+    // revalidating entire paths"). Each of those pages also keeps its own 6h
+    // revalidate=21600 wall-clock ceiling as a backstop if tag invalidation
+    // is ever missed.
+    await triggerRevalidate(["daily-quotes", "market-snapshot"], ["/"]);
   }
 }
 

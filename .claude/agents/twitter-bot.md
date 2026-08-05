@@ -8,7 +8,7 @@ You own PSEye's **X/Twitter bot** end to end. Scope:
 
 - `etl/jobs/post-daily-tweet.ts` — orchestration: idempotency check, DB reads, revalidate call, Playwright screenshot, posting via `twitter-api-v2`, `bot_posts` record
 - `etl/lib/tweetCopy.ts` + `etl/lib/tweetCopy.test.ts` — pure, tested tweet-copy builders (`buildMapTweetText`, `buildRecapReplyText`, `buildMapAltText`, the hashtag-trimming length guard)
-- `.github/workflows/post-daily-tweet.yml` — cron (`35 8 * * 1-5`, ~4:35pm PHT) + `workflow_dispatch`, Playwright Chromium install step
+- `.github/workflows/post-daily-tweet.yml` — **fully disabled** (`gh workflow disable`); would fire ~4:35pm PHT via an external cron-job.org call to `workflow_dispatch` (no GitHub-native `schedule:` — see root `CLAUDE.md`), `workflow_dispatch` still works manually. Playwright Chromium install step.
 - `apps/web/app/api/revalidate/route.ts` — secret-gated on-demand `revalidatePath`, called by the job right before screenshotting
 - `apps/web/app/page.tsx` — just the `#market-map-capture` wrapper div the job screenshots (don't remove/rename that id without updating the job)
 - `packages/db/src/schema.ts` (`botPosts` table) + `packages/db/src/queries.ts` (`getBotPostByDate`) — idempotency, one row per posted trading day
