@@ -96,6 +96,7 @@ export function StockStatistics({
               tone={toneOf(annReturn)}
               hint="CAGR"
               info="Compound annual growth rate implied by the closing-price series over this window."
+              glossaryId="cagr"
             />
             <Kpi
               label="Sharpe"
@@ -118,6 +119,7 @@ export function StockStatistics({
               value={downDevAnnPct == null ? "N/A" : `${downDevAnnPct.toFixed(1)}%`}
               hint="losses only"
               info="Standard deviation of returns below the risk-free rate: volatility from losing days only, ignoring upside swings."
+              glossaryId="downside-deviation"
             />
           </div>
         </div>
@@ -134,6 +136,7 @@ export function StockStatistics({
               value={skew == null ? "N/A" : skew.toFixed(2)}
               hint={skew == null ? undefined : skew > 0.1 ? "right tail" : skew < -0.1 ? "left tail" : "symmetric"}
               info="Asymmetry of the daily-return distribution. Positive means occasional large up days pull the tail right; negative means occasional large down days pull it left."
+              glossaryId="skewness"
             />
             <Kpi
               label="Excess kurtosis"
@@ -142,6 +145,7 @@ export function StockStatistics({
               info={
                 'How much more often extreme daily moves happen versus a normal distribution. Higher means more "fat tail" surprise days than a bell curve would predict.'
               }
+              glossaryId="excess-kurtosis"
             />
             <Kpi
               label="VaR (95%)"
@@ -187,6 +191,8 @@ export function StockStatistics({
                 label="Yield (TTM)"
                 value={dividend.yieldPct == null ? "N/A" : `${dividend.yieldPct.toFixed(2)}%`}
                 tone={dividend.yieldPct != null && dividend.yieldPct > 0 ? "up" : undefined}
+                info="Trailing-twelve-month cash dividends per share, divided by the current price."
+                glossaryId="dividend-yield"
               />
               <Kpi label="Dividends" value={`₱${dividend.ttm.toFixed(4).replace(/\.?0+$/, "")}`} hint="TTM" />
               <Kpi label="Payouts" value={String(dividend.payoutCount)} hint="TTM" />

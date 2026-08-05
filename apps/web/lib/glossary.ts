@@ -294,4 +294,103 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
       "The Philippine Stock Exchange settles trades two business days after the trade date (\"T+2\") — a buy order filled today doesn't land in your account, and a sell order's cash proceeds aren't available, until two business days later. This is a market-wide settlement cycle, not something specific to any one broker.",
     related: [{ href: "/getting-started", label: "Getting started" }],
   },
+  {
+    id: "moving-average",
+    term: "Simple Moving Average (SMA)",
+    question: "What Is a Simple Moving Average (SMA)?",
+    definition:
+      "The average closing price over a fixed trailing window — the 50-day and 200-day windows are the two conventionally watched. A price trading above its moving average is often read as a short-term uptrend, below as a downtrend; the average itself lags the price since it's built from past closes, not a prediction of future ones.",
+    related: [{ href: "/stocks", label: "Per-stock analytics" }],
+    seeAlso: ["rsi", "macd"],
+  },
+  {
+    id: "cagr",
+    term: "Annualized Return (CAGR)",
+    question: "What Is Annualized Return (CAGR)?",
+    definition:
+      "The compound annual growth rate implied by a price series over a given window — the single steady yearly rate that would have produced the same total return, smoothing out however bumpy the actual path was. Useful for comparing two stocks (or two time windows) on equal footing, since raw total return alone doesn't account for how long it took to get there.",
+    related: [{ href: "/stocks", label: "Per-stock statistics" }],
+    seeAlso: ["sharpe-ratio", "volatility"],
+  },
+  {
+    id: "downside-deviation",
+    term: "Downside Deviation",
+    question: "What Is Downside Deviation?",
+    definition:
+      "Like standard deviation (volatility), but calculated only from returns that fell below the risk-free rate — upside swings aren't counted as \"risk\" at all. It's the ingredient behind the Sortino ratio, and generally reads lower than full volatility for a stock whose bad days are less extreme than its good ones.",
+    related: [{ href: "/stocks", label: "Per-stock statistics" }],
+    seeAlso: ["sortino-ratio", "volatility"],
+  },
+  {
+    id: "skewness",
+    term: "Skewness",
+    question: "What Is Skewness?",
+    definition:
+      "A measure of asymmetry in a stock's daily-return distribution. Positive skew means occasional large up days pull the average up and stretch the distribution's right tail; negative skew means occasional large down days do the same to the left. A skew near zero means gains and losses are roughly symmetric in shape.",
+    related: [{ href: "/stocks", label: "Per-stock statistics" }],
+    seeAlso: ["excess-kurtosis", "volatility"],
+  },
+  {
+    id: "excess-kurtosis",
+    term: "Excess Kurtosis",
+    question: "What Is Excess Kurtosis?",
+    definition:
+      "How much more often extreme daily moves happen compared to a normal (bell-curve) distribution with the same volatility. Positive excess kurtosis (\"fat tails\") means big surprise days — up or down — show up more often than a bell curve would predict; near zero means the return distribution is closer to normal.",
+    related: [{ href: "/stocks", label: "Per-stock statistics" }],
+    seeAlso: ["skewness", "value-at-risk"],
+  },
+  {
+    id: "total-assets",
+    term: "Total Assets",
+    question: "What Are Total Assets?",
+    definition:
+      "Everything a company owns that has value — cash, receivables, inventory, property, equipment, investments — added up on its balance sheet. Reported alongside total liabilities so you can see what's owned versus owed; the difference between the two is stockholders' equity.",
+    related: [{ href: "/stocks", label: "Per-stock balance sheet" }],
+    seeAlso: ["total-liabilities", "stockholders-equity"],
+  },
+  {
+    id: "total-liabilities",
+    term: "Total Liabilities",
+    question: "What Are Total Liabilities?",
+    definition:
+      "Everything a company owes — loans, bonds payable, accounts payable, accrued expenses — added up on its balance sheet. A company with liabilities close to or exceeding its total assets is more financially fragile than one with a wide cushion between the two.",
+    related: [{ href: "/stocks", label: "Per-stock balance sheet" }],
+    seeAlso: ["total-assets", "stockholders-equity"],
+  },
+  {
+    id: "stockholders-equity",
+    term: "Stockholders' Equity",
+    question: "What Is Stockholders' Equity?",
+    definition:
+      "Total assets minus total liabilities — the portion of a company's balance sheet that belongs to shareholders rather than creditors, on paper. Divided by shares outstanding, it's the basis for book value per share.",
+    related: [{ href: "/stocks", label: "Per-stock balance sheet" }],
+    seeAlso: ["total-assets", "total-liabilities", "book-value-per-share"],
+  },
+  {
+    id: "net-income",
+    term: "Net Income (Net Profit/Loss)",
+    question: "What Is Net Income?",
+    definition:
+      "What's left of a company's revenue after every expense, interest cost, and tax for the fiscal year — the standard \"bottom line\" profit (or loss, if negative) figure. Divided by shares outstanding, it's the basis for earnings per share (EPS).",
+    related: [{ href: "/stocks", label: "Per-stock income statement" }],
+    seeAlso: ["earnings-per-share", "cagr"],
+  },
+  {
+    id: "market-order",
+    term: "Market Order",
+    question: "What Is a Market Order?",
+    definition:
+      "An order to buy or sell immediately at the best price currently available, rather than a price you set yourself. It almost always fills right away, but on a thinly-traded stock the price you actually get can differ from the last quoted price — you're trading certainty of execution for control over price.",
+    related: [{ href: "/getting-started", label: "Getting started" }],
+    seeAlso: ["limit-order"],
+  },
+  {
+    id: "limit-order",
+    term: "Limit Order",
+    question: "What Is a Limit Order?",
+    definition:
+      "An order to buy or sell only at a price you specify (or better) — a buy limit fills at your price or lower, a sell limit at your price or higher. It gives you control over the price but no guarantee of filling at all: if the market never reaches your limit, the order simply sits unfilled until it expires or you cancel it.",
+    related: [{ href: "/getting-started", label: "Getting started" }],
+    seeAlso: ["market-order"],
+  },
 ];

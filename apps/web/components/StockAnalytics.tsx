@@ -78,6 +78,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       tone: price >= ma50 ? "up" : "down",
       hint: price >= ma50 ? "price above" : "price below",
       info: "Simple moving average of the last 50 closing prices: a short-term trend line.",
+      glossaryId: "moving-average",
     });
   if (ma200 != null)
     risk.push({
@@ -86,6 +87,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       tone: price >= ma200 ? "up" : "down",
       hint: price >= ma200 ? "price above" : "price below",
       info: "Simple moving average of the last 200 closing prices: a longer-term trend line.",
+      glossaryId: "moving-average",
     });
 
   if (returns.length === 0 && risk.length === 0 && rsiValue == null && macdResult == null) return null;

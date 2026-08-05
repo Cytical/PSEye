@@ -17,6 +17,7 @@ import { StockAnalytics } from "@/components/StockAnalytics";
 import { CompanyFinancials, hasAnyFinancialData } from "@/components/CompanyFinancials";
 import { CompanyLeadership, hasAnyLeadershipData } from "@/components/CompanyLeadership";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { InfoTip } from "@/components/InfoTip";
 import { MatchHeight } from "@/components/MatchHeight";
 import {
   StockStatistics,
@@ -321,15 +322,46 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
   // Only the fields this particular quote actually has — a rail of "—"
   // placeholders would be worse than a shorter rail.
-  const heroStats: { label: string; value: string; hint?: string }[] = [];
-  if (quote) heroStats.push({ label: "Market cap", value: formatMarketCap(quote.marketCap) });
+  const heroStats: { label: string; value: string; hint?: string; info?: string; glossaryId?: string }[] = [];
+  if (quote)
+    heroStats.push({
+      label: "Market cap",
+      value: formatMarketCap(quote.marketCap),
+      info: "Last traded price × total outstanding shares — the standard measure of company size.",
+      glossaryId: "market-capitalization",
+    });
   if (prevClose != null) heroStats.push({ label: "Prev close", value: formatPeso(prevClose) });
-  if (quote?.volume != null) heroStats.push({ label: "Volume", value: formatCompact(quote.volume), hint: "shares" });
-  if (quote?.value != null) heroStats.push({ label: "Turnover", value: `₱${formatCompact(quote.value)}`, hint: "today" });
+  if (quote?.volume != null)
+    heroStats.push({
+      label: "Volume",
+      value: formatCompact(quote.volume),
+      hint: "shares",
+      info: "Number of shares that changed hands today.",
+      glossaryId: "trading-value-volume",
+    });
+  if (quote?.value != null)
+    heroStats.push({
+      label: "Turnover",
+      value: `₱${formatCompact(quote.value)}`,
+      hint: "today",
+      info: "Total peso amount traded today — the more useful measure for comparing activity across stocks at different prices.",
+      glossaryId: "trading-value-volume",
+    });
   if (quote?.freeFloatPct != null)
-    heroStats.push({ label: "Free float", value: `${quote.freeFloatPct.toFixed(1)}%` });
+    heroStats.push({
+      label: "Free float",
+      value: `${quote.freeFloatPct.toFixed(1)}%`,
+      info: "The percentage of outstanding shares actually available for public trading, excluding shares locked up by controlling owners or the government.",
+      glossaryId: "free-float",
+    });
   if (dividendSummary?.yieldPct != null)
-    heroStats.push({ label: "Div yield", value: `${dividendSummary.yieldPct.toFixed(2)}%`, hint: "TTM" });
+    heroStats.push({
+      label: "Div yield",
+      value: `${dividendSummary.yieldPct.toFixed(2)}%`,
+      hint: "TTM",
+      info: "Trailing-twelve-month cash dividends per share, divided by the current price.",
+      glossaryId: "dividend-yield",
+    });
 
   const companyFacts = profile ? buildCompanyFacts(profile) : [];
   const statsSample = yearCloses.length > 0 ? statisticsSampleSize(yearCloses) : null;
@@ -435,7 +467,10 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
               &middot;
             </span>
             <span>
-              #{rank} of {rankedByMarketCap.length} by float-adjusted market cap
+              #{rank} of {rankedByMarketCap.length} by{" "}
+              <Link href="/glossary/float-adjusted-market-cap" className="hover:underline">
+                float-adjusted market cap
+              </Link>
             </span>
             <span aria-hidden="true" className="mx-1 text-panel-fg/40">
               &middot;
@@ -477,8 +512,12 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         {yearStats && (
           <div className="min-w-0 lg:w-[300px] lg:shrink-0 lg:border-l lg:border-panel-border lg:pl-6">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="kicker text-panel-fg/60">
+              <span className="flex items-center kicker text-panel-fg/60">
                 {yearStats.sinceLabel ? `Range since ${yearStats.sinceLabel}` : "52-week range"}
+                <InfoTip
+                  text="The highest and lowest closing price this stock has recorded over the trailing year."
+                  glossaryId="52-week-high-low"
+                />
               </span>
               {yearStats.pctFromHigh != null && (
                 <span
@@ -517,7 +556,15 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             className="grid min-w-0 flex-1 grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-x-6 gap-y-3 lg:border-l lg:border-panel-border lg:pl-6"
           >
             {heroStats.map((s) => (
-              <Kpi key={s.label} label={s.label} value={s.value} hint={s.hint} size="lg" />
+              <Kpi
+                key={s.label}
+                label={s.label}
+                value={s.value}
+                hint={s.hint}
+                info={s.info}
+                glossaryId={s.glossaryId}
+                size="lg"
+              />
             ))}
           </div>
         )}

@@ -28,16 +28,31 @@ interface Row {
 export function CompanyFinancials({ data }: { data: CompanyFinancialsData }) {
   const balanceSheet: Row[] = [
     { label: "Current assets", figure: data.currentAssets },
-    { label: "Total assets", figure: data.totalAssets },
+    {
+      label: "Total assets",
+      figure: data.totalAssets,
+      info: "Everything the company owns that has value — cash, receivables, inventory, property, equipment, investments — added up.",
+      glossaryId: "total-assets",
+    },
     { label: "Current liabilities", figure: data.currentLiabilities },
-    { label: "Total liabilities", figure: data.totalLiabilities },
+    {
+      label: "Total liabilities",
+      figure: data.totalLiabilities,
+      info: "Everything the company owes — loans, bonds payable, accounts payable, accrued expenses — added up.",
+      glossaryId: "total-liabilities",
+    },
     {
       label: "Retained earnings/(deficit)",
       figure: data.retainedEarnings,
       toneBySign: true,
       info: "Cumulative profit kept in the business since incorporation, after all dividends paid out. Negative means accumulated losses exceed accumulated profit — a retained deficit.",
     },
-    { label: "Stockholders' equity", figure: data.stockholdersEquity },
+    {
+      label: "Stockholders' equity",
+      figure: data.stockholdersEquity,
+      info: "Total assets minus total liabilities — the portion of the balance sheet that belongs to shareholders rather than creditors, on paper.",
+      glossaryId: "stockholders-equity",
+    },
     { label: "Stockholders' equity — parent", figure: data.stockholdersEquityParent },
     {
       label: "Book value per share",
@@ -52,7 +67,13 @@ export function CompanyFinancials({ data }: { data: CompanyFinancialsData }) {
     { label: "Gross revenue", figure: data.grossRevenue },
     { label: "Gross expense", figure: data.grossExpense },
     { label: "Income/(loss) before tax", figure: data.incomeBeforeTax, toneBySign: true },
-    { label: "Net income/(loss) after tax", figure: data.netIncomeAfterTax, toneBySign: true },
+    {
+      label: "Net income/(loss) after tax",
+      figure: data.netIncomeAfterTax,
+      toneBySign: true,
+      info: "What's left of revenue after every expense, interest cost, and tax for the fiscal year — the standard \"bottom line\" profit or loss figure.",
+      glossaryId: "net-income",
+    },
     {
       label: "Net income/(loss) — parent",
       figure: data.netIncomeAttributableToParent,
