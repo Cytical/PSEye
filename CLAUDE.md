@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 PSEye — a free, community-first tracker for the Philippine Stock Exchange (PSE). pnpm + Turborepo monorepo.
 
+## Writing style
+
+Never use em dashes (—) in any user-facing copy: page content, FAQ answers, glossary definitions, metadata descriptions, tweet copy, anything a reader sees. Use a period, comma, colon, or parentheses instead. This does not apply to code comments, which keep the codebase's existing em-dash-heavy documentation convention.
+
 ## Commands
 
 Run from the repo root unless noted.
