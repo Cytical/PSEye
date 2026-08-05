@@ -214,6 +214,16 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     definition:
       "A 0-100 momentum gauge comparing the size of a stock's recent gains to its recent losses over the last 14 trading days. Conventionally, above 70 is considered overbought and below 30 oversold — though neither guarantees a reversal is coming.",
     related: [{ href: "/stocks", label: "Per-stock risk stats" }],
+    seeAlso: ["macd"],
+  },
+  {
+    id: "macd",
+    term: "MACD (Moving Average Convergence/Divergence)",
+    question: "What Is MACD?",
+    definition:
+      "A trend-momentum indicator: the 12-day exponential moving average minus the 26-day EMA, itself smoothed by a 9-day signal line. The histogram (the gap between the two) is the usual way to read it — positive and above zero suggests bullish momentum, negative suggests bearish, and a bar flipping from one side of zero to the other is called a crossover.",
+    related: [{ href: "/stocks", label: "Per-stock risk stats" }],
+    seeAlso: ["rsi"],
   },
   {
     id: "market-regime",
@@ -232,6 +242,24 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
       "Groups of PSE stocks with similar volatility, beta, momentum, and market correlation, found algorithmically (k-means clustering) rather than assigned by PSE's own sector labels — two stocks in different sectors can end up in the same cluster if they actually move alike.",
     related: [{ href: "/clusters", label: "Stock clusters" }],
     seeAlso: ["beta", "volatility", "correlation", "sector"],
+  },
+  {
+    id: "book-value-per-share",
+    term: "Book Value Per Share",
+    question: "What Is Book Value Per Share?",
+    definition:
+      "Stockholders' equity attributable to the parent company, divided by shares outstanding — what each share would be worth on paper if the company were liquidated at exactly its balance-sheet value. Sourced from PSE Edge's own Annual Financial Reports, not derived or estimated.",
+    related: [{ href: "/stocks", label: "Per-stock balance sheet" }],
+    seeAlso: ["earnings-per-share"],
+  },
+  {
+    id: "earnings-per-share",
+    term: "EPS (Earnings Per Share)",
+    question: "What Is Earnings Per Share (EPS)?",
+    definition:
+      "Net income attributable to the parent company for the fiscal year, divided by weighted-average shares outstanding — profit earned per share. PSE Edge reports both a basic figure (actual shares outstanding) and a diluted one (as if every convertible security were exercised), sourced from the company's own Annual Financial Reports.",
+    related: [{ href: "/stocks", label: "Per-stock income statement" }],
+    seeAlso: ["book-value-per-share", "pe-ratio"],
   },
   {
     id: "dca",

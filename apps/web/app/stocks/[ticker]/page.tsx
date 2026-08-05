@@ -3,9 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 import { DISCLOSURE_TYPE_LABELS, DISCLOSURE_TYPE_ACCENT } from "@pseye/source-disclosures";
-import { CORPORATE_ACTION_LABELS, CORPORATE_ACTION_TYPE_ACCENT } from "@pseye/source-corporate-actions";
 import { getDailyQuotes } from "@/lib/quotes";
 import { getCompanyProfiles, type CompanyProfile } from "@/lib/companyProfiles";
+import { getCompanyFinancials } from "@/lib/companyFinancials";
 import { getDisclosures } from "@/lib/disclosures";
 import { getCorporateActions } from "@/lib/corporateActions";
 import { manilaToday } from "@/lib/manilaDate";
@@ -14,6 +14,7 @@ import { getNewsForTicker } from "@/lib/news";
 import { getHistoricalQuotes } from "@/lib/historicalQuotes";
 import { StockPriceChart } from "@/components/StockPriceChart";
 import { StockAnalytics } from "@/components/StockAnalytics";
+import { CompanyFinancials, hasAnyFinancialData } from "@/components/CompanyFinancials";
 import {
   StockStatistics,
   StockSeasonality,
@@ -206,9 +207,10 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
   chartFrom.setUTCDate(chartFrom.getUTCDate() - HISTORY_LOOKBACK_DAYS);
   const chartFromIso = chartFrom.toISOString().slice(0, 10);
 
-  const [quotes, profiles, disclosures, corporateActions, news] = await Promise.all([
+  const [quotes, profiles, financials, disclosures, corporateActions, news] = await Promise.all([
     getDailyQuotes(),
     getCompanyProfiles(),
+    getCompanyFinancials(),
     getDisclosures(),
     getCorporateActions(),
     getNewsForTicker(ticker),
@@ -216,11 +218,12 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
   const quote = quotes.find((q) => q.ticker === ticker);
   const profile = profiles[ticker] ?? null;
+  const companyFinancials = financials[ticker];
+  const hasFinancials = companyFinancials != null && hasAnyFinancialData(companyFinancials);
   // The panels these feed scroll internally now, so a longer list costs no
   // layout height — worth showing more than the 8 the old fixed-height columns
   // could fit before they started pushing sibling sections down the page.
   const companyDisclosures = disclosures.filter((d) => d.ticker === ticker).slice(0, 25);
-  const companyActions = corporateActions.filter((a) => a.ticker === ticker).slice(0, 25);
 
   const sector = quote?.sector ?? company.sector;
   // Float-adjusted, so the "#N of M" here matches the board /rankings
@@ -692,45 +695,15 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             sibling (About), so unlike the rows above it needs an explicit
             desktop height for its body to have something to scroll within. */}
         <Panel
-          title="Dividends & corporate actions"
-          meta={companyActions.length > 0 ? `${companyActions.length} on record` : undefined}
+          title="Balance sheet & income statement"
+          meta="PSE Edge · Annual"
           className="min-w-0 lg:max-h-[26rem] lg:basis-1/3 lg:grow"
           scroll
-          flush
-          footer={
-            <Link href="/calendar" className="text-panel-fg/68 hover:underline">
-              Full calendar →
-            </Link>
-          }
         >
-          {companyActions.length > 0 ? (
-            <ul className="divide-y divide-panel-border">
-              {companyActions.map((a) => {
-                const accent = CORPORATE_ACTION_TYPE_ACCENT[a.type];
-                return (
-                  <li
-                    key={`${a.type}-${a.exDate}`}
-                    className="px-3 py-2 text-xs"
-                    style={{ boxShadow: `inset 3px 0 0 ${accent}` }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="type-badge truncate rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-                        style={{ "--badge-accent": accent } as React.CSSProperties}
-                      >
-                        {CORPORATE_ACTION_LABELS[a.type]}
-                      </span>
-                      <span className="ml-auto shrink-0 text-[10.5px] text-panel-fg/72">
-                        Ex-date {formatDate(a.exDate)}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 leading-snug text-panel-fg">{a.details}</p>
-                  </li>
-                );
-              })}
-            </ul>
+          {hasFinancials ? (
+            <CompanyFinancials data={companyFinancials!} />
           ) : (
-            <PanelEmpty>No dividends or corporate actions on record for {company.ticker}.</PanelEmpty>
+            <PanelEmpty>No annual financial report on file for {company.ticker} yet.</PanelEmpty>
           )}
         </Panel>
 

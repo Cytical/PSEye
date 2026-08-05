@@ -109,6 +109,65 @@ export const companyProfiles = pgTable("company_profiles", {
   wikipediaUrl: varchar("wikipedia_url", { length: 512 }),
 });
 
+// One row per ticker: the latest Annual Balance Sheet + Income Statement from
+// PSE Edge's own "Financial Reports" tab (current fiscal year vs previous —
+// the same two-column shape that page itself shows, no deeper multi-year
+// history kept). Populated by the manual backfill in
+// etl/jobs/backfill-company-financials.ts (same once-a-year-changes reasoning
+// as company_profiles above, not a recurring ETL job). Every numeric column
+// is nullable — a company can be missing an individual line item, or the
+// whole row can be absent for one that's never filed. See
+// apps/web/lib/companyFinancials.ts and
+// packages/sources/quotes/src/pseEdge/parseFinancialReports.ts.
+export const companyFinancials = pgTable("company_financials", {
+  id: serial("id").primaryKey(),
+  ticker: varchar("ticker", { length: 16 }).notNull().unique(),
+  fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull(),
+  // PSE Edge's own phrasing, e.g. "Dec 31, 2025" / "PhP (in Millions)" — kept
+  // as strings rather than parsed/normalized, since units vary per company
+  // (see parseFinancialReports.ts's doc comment on why).
+  fiscalYearEnded: varchar("fiscal_year_ended", { length: 32 }),
+  currencyUnit: varchar("currency_unit", { length: 64 }),
+
+  currentAssetsCurrent: numeric("current_assets_current", { precision: 20, scale: 4 }),
+  currentAssetsPrevious: numeric("current_assets_previous", { precision: 20, scale: 4 }),
+  totalAssetsCurrent: numeric("total_assets_current", { precision: 20, scale: 4 }),
+  totalAssetsPrevious: numeric("total_assets_previous", { precision: 20, scale: 4 }),
+  currentLiabilitiesCurrent: numeric("current_liabilities_current", { precision: 20, scale: 4 }),
+  currentLiabilitiesPrevious: numeric("current_liabilities_previous", { precision: 20, scale: 4 }),
+  totalLiabilitiesCurrent: numeric("total_liabilities_current", { precision: 20, scale: 4 }),
+  totalLiabilitiesPrevious: numeric("total_liabilities_previous", { precision: 20, scale: 4 }),
+  retainedEarningsCurrent: numeric("retained_earnings_current", { precision: 20, scale: 4 }),
+  retainedEarningsPrevious: numeric("retained_earnings_previous", { precision: 20, scale: 4 }),
+  stockholdersEquityCurrent: numeric("stockholders_equity_current", { precision: 20, scale: 4 }),
+  stockholdersEquityPrevious: numeric("stockholders_equity_previous", { precision: 20, scale: 4 }),
+  stockholdersEquityParentCurrent: numeric("stockholders_equity_parent_current", { precision: 20, scale: 4 }),
+  stockholdersEquityParentPrevious: numeric("stockholders_equity_parent_previous", { precision: 20, scale: 4 }),
+  bookValuePerShareCurrent: numeric("book_value_per_share_current", { precision: 20, scale: 4 }),
+  bookValuePerSharePrevious: numeric("book_value_per_share_previous", { precision: 20, scale: 4 }),
+
+  grossRevenueCurrent: numeric("gross_revenue_current", { precision: 20, scale: 4 }),
+  grossRevenuePrevious: numeric("gross_revenue_previous", { precision: 20, scale: 4 }),
+  grossExpenseCurrent: numeric("gross_expense_current", { precision: 20, scale: 4 }),
+  grossExpensePrevious: numeric("gross_expense_previous", { precision: 20, scale: 4 }),
+  incomeBeforeTaxCurrent: numeric("income_before_tax_current", { precision: 20, scale: 4 }),
+  incomeBeforeTaxPrevious: numeric("income_before_tax_previous", { precision: 20, scale: 4 }),
+  netIncomeAfterTaxCurrent: numeric("net_income_after_tax_current", { precision: 20, scale: 4 }),
+  netIncomeAfterTaxPrevious: numeric("net_income_after_tax_previous", { precision: 20, scale: 4 }),
+  netIncomeAttributableToParentCurrent: numeric("net_income_attributable_to_parent_current", {
+    precision: 20,
+    scale: 4,
+  }),
+  netIncomeAttributableToParentPrevious: numeric("net_income_attributable_to_parent_previous", {
+    precision: 20,
+    scale: 4,
+  }),
+  earningsPerShareBasicCurrent: numeric("eps_basic_current", { precision: 20, scale: 4 }),
+  earningsPerShareBasicPrevious: numeric("eps_basic_previous", { precision: 20, scale: 4 }),
+  earningsPerShareDilutedCurrent: numeric("eps_diluted_current", { precision: 20, scale: 4 }),
+  earningsPerShareDilutedPrevious: numeric("eps_diluted_previous", { precision: 20, scale: 4 }),
+});
+
 // One row per calendar day, upserted on every hourly ETL run (see
 // etl/jobs/fetch-market-snapshot.ts) — "the day's" PSEi/forex reading, not a
 // full intraday history.

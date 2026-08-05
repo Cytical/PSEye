@@ -11,6 +11,8 @@ import {
   histogram,
   historicalVaR,
   logReturns,
+  macd,
+  macdSignalLabel,
   maxDrawdown,
   mean,
   monthlyReturnStats,
@@ -91,6 +93,42 @@ describe("rsi", () => {
     const value = rsi(zig, 14)!;
     expect(value).toBeGreaterThan(30);
     expect(value).toBeLessThan(70);
+  });
+});
+
+describe("macd", () => {
+  it("is null below slow+signal closes", () => {
+    expect(macd(Array.from({ length: 34 }, (_, i) => 100 + i))).toBeNull();
+  });
+  it("is ~0 across fast/slow/signal for a flat series", () => {
+    const flat = Array.from({ length: 60 }, () => 100);
+    const result = macd(flat)!;
+    expect(result.macd).toBeCloseTo(0, 6);
+    expect(result.signal).toBeCloseTo(0, 6);
+    expect(result.histogram).toBeCloseTo(0, 6);
+  });
+  it("goes positive (fast EMA pulls ahead) on a sustained uptrend", () => {
+    const rising = Array.from({ length: 80 }, (_, i) => 100 + i * 0.5);
+    const result = macd(rising)!;
+    expect(result.macd).toBeGreaterThan(0);
+    expect(result.histogram).toBeGreaterThan(-1e-6);
+  });
+  it("returns recentHistogram capped at recentBars", () => {
+    const rising = Array.from({ length: 80 }, (_, i) => 100 + i * 0.5);
+    const result = macd(rising, 12, 26, 9, 5)!;
+    expect(result.recentHistogram).toHaveLength(5);
+    expect(result.recentHistogram[result.recentHistogram.length - 1]).toBeCloseTo(result.histogram, 10);
+  });
+});
+
+describe("macdSignalLabel", () => {
+  it("reads a sign flip as a crossover", () => {
+    expect(macdSignalLabel([-0.5, -0.1, 0.2])).toBe("bullish crossover");
+    expect(macdSignalLabel([0.5, 0.1, -0.2])).toBe("bearish crossover");
+  });
+  it("falls back to the current sign with no flip", () => {
+    expect(macdSignalLabel([0.3, 0.4, 0.5])).toBe("above signal");
+    expect(macdSignalLabel([-0.3, -0.4, -0.5])).toBe("below signal");
   });
 });
 

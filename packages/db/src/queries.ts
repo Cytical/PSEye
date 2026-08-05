@@ -3,6 +3,7 @@ import type { Db } from "./client";
 import {
   dailyQuotes,
   companyProfiles,
+  companyFinancials,
   marketSnapshot,
   indexForeignFlow,
   stockForeignFlow,
@@ -35,6 +36,11 @@ export async function getLatestDailyQuotes(db: Db) {
  */
 export async function getCompanyProfiles(db: Db) {
   return db.select().from(companyProfiles);
+}
+
+/** Every company_financials row — same one-query-for-everything shape as getCompanyProfiles. */
+export async function getCompanyFinancials(db: Db) {
+  return db.select().from(companyFinancials);
 }
 
 /** Today's (or the most recently captured) PSEi/forex snapshot, or undefined if the table is empty. */

@@ -14,6 +14,7 @@
     "fetch-historical-quotes": "tsx jobs/fetch-historical-quotes.ts",
     "fetch-market-snapshot": "tsx jobs/fetch-market-snapshot.ts",
     "backfill-company-profiles": "tsx jobs/backfill-company-profiles.ts",
+    "backfill-company-financials": "tsx jobs/backfill-company-financials.ts",
     "post-daily-tweet": "tsx jobs/post-daily-tweet.ts",
     "migrate-db": "tsx jobs/migrate-db.ts",
     "typecheck": "tsc --noEmit",

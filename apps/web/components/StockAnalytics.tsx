@@ -1,6 +1,8 @@
 import type { HistoricalClose } from "@pseye/source-quotes";
 import {
   annualizedVolatility,
+  macd,
+  macdSignalLabel,
   maxDrawdown,
   rsi,
   rsiLabel,
@@ -8,7 +10,7 @@ import {
   trailingReturn,
 } from "@/lib/analytics";
 import { Kpi } from "./Kpi";
-import { RadialGauge } from "./RadialGauge";
+import { MacdBars, RadialGauge } from "./RadialGauge";
 import { InfoTip } from "./InfoTip";
 
 /**
@@ -31,6 +33,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
 
   const vol = annualizedVolatility(series);
   const rsiValue = rsi(series);
+  const macdResult = macd(series);
   const ma50 = sma(series, 50);
   const ma200 = sma(series, 200);
   const dd = maxDrawdown(series);
@@ -85,26 +88,56 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       info: "Simple moving average of the last 200 closing prices: a longer-term trend line.",
     });
 
-  if (returns.length === 0 && risk.length === 0 && rsiValue == null) return null;
+  if (returns.length === 0 && risk.length === 0 && rsiValue == null && macdResult == null) return null;
 
   const rsiTone: "up" | "down" | undefined =
     rsiValue == null ? undefined : rsiValue >= 70 ? "down" : rsiValue <= 30 ? "up" : undefined;
 
+  const macdLabel = macdResult ? macdSignalLabel(macdResult.recentHistogram) : null;
+  const macdTone: "up" | "down" | undefined =
+    macdLabel == null ? undefined : macdLabel.startsWith("bullish") || macdLabel === "above signal" ? "up" : "down";
+
   return (
     <div className="flex h-full flex-col gap-2.5">
-      {rsiValue != null && (
-        <div className="flex items-center gap-2.5 rounded-lg bg-panel-raised px-2.5 py-1.5">
-          <RadialGauge value={rsiValue} tone={rsiTone} />
-          <div className="min-w-0">
-            <div className="flex items-center gap-0.5 text-[10.5px] leading-tight text-panel-fg/60">
-              RSI (14)
-              <InfoTip
-                text='Relative Strength Index, Wilder&apos;s 14-day smoothing. Runs 0–100: readings above 70 are typically read as "overbought," below 30 as "oversold." A momentum reading, not a buy/sell signal.'
-                glossaryId="rsi"
-              />
+      {(rsiValue != null || macdResult != null) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {rsiValue != null && (
+            <div className="flex items-center gap-2.5 rounded-lg bg-panel-raised px-2.5 py-1.5">
+              <RadialGauge value={rsiValue} tone={rsiTone} />
+              <div className="min-w-0">
+                <div className="flex items-center gap-0.5 text-[10.5px] leading-tight text-panel-fg/60">
+                  RSI (14)
+                  <InfoTip
+                    text='Relative Strength Index, Wilder&apos;s 14-day smoothing. Runs 0–100: readings above 70 are typically read as "overbought," below 30 as "oversold." A momentum reading, not a buy/sell signal.'
+                    glossaryId="rsi"
+                  />
+                </div>
+                <div className="text-[13.5px] font-semibold text-panel-fg">{rsiLabel(rsiValue)}</div>
+              </div>
             </div>
-            <div className="text-[13.5px] font-semibold text-panel-fg">{rsiLabel(rsiValue)}</div>
-          </div>
+          )}
+
+          {macdResult != null && macdLabel != null && (
+            <div className="flex items-center gap-2.5 rounded-lg bg-panel-raised px-2.5 py-1.5">
+              <MacdBars histogram={macdResult.recentHistogram} />
+              <div className="min-w-0">
+                <div className="flex items-center gap-0.5 text-[10.5px] leading-tight text-panel-fg/60">
+                  MACD
+                  <InfoTip
+                    text="Moving Average Convergence/Divergence: the 12-day EMA minus the 26-day EMA, smoothed by its own 9-day signal line. The bars are the gap between them — green above zero is bullish momentum, red below zero is bearish, and a bar flipping sign is a crossover."
+                    glossaryId="macd"
+                  />
+                </div>
+                <div
+                  className={`text-[13.5px] font-semibold capitalize ${
+                    macdTone === "up" ? "text-up" : macdTone === "down" ? "text-down" : "text-panel-fg"
+                  }`}
+                >
+                  {macdLabel}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

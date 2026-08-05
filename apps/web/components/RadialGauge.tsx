@@ -56,3 +56,34 @@ export function RadialGauge({
     </svg>
   );
 }
+
+/**
+ * Compact MACD histogram — a small red/green bar chart of the trailing
+ * histogram bars around a zero baseline. Deliberately a different visual
+ * shape from `RadialGauge` (a bounded 0–100 ring doesn't fit MACD, which is
+ * unbounded and sign-based) so the two read as distinct signals sitting side
+ * by side, not two dials measuring the same thing.
+ */
+export function MacdBars({ histogram, size = 52 }: { histogram: number[]; size?: number }) {
+  const barW = 3;
+  const gap = 1.5;
+  const width = Math.max(size, histogram.length * (barW + gap));
+  const mid = size / 2;
+  const maxAbs = Math.max(...histogram.map((h) => Math.abs(h)), 1e-9);
+
+  return (
+    <svg width={width} height={size} viewBox={`0 0 ${width} ${size}`} className="shrink-0">
+      <line x1={0} y1={mid} x2={width} y2={mid} stroke="var(--panel-border)" strokeWidth={1} />
+      {histogram.map((h, i) => {
+        const barH = Math.max((Math.abs(h) / maxAbs) * (mid - 2), 1);
+        const x = i * (barW + gap);
+        const y = h >= 0 ? mid - barH : mid;
+        const isLast = i === histogram.length - 1;
+        const color = h >= 0 ? "var(--up)" : "var(--down)";
+        return (
+          <rect key={i} x={x} y={y} width={barW} height={barH} rx={0.75} fill={color} opacity={isLast ? 1 : 0.55} />
+        );
+      })}
+    </svg>
+  );
+}

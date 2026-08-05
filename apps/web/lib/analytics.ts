@@ -217,6 +217,71 @@ export function rsiLabel(value: number): "oversold" | "neutral" | "overbought" {
   return "neutral";
 }
 
+/**
+ * Exponential moving average of `values`, seeded with the simple average of
+ * the first `period` values (standard seeding — more stable than starting
+ * from the first raw value). Returned array is aligned to the tail of
+ * `values`: index 0 is the seed, i.e. the EMA as of `values[period - 1]`.
+ */
+function emaSeries(values: number[], period: number): number[] {
+  const k = 2 / (period + 1);
+  const out: number[] = [mean(values.slice(0, period))];
+  for (let i = period; i < values.length; i++) {
+    out.push(values[i] * k + out[out.length - 1] * (1 - k));
+  }
+  return out;
+}
+
+export interface MacdResult {
+  macd: number;
+  signal: number;
+  histogram: number;
+  /** Trailing histogram values (most recent last), for a compact bar visual. */
+  recentHistogram: number[];
+}
+
+/**
+ * MACD (Moving Average Convergence/Divergence): the fast EMA minus the slow
+ * EMA (the "MACD line"), itself smoothed by a signal-line EMA. The histogram
+ * (macd − signal) is the conventional way to read it — positive means the
+ * MACD line sits above its signal (bullish momentum), negative means below
+ * (bearish), and a sign flip is a "crossover". Close-only, like the rest of
+ * this file — no OHLC needed. Returns null if there's not enough history for
+ * a full slow EMA plus signal smoothing.
+ */
+export function macd(closes: number[], fast = 12, slow = 26, signalPeriod = 9, recentBars = 14): MacdResult | null {
+  if (closes.length < slow + signalPeriod) return null;
+
+  const emaFast = emaSeries(closes, fast); // aligned to closes[fast-1 ..]
+  const emaSlow = emaSeries(closes, slow); // aligned to closes[slow-1 ..]
+  const offset = slow - fast; // emaFast[i + offset] lines up with emaSlow[i]
+  const macdLine = emaSlow.map((slowVal, i) => emaFast[i + offset] - slowVal);
+  if (macdLine.length < signalPeriod) return null;
+
+  const signalLine = emaSeries(macdLine, signalPeriod);
+  const macdOffset = macdLine.length - signalLine.length;
+  const histogram = signalLine.map((sig, i) => macdLine[i + macdOffset] - sig);
+
+  return {
+    macd: macdLine[macdLine.length - 1],
+    signal: signalLine[signalLine.length - 1],
+    histogram: histogram[histogram.length - 1],
+    recentHistogram: histogram.slice(-recentBars),
+  };
+}
+
+export type MacdSignal = "bullish crossover" | "bearish crossover" | "above signal" | "below signal";
+
+/** Reads the latest histogram bar (and the one before it, for a crossover) into a short label. */
+export function macdSignalLabel(recentHistogram: number[]): MacdSignal {
+  const n = recentHistogram.length;
+  const cur = recentHistogram[n - 1];
+  const prev = n >= 2 ? recentHistogram[n - 2] : null;
+  if (prev != null && prev <= 0 && cur > 0) return "bullish crossover";
+  if (prev != null && prev >= 0 && cur < 0) return "bearish crossover";
+  return cur >= 0 ? "above signal" : "below signal";
+}
+
 // ---------------------------------------------------------------------------
 // Statistical profile — the "advanced statistics" layer (risk-adjusted return,
 // distribution shape, tail risk, seasonality). All close-based: historical_
