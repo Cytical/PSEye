@@ -759,7 +759,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
 
       {profile && hasAnyLeadershipData(profile.boardOfDirectors, profile.managementOfficers) && (
         <div className="mt-3">
-          <Panel title="Board of directors & management" meta="PSE Edge">
+          <Panel title="Board of directors & management" meta="PSE Edge" className="lg:max-h-[26rem]" scroll>
             <CompanyLeadership
               boardOfDirectors={profile.boardOfDirectors}
               managementOfficers={profile.managementOfficers}
