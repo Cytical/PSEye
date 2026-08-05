@@ -9,7 +9,15 @@ import {
   integer,
   varchar,
   unique,
+  jsonb,
 } from "drizzle-orm/pg-core";
+
+/** One board/management row parsed from PSE Edge's "Directors and
+ * Management" page — see parseDirectorsAndManagement.ts. */
+export interface CompanyPersonRow {
+  position: string;
+  name: string;
+}
 
 export const dailyQuotes = pgTable(
   "daily_quotes",
@@ -101,10 +109,26 @@ export const companyProfiles = pgTable("company_profiles", {
   numberOfDirectors: integer("number_of_directors"),
   externalAuditor: varchar("external_auditor", { length: 256 }),
   fiscalYearEnd: varchar("fiscal_year_end", { length: 32 }),
-  // Absolute edge.pse.com.ph URL of the company's own logo image — filename
-  // scheme varies per company (see parseCompanyInfoHtml's doc comment), so
-  // this is read off the page rather than constructed from ticker/cmpy_id.
-  logoUrl: varchar("logo_url", { length: 512 }),
+  // Self-contained `data:image/webp;base64,...` URI, not a link back to
+  // PSE Edge (see parseCompanyInfoHtml's doc comment on why the source URL
+  // itself is read off the page rather than constructed from ticker/cmpy_id).
+  // The raw source images are almost always a small mark on a large uniform
+  // white canvas (e.g. Jollibee's logo is 614x600 with the mascot occupying
+  // a small fraction of it) — 2026-08's backfill fetches the image and runs
+  // it through sharp's trim() to crop that padding away before storing it,
+  // since object-fit:contain alone can't fix a logo where the real content
+  // is a few percent of the frame. text, not varchar, since a data URI runs
+  // well past 512 chars.
+  logoImage: text("logo_image"),
+  // Board of Directors / Management Officers rosters from PSE Edge's own
+  // "Directors and Management" tab (`/companyPage/directors_and_management_list.do`)
+  // — a separate page from the one everything else on this table is sourced
+  // from, fetched alongside it in the same backfill. Variable-length lists
+  // with no fixed field set (position titles vary freely per company), hence
+  // jsonb rather than flat columns. Empty array, not null, when a company has
+  // no roster on file — same array-shaped absence as everything else here.
+  boardOfDirectors: jsonb("board_of_directors").$type<CompanyPersonRow[]>().notNull().default([]),
+  managementOfficers: jsonb("management_officers").$type<CompanyPersonRow[]>().notNull().default([]),
   // High-confidence auto-matched Wikipedia summary only (see
   // fetchWikipediaSummary's doc comment) — absent, not a guess, when no
   // confident match was found.

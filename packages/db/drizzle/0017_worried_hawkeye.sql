@@ -1,0 +1,2 @@
+ALTER TABLE "company_profiles" ADD COLUMN "board_of_directors" jsonb DEFAULT '[]'::jsonb NOT NULL;--> statement-breakpoint
+ALTER TABLE "company_profiles" ADD COLUMN "management_officers" jsonb DEFAULT '[]'::jsonb NOT NULL;

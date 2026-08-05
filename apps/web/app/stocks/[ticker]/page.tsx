@@ -15,6 +15,7 @@ import { getHistoricalQuotes } from "@/lib/historicalQuotes";
 import { StockPriceChart } from "@/components/StockPriceChart";
 import { StockAnalytics } from "@/components/StockAnalytics";
 import { CompanyFinancials, hasAnyFinancialData } from "@/components/CompanyFinancials";
+import { CompanyLeadership, hasAnyLeadershipData } from "@/components/CompanyLeadership";
 import { CompanyLogo } from "@/components/CompanyLogo";
 import {
   StockStatistics,
@@ -387,7 +388,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           is folded into the meta line rather than getting a row of its own. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="flex min-w-0 items-center gap-2">
-          <CompanyLogo logoUrl={profile?.logoUrl ?? null} alt={`${company.companyName} logo`} />
+          <CompanyLogo logoImage={profile?.logoImage ?? null} alt={`${company.companyName} logo`} />
           <WatchlistStarButton ticker={company.ticker} size={20} />
           <h1 className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 leading-tight">
             <span className="font-mono text-lg font-bold tracking-tight text-accent">{company.ticker}</span>
@@ -755,6 +756,17 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           )}
         </Panel>
       </div>
+
+      {profile && hasAnyLeadershipData(profile.boardOfDirectors, profile.managementOfficers) && (
+        <div className="mt-3">
+          <Panel title="Board of directors & management" meta="PSE Edge">
+            <CompanyLeadership
+              boardOfDirectors={profile.boardOfDirectors}
+              managementOfficers={profile.managementOfficers}
+            />
+          </Panel>
+        </div>
+      )}
 
       {yearCloses.length >= 31 && (
         <div className="mt-3">

@@ -1,5 +1,7 @@
 import { unstable_cache } from "next/cache";
-import { createDb, getCompanyProfiles as getCompanyProfilesQuery } from "@pseye/db";
+import { createDb, getCompanyProfiles as getCompanyProfilesQuery, type CompanyPersonRow } from "@pseye/db";
+
+export type { CompanyPersonRow };
 
 export interface CompanyProfile {
   description: string;
@@ -14,7 +16,11 @@ export interface CompanyProfile {
   numberOfDirectors: number | null;
   externalAuditor: string | null;
   fiscalYearEnd: string | null;
-  logoUrl: string | null;
+  /** Self-contained `data:image/webp;base64,...` URI — see the
+   * company_profiles schema doc comment on logoImage. */
+  logoImage: string | null;
+  boardOfDirectors: CompanyPersonRow[];
+  managementOfficers: CompanyPersonRow[];
   wikipediaTitle: string | null;
   wikipediaSummary: string | null;
   wikipediaUrl: string | null;
@@ -57,7 +63,9 @@ async function fetchCompanyProfiles(): Promise<Record<string, CompanyProfile>> {
         numberOfDirectors: row.numberOfDirectors,
         externalAuditor: row.externalAuditor,
         fiscalYearEnd: row.fiscalYearEnd,
-        logoUrl: row.logoUrl,
+        logoImage: row.logoImage,
+        boardOfDirectors: row.boardOfDirectors,
+        managementOfficers: row.managementOfficers,
         wikipediaTitle: row.wikipediaTitle,
         wikipediaSummary: row.wikipediaSummary,
         wikipediaUrl: row.wikipediaUrl,

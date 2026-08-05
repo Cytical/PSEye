@@ -1,0 +1,1 @@
+ALTER TABLE "company_profiles" DROP COLUMN IF EXISTS "logo_url";

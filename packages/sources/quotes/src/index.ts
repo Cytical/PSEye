@@ -7,6 +7,7 @@ export * from "./pseEdge/pseEdgeCompanyDirectory";
 export * from "./pseEdge/parseStockData";
 export * from "./pseEdge/parseCompanyInfo";
 export * from "./pseEdge/parseFinancialReports";
+export * from "./pseEdge/parseDirectorsAndManagement";
 export * from "./pseEdge/parseIndexSummary";
 export * from "./pseEdge/pseEdgeHistoricalQuoteSource";
 export * from "./pseEdge/parseChartData";
