@@ -493,9 +493,17 @@ export function MarketMap({
             page's own background. The modal lives inside this subtree too —
             a sibling would be invisible while this element is fullscreened,
             since the Fullscreen API only paints the fullscreened element and
-            its descendants. */}
+            its descendants.
+
+            Also the screenshot target for etl/jobs/post-daily-tweet.ts's daily
+            X post (id="market-map-canvas") — deliberately just this div, not
+            the nav sidebar to its left (time machine/filter chips/colorblind
+            toggle/PSEi summary bar/top movers) and not the headline above,
+            so the posted image is the treemap alone. Don't remove/rename this
+            id without updating CAPTURE_SELECTOR there. */}
         <div
           ref={mapAreaRef}
+          id="market-map-canvas"
           className={`order-1 min-w-0 flex-1 bg-background sm:order-none ${isFullscreen ? "flex flex-col items-center justify-center gap-3 overflow-auto p-4" : ""}`}
         >
           {isSharedWatchlistView && (

@@ -88,10 +88,10 @@ export default async function MarketMapPage() {
   return (
     <div className="mx-auto max-w-[1600px] px-4 py-8 sm:py-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
-      {/* Screenshotted by etl/jobs/post-daily-tweet.ts (Playwright targets this
-          id) for the daily X/Twitter post — kept to just the headline + map,
-          not the FAQ below, so the captured image stays a compact, shareable
-          card instead of an awkwardly tall crop. */}
+      {/* NOTE: the daily X/Twitter screenshot no longer targets this id — it
+          now targets #market-map-canvas inside MarketMap.tsx (just the
+          treemap, not the filter sidebar/PSEi summary/top movers). This
+          wrapper still exists for the skip-link below. */}
       <div id="market-map-capture">
         {/* WCAG 2.4.1: the treemap renders one focusable button per company —
             284 of them, measured — and it is the last thing in <main>, so

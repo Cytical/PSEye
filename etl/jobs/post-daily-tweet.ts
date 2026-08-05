@@ -14,7 +14,7 @@ import {
 import { buildMapAltText, buildMapTweetText, buildRecapReplyText } from "../lib/tweetCopy";
 import { triggerRevalidate } from "../lib/triggerRevalidate";
 
-const CAPTURE_SELECTOR = "#market-map-capture";
+const CAPTURE_SELECTOR = "#market-map-canvas";
 
 /**
  * Runs once/day after PSE's close, as .github/workflows/post-daily-tweet.yml's
@@ -169,7 +169,7 @@ function formatDateLabel(iso: string): string {
   });
 }
 
-/** Screenshots the live market map's #market-map-capture element (see app/page.tsx) at 2x scale for a crisp X image. */
+/** Screenshots the live market map's #market-map-canvas element (see components/MarketMap.tsx) — just the treemap, not the filter sidebar/PSEi summary/top movers — at 2x scale for a crisp X image. */
 async function captureMarketMapScreenshot(siteUrl: string): Promise<Buffer> {
   const browser = await chromium.launch();
   try {
@@ -181,8 +181,15 @@ async function captureMarketMapScreenshot(siteUrl: string): Promise<Buffer> {
     await capture.waitFor({ state: "visible", timeout: 30_000 });
     // The treemap measures its own width via ResizeObserver on mount before
     // laying out tiles — wait for at least one rendered tile rather than a
-    // fixed delay, so this doesn't flake on a slow cold render.
-    await page.waitForSelector(`${CAPTURE_SELECTOR} svg rect`, { timeout: 30_000 });
+    // fixed delay, so this doesn't flake on a slow cold render. Tiles are
+    // absolutely-positioned <button title="TICKER ...">, not SVG (2026-08-05:
+    // the old `svg rect` selector never actually matched a tile — it
+    // happened to resolve against the calendar-icon SVG in the filter
+    // sidebar's date picker, which was still in scope back when
+    // CAPTURE_SELECTOR was #market-map-capture; now that it's scoped to just
+    // #market-map-canvas, that icon is out of scope too, so this needs a
+    // selector that actually matches a tile).
+    await page.waitForSelector(`${CAPTURE_SELECTOR} button[title]`, { timeout: 30_000 });
     await page.waitForTimeout(500);
 
     // A manually-measured clip, not locator.screenshot() — confirmed live
