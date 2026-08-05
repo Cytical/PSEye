@@ -202,7 +202,7 @@ const NEXT_TOOLS: { href: string; label: string; description: string }[] = [
   },
 ];
 
-const SECTION_HEADING = "font-serif text-lg font-semibold tracking-tight text-foreground";
+const SECTION_HEADING = "font-serif text-xl font-semibold tracking-tight text-foreground";
 
 /**
  * Wide desktop layout, deliberately not a single centered text column: below
@@ -223,10 +223,10 @@ export default function GettingStartedPage() {
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:items-start lg:gap-10">
         <div className="max-w-3xl">
           <p className="kicker text-accent">New here?</p>
-          <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h1 className="mt-1 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
             How to invest in PSE stocks, explained for total beginners
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-foreground/80">
+          <p className="mt-3 text-base leading-relaxed text-foreground/80">
             This page assumes zero background — no jargon left unexplained, no assumed knowledge of
             how the stock market works. PSEye can show you every listed company, what it&apos;s
             worth, and how it&apos;s been trading — but it&apos;s a tracker, not a brokerage, so it
@@ -234,13 +234,13 @@ export default function GettingStartedPage() {
             stock actually is, to how money is made or lost owning one, to the practical steps of
             opening an account and placing your first order.
           </p>
-          <p className="mt-3 rounded-lg bg-panel-raised px-3.5 py-2.5 text-xs leading-relaxed text-foreground/70 ring-1 ring-panel-border">
+          <p className="mt-3 rounded-lg bg-panel-raised px-3.5 py-2.5 text-sm leading-relaxed text-foreground/70 ring-1 ring-panel-border">
             Worth saying up front: investing in stocks carries real risk of loss. Only invest money
             you can afford to have tied up or lose, take time to understand what you&apos;re buying,
             and treat everything below as general information, not personalized financial advice.
           </p>
 
-          <div className="mt-8 flex flex-col gap-8 text-sm leading-relaxed text-foreground/80">
+          <div className="mt-8 flex flex-col gap-8 text-base leading-relaxed text-foreground/80">
             <section id="what-is-a-stock" className="scroll-mt-20">
               <h2 className={SECTION_HEADING}>1. What is a stock, actually?</h2>
               <p className="mt-2">
@@ -273,12 +273,12 @@ export default function GettingStartedPage() {
               <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {MONEY_EXAMPLES.map((ex) => (
                   <div key={ex.title} className="rounded-lg bg-panel-raised p-3 ring-1 ring-panel-border">
-                    <h3 className="text-xs font-semibold text-foreground">{ex.title}</h3>
-                    <p className="mt-1.5 text-xs leading-relaxed text-foreground/72">{ex.body}</p>
+                    <h3 className="text-sm font-semibold text-foreground">{ex.title}</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-foreground/72">{ex.body}</p>
                   </div>
                 ))}
               </div>
-              <p className="mt-3 text-xs text-foreground/60">
+              <p className="mt-3 text-sm text-foreground/60">
                 All figures above are illustrative round numbers, not a prediction, backtest, or
                 recommendation for any specific stock. To see a real company&apos;s actual price
                 history, open its page from the{" "}
@@ -306,9 +306,9 @@ export default function GettingStartedPage() {
               </p>
 
               <div className="mt-4 overflow-x-auto rounded-lg ring-1 ring-panel-border">
-                <table className="w-full min-w-[560px] text-xs">
+                <table className="w-full min-w-[620px] text-sm">
                   <thead>
-                    <tr className="bg-panel-raised text-left text-[10.5px] uppercase tracking-[0.04em] text-foreground/55">
+                    <tr className="bg-panel-raised text-left text-xs uppercase tracking-[0.04em] text-foreground/55">
                       <th className="px-3 py-2 font-medium">Broker</th>
                       <th className="px-3 py-2 font-medium">Account type</th>
                       <th className="px-3 py-2 font-medium">Good to know</th>
@@ -325,7 +325,7 @@ export default function GettingStartedPage() {
                   </tbody>
                 </table>
               </div>
-              <p className="mt-2 text-xs text-foreground/60">
+              <p className="mt-2 text-sm text-foreground/60">
                 Not an exhaustive list, and not a recommendation of any one broker over another —
                 just the more commonly used online options, to give you a starting point.{" "}
                 <a
@@ -487,8 +487,8 @@ export default function GettingStartedPage() {
                     href={t.href}
                     className="rounded-lg bg-panel-raised p-3 ring-1 ring-panel-border transition-colors hover:bg-panel-active"
                   >
-                    <span className="text-sm font-medium text-foreground">{t.label}</span>
-                    <p className="mt-0.5 text-xs leading-snug text-foreground/65">{t.description}</p>
+                    <span className="text-base font-medium text-foreground">{t.label}</span>
+                    <p className="mt-0.5 text-sm leading-snug text-foreground/65">{t.description}</p>
                   </Link>
                 ))}
               </div>
@@ -496,10 +496,10 @@ export default function GettingStartedPage() {
           </div>
 
           <div id="faq" className="scroll-mt-20">
-            <MarketMapFaq items={FAQ} />
+            <MarketMapFaq items={FAQ} large />
           </div>
 
-          <p className="mt-8 border-t border-foreground/10 pt-5 text-xs text-foreground/65">
+          <p className="mt-8 border-t border-foreground/10 pt-5 text-sm text-foreground/65">
             Nothing on this page or anywhere else on PSEye is financial advice, a stock pick, or a
             buy/sell signal. See{" "}
             <Link href="/about" className="underline hover:no-underline">
@@ -512,7 +512,7 @@ export default function GettingStartedPage() {
         <aside className="hidden lg:block lg:sticky lg:top-20 lg:self-start">
           <nav aria-label="On this page" className="rounded-lg bg-panel-raised p-4 ring-1 ring-panel-border">
             <p className="kicker text-foreground/55">On this page</p>
-            <ul className="mt-2.5 flex flex-col gap-1.5 text-xs">
+            <ul className="mt-2.5 flex flex-col gap-2 text-sm">
               {TOC.map((item) => (
                 <li key={item.id}>
                   <a href={`#${item.id}`} className="text-foreground/70 hover:text-foreground hover:underline">
@@ -524,7 +524,7 @@ export default function GettingStartedPage() {
           </nav>
           <nav aria-label="Jump to a tool" className="mt-4 rounded-lg bg-panel-raised p-4 ring-1 ring-panel-border">
             <p className="kicker text-foreground/55">Jump to a tool</p>
-            <ul className="mt-2.5 flex flex-col gap-1.5 text-xs">
+            <ul className="mt-2.5 flex flex-col gap-2 text-sm">
               {NEXT_TOOLS.slice(0, 4).map((t) => (
                 <li key={t.href}>
                   <Link href={t.href} className="text-foreground/70 hover:text-foreground hover:underline">

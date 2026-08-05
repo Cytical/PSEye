@@ -17,7 +17,17 @@ interface FaqItem {
  * JS-driven accordion that unmounts closed panels), so the FAQPage JSON-LD in
  * page.tsx still matches what a crawler actually sees in the markup.
  */
-export function MarketMapFaq({ items }: { items: FaqItem[] }) {
+export function MarketMapFaq({
+  items,
+  large,
+}: {
+  items: FaqItem[];
+  /** Bumps the answer text (and the question a step further) up one size —
+   * opt-in so the homepage's existing FAQ, sized for a dense landing page,
+   * doesn't change just because a reading-focused page like Getting Started
+   * wants larger text. */
+  large?: boolean;
+}) {
   return (
     <section className="mt-16 border-t border-foreground/10 pt-9">
       <p className="kicker text-foreground/65">Good to know</p>
@@ -34,7 +44,7 @@ export function MarketMapFaq({ items }: { items: FaqItem[] }) {
                 content is explicitly allowed in <summary>, and the h3 sits
                 under the section's h2 so the outline stays well-formed. */}
             <summary className="flex cursor-pointer list-none items-start justify-between gap-4 font-medium text-foreground [&::-webkit-details-marker]:hidden">
-              <h3 className="flex gap-3 text-base font-medium">
+              <h3 className={`flex gap-3 font-medium ${large ? "text-lg" : "text-base"}`}>
                 <span className="font-mono text-xs text-foreground/65">{String(i + 1).padStart(2, "0")}</span>
                 <span>{item.q}</span>
               </h3>
@@ -54,7 +64,7 @@ export function MarketMapFaq({ items }: { items: FaqItem[] }) {
               </svg>
             </summary>
 
-            <p className="mt-2.5 pl-7 text-sm leading-relaxed text-foreground/65">
+            <p className={`mt-2.5 pl-7 leading-relaxed text-foreground/65 ${large ? "text-base" : "text-sm"}`}>
               {item.a}
               {item.href && (
                 <>

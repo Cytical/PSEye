@@ -69,7 +69,7 @@ export default async function GlossaryTermPage({ params }: { params: Promise<{ t
     <div className="mx-auto max-w-2xl px-4 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="text-xs text-panel-fg/68">
+      <nav className="text-sm text-panel-fg/68">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -82,13 +82,13 @@ export default async function GlossaryTermPage({ params }: { params: Promise<{ t
       </nav>
 
       <p className="kicker mt-2 text-accent">Reference</p>
-      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">
+      <h1 className="mt-1 font-serif text-3xl font-semibold tracking-tight text-panel-fg sm:text-4xl">
         {term.question}
       </h1>
-      <p className="mt-3 max-w-xl text-base leading-relaxed text-panel-fg/85">{term.definition}</p>
+      <p className="mt-3 max-w-xl text-lg leading-relaxed text-panel-fg/85">{term.definition}</p>
 
       {term.related && term.related.length > 0 && (
-        <div className="mt-6 flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
+        <div className="mt-6 flex flex-wrap gap-x-4 gap-y-1.5 text-base">
           {term.related.map((r) => (
             <Link key={r.href} href={r.href} className="text-panel-fg/80 underline hover:text-panel-fg">
               See {r.label} →
@@ -99,8 +99,8 @@ export default async function GlossaryTermPage({ params }: { params: Promise<{ t
 
       {seeAlso.length > 0 && (
         <div className="mt-8 border-t border-panel-border pt-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-panel-fg/60">See also</p>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
+          <p className="text-sm font-semibold uppercase tracking-[0.08em] text-panel-fg/60">See also</p>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-base">
             {seeAlso.map((t) => (
               <Link key={t.id} href={`/glossary/${t.id}`} className="text-panel-fg/80 underline hover:text-panel-fg">
                 {t.term}
@@ -110,7 +110,7 @@ export default async function GlossaryTermPage({ params }: { params: Promise<{ t
         </div>
       )}
 
-      <div className="mt-10 flex items-center justify-between border-t border-panel-border pt-5 text-sm">
+      <div className="mt-10 flex items-center justify-between border-t border-panel-border pt-5 text-base">
         {prev ? (
           <Link href={`/glossary/${prev.id}`} className="text-panel-fg/72 hover:text-panel-fg hover:underline">
             ← {prev.term}
@@ -127,7 +127,7 @@ export default async function GlossaryTermPage({ params }: { params: Promise<{ t
         )}
       </div>
 
-      <p className="mt-6 text-sm text-panel-fg/72">
+      <p className="mt-6 text-base text-panel-fg/72">
         See every term in the{" "}
         <Link href="/glossary" className="underline hover:text-panel-fg">
           full PSE investing glossary

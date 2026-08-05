@@ -41,7 +41,7 @@ export default function GlossaryPage() {
     <div className="mx-auto max-w-3xl px-4 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <nav className="text-xs text-panel-fg/68">
+      <nav className="text-sm text-panel-fg/68">
         <Link href="/" className="hover:underline">
           Market Map
         </Link>
@@ -50,13 +50,13 @@ export default function GlossaryPage() {
       </nav>
 
       <p className="kicker mt-2 text-accent">Reference</p>
-      <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-panel-fg sm:text-3xl">PSE Investing Glossary</h1>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
+      <h1 className="mt-1 font-serif text-3xl font-semibold tracking-tight text-panel-fg sm:text-4xl">PSE Investing Glossary</h1>
+      <p className="mt-2 max-w-2xl text-base leading-relaxed text-panel-fg/65">
         Plain-English definitions for the terms used across PSEye. Every entry here is something
         this site computes or displays, not a generic finance dictionary.
       </p>
 
-      <nav aria-label="Jump to term" className="mt-3 flex flex-wrap gap-x-2 gap-y-0.5 text-xs">
+      <nav aria-label="Jump to term" className="mt-3 flex flex-wrap gap-x-2 gap-y-0.5 text-sm">
         {GLOSSARY_TERMS.map((t) => (
           <a
             key={t.id}
@@ -71,13 +71,13 @@ export default function GlossaryPage() {
       <dl className="mt-6 flex flex-col gap-6">
         {GLOSSARY_TERMS.map((t) => (
           <div key={t.id} id={t.id} className="scroll-mt-20 border-t border-panel-border pt-4 first:border-t-0 first:pt-0">
-            <dt className="font-serif text-lg font-semibold text-panel-fg">
+            <dt className="font-serif text-xl font-semibold text-panel-fg">
               <Link href={`/glossary/${t.id}`} className="hover:underline">
                 {t.term}
               </Link>
             </dt>
-            <dd className="mt-1.5 text-sm leading-relaxed text-panel-fg/80">{t.definition}</dd>
-            <dd className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+            <dd className="mt-1.5 text-base leading-relaxed text-panel-fg/80">{t.definition}</dd>
+            <dd className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm">
               <Link href={`/glossary/${t.id}`} className="font-medium text-panel-fg/80 hover:text-panel-fg hover:underline">
                 Full definition →
               </Link>
