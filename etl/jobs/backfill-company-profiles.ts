@@ -4,6 +4,7 @@ import sharp from "sharp";
 import { createDb, companyProfiles } from "@pseye/db";
 import { PSE_EDGE_COMPANIES, parseCompanyInfoHtml, parseDirectorsAndManagementHtml } from "@pseye/source-quotes";
 import { fetchWikipediaSummary } from "../lib/wikipediaSummary";
+import { triggerRevalidate } from "../lib/triggerRevalidate";
 
 const USER_AGENT =
   "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching public company information pages";
@@ -109,6 +110,13 @@ async function main() {
   }
 
   console.log(`Upserted ${upserted}/${PSE_EDGE_COMPANIES.length} company profiles`);
+
+  // Without this, the site keeps serving whatever it had cached under the
+  // "company-profiles" tag (up to the 1h wall-clock ceiling in
+  // lib/companyProfiles.ts) even though this backfill just wrote fresh rows —
+  // caught live during the 2026-08 board/logo rollout, where prod kept
+  // showing pages with no About panel at all until this was called by hand.
+  await triggerRevalidate(["company-profiles"], ["/"]);
 }
 
 async function fetchOne(cmpyId: string) {

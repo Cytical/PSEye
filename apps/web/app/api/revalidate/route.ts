@@ -29,6 +29,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 const KNOWN_TAGS = new Set([
   "daily-quotes",
   "company-profiles",
+  "company-financials",
   "market-snapshot",
   "news",
   "disclosures",

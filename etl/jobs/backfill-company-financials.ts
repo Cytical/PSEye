@@ -2,6 +2,7 @@ import "../lib/loadEnv";
 import { sql } from "drizzle-orm";
 import { createDb, companyFinancials } from "@pseye/db";
 import { PSE_EDGE_COMPANIES, parseFinancialReportsHtml, type FinancialStatementFigure } from "@pseye/source-quotes";
+import { triggerRevalidate } from "../lib/triggerRevalidate";
 
 const USER_AGENT =
   "Mozilla/5.0 (compatible; PHMarketEyeBot/1.0; +https://github.com/Cytical/PSEye) fetching public financial report pages";
@@ -117,6 +118,12 @@ async function main() {
   }
 
   console.log(`Upserted ${upserted}/${PSE_EDGE_COMPANIES.length} company financials`);
+
+  // Same reasoning as backfill-company-profiles.ts's call: without this the
+  // site keeps serving whatever was cached under "company-financials" until
+  // its 1h wall-clock ceiling passes, even though this run just wrote fresh
+  // rows.
+  await triggerRevalidate(["company-financials"], ["/"]);
 }
 
 async function fetchOne(cmpyId: string) {
