@@ -101,6 +101,10 @@ export const companyProfiles = pgTable("company_profiles", {
   numberOfDirectors: integer("number_of_directors"),
   externalAuditor: varchar("external_auditor", { length: 256 }),
   fiscalYearEnd: varchar("fiscal_year_end", { length: 32 }),
+  // Absolute edge.pse.com.ph URL of the company's own logo image — filename
+  // scheme varies per company (see parseCompanyInfoHtml's doc comment), so
+  // this is read off the page rather than constructed from ticker/cmpy_id.
+  logoUrl: varchar("logo_url", { length: 512 }),
   // High-confidence auto-matched Wikipedia summary only (see
   // fetchWikipediaSummary's doc comment) — absent, not a guess, when no
   // confident match was found.

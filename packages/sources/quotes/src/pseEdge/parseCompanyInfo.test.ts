@@ -113,5 +113,19 @@ describe("parseCompanyInfoHtml", () => {
     expect(result.fiscalYearEnd).toBeNull();
     expect(result.businessAddress).toBeNull();
     expect(result.website).toBeNull();
+    expect(result.logoUrl).toBeNull();
+  });
+
+  it("resolves the header logo <img> to an absolute edge.pse.com.ph URL", () => {
+    expect(parseCompanyInfoHtml(FULL_COMPANY_INFO_HTML).logoUrl).toBeNull();
+    const withLogo = `<img src="/clogo/bdoLOGO1.jpg" alt="Logo" height="85" />${FULL_COMPANY_INFO_HTML}`;
+    expect(parseCompanyInfoHtml(withLogo).logoUrl).toBe("https://edge.pse.com.ph/clogo/bdoLOGO1.jpg");
+  });
+
+  it("passes through an already-absolute logo URL unchanged", () => {
+    const withAbsoluteLogo = `<img src="https://edge.pse.com.ph/clogo/627/cl5a97d02br326.png" alt="Logo" />${FULL_COMPANY_INFO_HTML}`;
+    expect(parseCompanyInfoHtml(withAbsoluteLogo).logoUrl).toBe(
+      "https://edge.pse.com.ph/clogo/627/cl5a97d02br326.png"
+    );
   });
 });

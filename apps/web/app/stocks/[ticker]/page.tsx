@@ -15,6 +15,7 @@ import { getHistoricalQuotes } from "@/lib/historicalQuotes";
 import { StockPriceChart } from "@/components/StockPriceChart";
 import { StockAnalytics } from "@/components/StockAnalytics";
 import { CompanyFinancials, hasAnyFinancialData } from "@/components/CompanyFinancials";
+import { CompanyLogo } from "@/components/CompanyLogo";
 import {
   StockStatistics,
   StockSeasonality,
@@ -386,6 +387,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           is folded into the meta line rather than getting a row of its own. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="flex min-w-0 items-center gap-2">
+          <CompanyLogo logoUrl={profile?.logoUrl ?? null} alt={`${company.companyName} logo`} />
           <WatchlistStarButton ticker={company.ticker} size={20} />
           <h1 className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 leading-tight">
             <span className="font-mono text-lg font-bold tracking-tight text-accent">{company.ticker}</span>
@@ -694,19 +696,6 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         {/* Capped only from `lg`: this row's panels stretch to match the tallest
             sibling (About), so unlike the rows above it needs an explicit
             desktop height for its body to have something to scroll within. */}
-        <Panel
-          title="Balance sheet & income statement"
-          meta="PSE Edge · Annual"
-          className="min-w-0 lg:max-h-[26rem] lg:basis-1/3 lg:grow"
-          scroll
-        >
-          {hasFinancials ? (
-            <CompanyFinancials data={companyFinancials!} />
-          ) : (
-            <PanelEmpty>No annual financial report on file for {company.ticker} yet.</PanelEmpty>
-          )}
-        </Panel>
-
         {profile && (
           <Panel
             title={`About ${company.ticker}`}
@@ -752,6 +741,19 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             )}
           </Panel>
         )}
+
+        <Panel
+          title="Balance sheet & income statement"
+          meta="PSE Edge · Annual"
+          className="min-w-0 lg:max-h-[26rem] lg:basis-1/3 lg:grow"
+          scroll
+        >
+          {hasFinancials ? (
+            <CompanyFinancials data={companyFinancials!} />
+          ) : (
+            <PanelEmpty>No annual financial report on file for {company.ticker} yet.</PanelEmpty>
+          )}
+        </Panel>
       </div>
 
       {yearCloses.length >= 31 && (

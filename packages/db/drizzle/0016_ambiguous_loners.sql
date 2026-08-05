@@ -1,0 +1,1 @@
+ALTER TABLE "company_profiles" ADD COLUMN "logo_url" varchar(512);

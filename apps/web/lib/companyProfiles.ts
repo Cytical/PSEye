@@ -14,6 +14,7 @@ export interface CompanyProfile {
   numberOfDirectors: number | null;
   externalAuditor: string | null;
   fiscalYearEnd: string | null;
+  logoUrl: string | null;
   wikipediaTitle: string | null;
   wikipediaSummary: string | null;
   wikipediaUrl: string | null;
@@ -56,6 +57,7 @@ async function fetchCompanyProfiles(): Promise<Record<string, CompanyProfile>> {
         numberOfDirectors: row.numberOfDirectors,
         externalAuditor: row.externalAuditor,
         fiscalYearEnd: row.fiscalYearEnd,
+        logoUrl: row.logoUrl,
         wikipediaTitle: row.wikipediaTitle,
         wikipediaSummary: row.wikipediaSummary,
         wikipediaUrl: row.wikipediaUrl,

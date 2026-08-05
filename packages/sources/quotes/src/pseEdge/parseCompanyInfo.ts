@@ -21,6 +21,14 @@ export interface ParsedCompanyInfo {
   fiscalYearEnd: string | null;
   businessAddress: string | null;
   website: string | null;
+  /** Absolute URL of the company's own logo image, e.g.
+   * "https://edge.pse.com.ph/clogo/bdoLOGO1.jpg" — PSE Edge serves these from
+   * a `<img alt="Logo">` in the page header, filename scheme varies per
+   * company (some are `/clogo/{cmpy_id}/cl{hash}.{ext}`, older ones are
+   * `/clogo/{something}.{ext}` directly), so it's read off the page rather
+   * than constructed from ticker/cmpy_id. Null when a company has none on
+   * file (the `<img>` itself is still present but empty `src`, or absent). */
+  logoUrl: string | null;
 }
 
 /**
@@ -68,6 +76,9 @@ export function parseCompanyInfoHtml(html: string): ParsedCompanyInfo {
   const contact = parseKeyValueTable($, "Contact Information");
   const directorCount = security["Number of Directors"] ? parseInt(security["Number of Directors"], 10) : NaN;
 
+  const logoSrc = $("img[alt='Logo']").first().attr("src");
+  const logoUrl = logoSrc ? new URL(logoSrc, "https://edge.pse.com.ph").toString() : null;
+
   const base: Omit<ParsedCompanyInfo, "description" | "citedSource"> = {
     incorporationDate: security["Incorporation Date"] || null,
     numberOfDirectors: Number.isFinite(directorCount) ? directorCount : null,
@@ -75,6 +86,7 @@ export function parseCompanyInfoHtml(html: string): ParsedCompanyInfo {
     fiscalYearEnd: security["Fiscal Year"] || null,
     businessAddress: contact["Business Address"] || null,
     website: contact["Website"] || null,
+    logoUrl,
   };
 
   const caption = $("table.view caption").filter((_, el) => $(el).text().trim() === "Company Description").first();
