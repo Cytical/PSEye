@@ -10,6 +10,9 @@ const EDGE_MARGIN = 8;
  * generous enough for the tallest case (a two-line hint plus the "Learn more"
  * link) without needing to measure the rendered tooltip itself. */
 const MIN_ROOM_ABOVE = 160;
+/** Grace period before a mouseleave/blur actually hides the tooltip — see
+ * scheduleHide's comment below. */
+const HIDE_DELAY_MS = 200;
 
 interface TooltipPosition {
   left: number;
@@ -41,8 +44,17 @@ interface TooltipPosition {
 export function InfoTip({ text, glossaryId }: { text: string; glossaryId?: string }) {
   const [pos, setPos] = useState<TooltipPosition | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function cancelHide() {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+  }
 
   function show() {
+    cancelHide();
     const rect = btnRef.current?.getBoundingClientRect();
     if (!rect) return;
     const openAbove = rect.top > MIN_ROOM_ABOVE;
@@ -53,8 +65,16 @@ export function InfoTip({ text, glossaryId }: { text: string; glossaryId?: strin
     setPos({ left, anchorY: openAbove ? rect.top - 6 : rect.bottom + 6, openAbove });
   }
 
-  function hide() {
-    setPos(null);
+  /** Delayed, cancelable hide instead of hiding the instant the cursor/focus
+   * leaves the trigger — an immediate hide made "Learn more" unreachable:
+   * moving the mouse from the (i) icon toward the tooltip below/above it
+   * crosses a gap that counts as "left the trigger" before it counts as
+   * "entered the tooltip," so the tooltip vanished mid-move. The tooltip
+   * itself now also has its own enter/leave handlers that cancel/reschedule
+   * this, so hovering (or tabbing) into it keeps it open. */
+  function scheduleHide() {
+    cancelHide();
+    hideTimer.current = setTimeout(() => setPos(null), HIDE_DELAY_MS);
   }
 
   return (
@@ -64,9 +84,9 @@ export function InfoTip({ text, glossaryId }: { text: string; glossaryId?: strin
         type="button"
         aria-label={text}
         onMouseEnter={show}
-        onMouseLeave={hide}
+        onMouseLeave={scheduleHide}
         onFocus={show}
-        onBlur={hide}
+        onBlur={scheduleHide}
         className="flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] font-semibold text-panel-fg/50 ring-1 ring-panel-fg/30 hover:text-panel-fg/80 hover:ring-panel-fg/50 focus-visible:text-panel-fg/80 focus-visible:outline-none focus-visible:ring-accent"
       >
         i
@@ -76,7 +96,9 @@ export function InfoTip({ text, glossaryId }: { text: string; glossaryId?: strin
         createPortal(
           <span
             role="tooltip"
-            className="pointer-events-none fixed z-50 w-48 rounded-md bg-panel-raised p-2 text-[11px] font-normal leading-snug text-panel-fg shadow-lg ring-1 ring-panel-border"
+            onMouseEnter={cancelHide}
+            onMouseLeave={scheduleHide}
+            className="fixed z-50 w-48 rounded-md bg-panel-raised p-2 text-[11px] font-normal leading-snug text-panel-fg shadow-lg ring-1 ring-panel-border"
             style={{
               left: pos.left,
               top: pos.openAbove ? undefined : pos.anchorY,
@@ -87,7 +109,9 @@ export function InfoTip({ text, glossaryId }: { text: string; glossaryId?: strin
             {glossaryId && (
               <Link
                 href={`/glossary/${glossaryId}`}
-                className="pointer-events-auto mt-1 block font-medium text-accent underline"
+                onFocus={cancelHide}
+                onBlur={scheduleHide}
+                className="mt-1 block font-medium text-accent underline"
               >
                 Learn more →
               </Link>

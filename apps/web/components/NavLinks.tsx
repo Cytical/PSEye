@@ -9,6 +9,7 @@ const PRIMARY = [
   { href: "/", label: "Market Map" },
   { href: "/daily", label: "Daily Recap" },
   { href: "/news", label: "News" },
+  { href: "/getting-started", label: "Getting Started" },
 ];
 
 interface NavLink {
@@ -51,6 +52,7 @@ const DROPDOWNS: { label: string; links: NavLink[] }[] = [
       { href: "/rankings", label: "Rankings", description: "Every stock ranked by market cap" },
       { href: "/most-active", label: "Most Active", description: "Highest-turnover stocks today" },
       { href: "/sectors", label: "Sectors", description: "Every company grouped by PSE sector" },
+      { href: "/glossary", label: "Glossary", description: "Plain-English definitions for every term on the site" },
     ],
   },
   {
@@ -85,11 +87,15 @@ function navLinkClass(active: boolean) {
 }
 
 /**
- * Nav is split so Market Map, Daily Recap, and News stay one click away (the
- * three highest-traffic/most-frequently-updated pages) while the other 17
- * collapse behind four topic dropdowns instead of one flat "More" list, so
- * each menu stays short and scannable and its trigger label tells you what's
- * inside before you open it. `variant="stacked"` (mobile hamburger panel)
+ * Nav is split so Market Map, Daily Recap, News, and Getting Started stay one
+ * click away (the first three are the highest-traffic/most-frequently-updated
+ * pages; Getting Started is deliberately here too, not for traffic, but so a
+ * first-time visitor has an obvious "what is this site" link right in the
+ * primary row instead of buried in a dropdown or only in the footer) while
+ * the other 16 collapse behind four topic dropdowns instead of one flat
+ * "More" list, so each menu stays short and scannable and its trigger label
+ * tells you what's inside before you open it. `variant="stacked"` (mobile
+ * hamburger panel)
  * keeps the same four groupings — each under its own section heading —
  * rather than flattening everything into one 20-link list, which had the
  * same "wall of names" problem as the old single "Tools" dropdown, just

@@ -75,7 +75,7 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     question: "What Is Free Float?",
     definition:
       "The percentage of a company's total outstanding shares that are actually available for public trading, excluding shares locked up by controlling owners, the government, or other strategic holders. A company can have a huge market cap but a tiny free float if almost all its shares are held privately.",
-    seeAlso: ["market-capitalization"],
+    seeAlso: ["market-capitalization", "float-adjusted-market-cap"],
   },
   {
     id: "market-capitalization",
@@ -87,7 +87,16 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
       { href: "/rankings", label: "Company rankings" },
       { href: "/sectors", label: "Sectors" },
     ],
-    seeAlso: ["free-float", "sector"],
+    seeAlso: ["free-float", "sector", "float-adjusted-market-cap"],
+  },
+  {
+    id: "float-adjusted-market-cap",
+    term: "Float-Adjusted Market Cap",
+    question: "What Is Float-Adjusted Market Cap?",
+    definition:
+      "Market capitalization multiplied by free float percentage — the portion of a company's value actually available for public trading. This, not raw market cap, is what every ranking and cap-weighted figure on PSEye sorts and sizes by (the same convention the PSEi itself, MSCI, and FTSE use): a company can report a huge raw market cap while trading only a sliver of its shares here, which raw cap alone would badly overstate.",
+    related: [{ href: "/rankings", label: "Company rankings" }],
+    seeAlso: ["market-capitalization", "free-float"],
   },
   {
     id: "pe-ratio",
@@ -268,5 +277,21 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     definition:
       "Investing a fixed peso amount at regular intervals (e.g. monthly) regardless of price, rather than a lump sum — buys more shares when the price is low and fewer when it's high, averaging out your entry price over time instead of betting on a single day.",
     related: [{ href: "/dca", label: "DCA calculator" }],
+  },
+  {
+    id: "stock-transaction-tax",
+    term: "Stock Transaction Tax",
+    question: "What Is the Stock Transaction Tax?",
+    definition:
+      "A 0.6% tax on the gross selling price, deducted automatically by your broker on every sale of PSE-listed shares — not on purchases, and not something you calculate or file yourself. It applies regardless of whether the sale was a gain or a loss, since it's charged on the transaction value, not the profit.",
+    related: [{ href: "/getting-started", label: "Getting started" }],
+  },
+  {
+    id: "settlement-t2",
+    term: "Settlement (T+2)",
+    question: "What Does T+2 Settlement Mean?",
+    definition:
+      "The Philippine Stock Exchange settles trades two business days after the trade date (\"T+2\") — a buy order filled today doesn't land in your account, and a sell order's cash proceeds aren't available, until two business days later. This is a market-wide settlement cycle, not something specific to any one broker.",
+    related: [{ href: "/getting-started", label: "Getting started" }],
   },
 ];
