@@ -100,7 +100,7 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
   return (
     <div className="flex h-full flex-col gap-2.5">
       {(rsiValue != null || macdResult != null) && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           {rsiValue != null && (
             <div className="flex items-center gap-2.5 rounded-lg bg-panel-raised px-2.5 py-1.5">
               <RadialGauge value={rsiValue} tone={rsiTone} />
@@ -144,7 +144,14 @@ export function StockAnalytics({ closes }: { closes: HistoricalClose[] }) {
       {returns.length > 0 && (
         <div>
           <SubHead>Trailing return</SubHead>
-          <div className="mt-1.5 grid grid-cols-3 gap-x-3 gap-y-2.5">
+          {/* grid-cols-2, matching Risk & trend below: with 3 equal columns
+              and the common case of only 2 returns available (a 1-year
+              figure needs ~251 trading days many tickers don't have yet),
+              the second value landed in the middle column instead of the
+              right one, so it didn't line up with Risk & trend's own second
+              column beneath it. A 3rd return (1 year), when present, simply
+              wraps to its own row. */}
+          <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-2.5">
             {returns.map((m) => (
               <Kpi key={m.label} label={m.label} value={m.value} tone={m.tone} />
             ))}

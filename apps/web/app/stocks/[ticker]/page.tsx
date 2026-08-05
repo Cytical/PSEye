@@ -138,18 +138,6 @@ function formatCompact(n: number): string {
   return n.toLocaleString("en-PH");
 }
 
-/** First sentence of the SEC-sourced description — a plain-English "what
- * does this company do" line for a visitor who doesn't yet know what an
- * RSI or a Sharpe ratio is, surfaced right under the ticker instead of only
- * appearing in the full "About" panel below the quantitative dashboard. SEC
- * 17-A descriptions reliably open with an identifying sentence ("X was
- * incorporated on... to serve as...", "X is engaged in..."), so this is a
- * cheap, honest summary rather than a truncation that could cut mid-thought. */
-function firstSentence(description: string): string {
-  const match = description.match(/^.*?[.!?](?=\s|$)/);
-  return (match?.[0] ?? description).trim();
-}
-
 function formatDate(iso: string): string {
   return new Date(iso + "T00:00:00Z").toLocaleDateString("en-PH", {
     month: "short",
@@ -399,19 +387,14 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="flex min-w-0 items-center gap-2">
           <CompanyLogo logoImage={profile?.logoImage ?? null} alt={`${company.companyName} logo`} />
-          <WatchlistStarButton ticker={company.ticker} size={20} />
           <h1 className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 leading-tight">
             <span className="font-mono text-lg font-bold tracking-tight text-accent">{company.ticker}</span>
             <span className="truncate font-serif text-xl font-semibold tracking-tight text-panel-fg">
               {company.companyName}
             </span>
           </h1>
+          <WatchlistStarButton ticker={company.ticker} size={20} />
         </div>
-        {profile && (
-          <p className="w-full max-w-2xl text-xs leading-snug text-panel-fg/65">
-            {firstSentence(profile.description)}
-          </p>
-        )}
         <div className="flex shrink-0 items-center gap-2">
           <ShareButton
             shareTitle={`${company.ticker}: ${company.companyName}`}
@@ -756,8 +739,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         <Panel
           title="Balance sheet & income statement"
           meta="PSE Edge · Annual"
-          className="min-w-0 lg:max-h-[26rem] lg:basis-1/3 lg:grow"
-          scroll
+          className="min-w-0 lg:basis-1/3 lg:grow"
         >
           {hasFinancials ? (
             <CompanyFinancials data={companyFinancials!} />
