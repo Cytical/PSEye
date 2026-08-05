@@ -60,6 +60,16 @@ const STATS_LOOKBACK_DAYS = 365;
  */
 const DASH_ROW = "flex flex-col gap-3 lg:h-[19.5rem] lg:flex-row 2xl:h-[21rem]";
 /**
+ * Row 2 only (Statistical profile / Recent disclosures / In the news):
+ * shorter than `DASH_ROW` because Statistical profile's actual content —
+ * two 4-KPI rows plus the histogram — only needs ~257px including the
+ * header, so `DASH_ROW`'s height left a visibly empty gap beneath it. The
+ * other two panels in the row (disclosures, news) already handle overflow
+ * via `scroll`, so shortening the row just means fewer items show before
+ * scrolling, same tradeoff `DASH_ROW` already makes everywhere else.
+ */
+const STATS_ROW = "flex flex-col gap-3 lg:h-[16.5rem] lg:flex-row";
+/**
  * Panel widths within a `DASH_ROW`. Flex basis + grow rather than a 12-column
  * grid's `col-span-*`, specifically so a row heals when a panel doesn't
  * render: Chart, Analytics, and Statistics all require real DB-backed history,
@@ -590,7 +600,7 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       </div>
 
       {/* Dashboard row 2 — the quantitative profile beside the two live feeds. */}
-      <div className={`mt-3 ${DASH_ROW}`}>
+      <div className={`mt-3 ${STATS_ROW}`}>
         {statsSample != null && (
           <Panel
             title="Statistical profile"

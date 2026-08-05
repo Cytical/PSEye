@@ -38,7 +38,11 @@ export function ReturnHistogram({
 
   const WIDTH = width;
   const HEIGHT = height;
-  const PAD_BOTTOM = fontSize * 2.6;
+  // 2.1x, not the axis label's own ~1x line-height: leaves just enough room
+  // for the tick text without the wide dead gutter a taller multiplier left
+  // beneath the plot (this chart renders small, so every pixel given to bars
+  // instead of whitespace reads as visibly taller, more legible bars).
+  const PAD_BOTTOM = fontSize * 2.1;
 
   const bins = histogram(returns, binCount);
   const maxCount = Math.max(...bins.map((b) => b.count));
@@ -66,8 +70,25 @@ export function ReturnHistogram({
       role="img"
       aria-label="Distribution of daily returns over the window"
     >
-      {/* zero line */}
-      <line x1={zeroX} x2={zeroX} y1={PAD_TOP} y2={PAD_TOP + plotHeight} className="stroke-panel-fg/20" strokeWidth={1} />
+      {/* baseline the bars sit on — without it they just float above the axis
+          labels with nothing grounding them to a floor */}
+      <line
+        x1={PAD_LEFT}
+        x2={PAD_LEFT + plotWidth}
+        y1={PAD_TOP + plotHeight}
+        y2={PAD_TOP + plotHeight}
+        className="stroke-panel-fg/20"
+        strokeWidth={1}
+      />
+      {/* zero line — drawn after the baseline so it isn't dimmed under it at y-max */}
+      <line
+        x1={zeroX}
+        x2={zeroX}
+        y1={PAD_TOP}
+        y2={PAD_TOP + plotHeight}
+        className="stroke-panel-fg/30"
+        strokeWidth={1}
+      />
       {bins.map((b, i) => {
         const x = xFor(b.x0);
         const w = Math.max(1, xFor(b.x1) - xFor(b.x0) - 1);
@@ -81,6 +102,7 @@ export function ReturnHistogram({
             y={y}
             width={w}
             height={h}
+            rx={Math.min(1.5, w / 2)}
             fill={isDown ? "var(--down)" : "var(--up)"}
             opacity={0.85}
           />

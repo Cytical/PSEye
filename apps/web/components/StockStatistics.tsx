@@ -85,7 +85,7 @@ export function StockStatistics({
   const showIncome = dividend != null && (dividend.yieldPct != null || dividend.payoutCount > 0);
 
   return (
-    <div className="grid grid-cols-1 gap-x-5 gap-y-3 xl:grid-cols-[minmax(0,1fr)_minmax(190px,225px)]">
+    <div className="grid grid-cols-1 items-start gap-x-5 gap-y-3 xl:grid-cols-[minmax(0,1fr)_minmax(190px,225px)]">
       <div className="flex min-w-0 flex-col gap-3">
         <div>
           <SubHead>Risk-adjusted return</SubHead>
