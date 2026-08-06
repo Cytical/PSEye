@@ -1,15 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-/** Always shown inline, in this order. */
-const PRIMARY = [
+/**
+ * Shown inline, in this order.
+ *
+ * `xlOnly` drops a link out of the inline row on narrower desktops. Between
+ * `lg` (where the hamburger gives way to the inline nav) and `xl` the row plus
+ * the search box are about 100px wider than the header, which used to make the
+ * whole nav wrap onto a second line inside a bar fixed at 64px. Getting Started
+ * is the one to give up there: it is in the row for first-time visitors rather
+ * than for traffic, and it stays reachable in the footer, in the homepage FAQ,
+ * and in the hamburger panel below `lg`.
+ */
+const PRIMARY: { href: string; label: string; xlOnly?: boolean }[] = [
   { href: "/", label: "Market Map" },
   { href: "/daily", label: "Daily Recap" },
   { href: "/news", label: "News" },
-  { href: "/getting-started", label: "Getting Started" },
+  { href: "/getting-started", label: "Getting Started", xlOnly: true },
 ];
 
 interface NavLink {
@@ -74,16 +84,53 @@ const DROPDOWNS: { label: string; links: NavLink[] }[] = [
     ],
   },
 ];
+/**
+ * Whether the visitor is driving a real pointer, which is what makes
+ * hover-to-open a sane thing to do in the nav below.
+ *
+ * Gated on `pointer: fine` as well as `hover: hover`: a touchscreen reports a
+ * hover for the instant of a tap, so on the coarse-pointer reading alone a tap
+ * on a dropdown trigger both opens the menu (hover) and closes it (click),
+ * which is to say it does nothing at all. Server-snapshots to false and reads
+ * the live value through useSyncExternalStore, the same contract as
+ * lib/useNarrowViewport.ts.
+ */
+const HOVER_QUERY = "(hover: hover) and (pointer: fine)";
+
+function subscribeToHoverCapability(callback: () => void) {
+  const mq = window.matchMedia(HOVER_QUERY);
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function usePointerCanHover(): boolean {
+  return useSyncExternalStore(
+    subscribeToHoverCapability,
+    () => window.matchMedia(HOVER_QUERY).matches,
+    () => false,
+  );
+}
+
 function useIsActive() {
   const pathname = usePathname();
   return (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/**
+ * The underline is a scaling `::after` bar rather than a `border-bottom` that
+ * switches colour. A border can only pop in or out; this one wipes in from the
+ * left on hover and is simply already at full width when the link is the
+ * current page, so hovering the nav feels like a single continuous control
+ * instead of eight independent on/off states. Same 2px, same position, so it
+ * costs no layout and nothing in the header's tight width budget.
+ */
 function navLinkClass(active: boolean) {
+  const base =
+    "relative pb-1 transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:origin-left after:rounded-full after:transition-transform after:duration-200 after:content-['']";
   return active
-    ? "border-b-2 border-accent pb-0.5 font-medium text-foreground"
-    : "border-b-2 border-transparent pb-0.5 text-foreground/65 transition-colors hover:border-foreground/20 hover:text-foreground";
+    ? `${base} font-medium text-foreground after:scale-x-100 after:bg-accent`
+    : `${base} text-foreground/65 after:scale-x-0 after:bg-foreground/30 hover:text-foreground hover:after:scale-x-100`;
 }
 
 /**
@@ -147,7 +194,12 @@ export function NavLinks({ variant = "inline" }: { variant?: "inline" | "stacked
           key={link.href}
           href={link.href}
           aria-current={isActive(link.href) ? "page" : undefined}
-          className={navLinkClass(isActive(link.href))}
+          // shrink-0 across the row: with the header's nav now flex-nowrap, a
+          // shrinkable item doesn't overflow, it wraps its own label onto a
+          // second line inside a 64px bar, which is the same bug one level down.
+          className={`shrink-0 whitespace-nowrap ${navLinkClass(isActive(link.href))} ${
+            link.xlOnly ? "hidden xl:inline-block" : ""
+          }`}
         >
           {link.label}
         </Link>
@@ -183,8 +235,38 @@ function NavDropdown({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeTimer = useRef<number | null>(null);
   const panelId = `nav-panel-${label.toLowerCase().replace(/\s+/g, "-")}`;
   const hasActiveChild = links.some((link) => isActive(link.href));
+
+  const pointerCanHover = usePointerCanHover();
+
+  useEffect(() => () => {
+    if (closeTimer.current != null) window.clearTimeout(closeTimer.current);
+  }, []);
+
+  function cancelClose() {
+    if (closeTimer.current != null) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }
+
+  function onPointerEnter() {
+    if (!pointerCanHover) return;
+    cancelClose();
+    setOpen(true);
+  }
+
+  /** Closes on a delay, not immediately: the panel hangs 8px below its trigger,
+   * so the pointer necessarily leaves this element for a frame or two on its
+   * way into the menu. The delay is what bridges that gap, and it also forgives
+   * a pointer that clips a corner on its way to the item it wants. */
+  function onPointerLeave() {
+    if (!pointerCanHover) return;
+    cancelClose();
+    closeTimer.current = window.setTimeout(() => setOpen(false), 160);
+  }
 
   // Close on outside click / Escape.
   useEffect(() => {
@@ -211,7 +293,9 @@ function NavDropdown({
   return (
     <div
       ref={ref}
-      className="relative"
+      className="relative shrink-0"
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
       // Tabbing past the last link should close the panel the same way clicking
       // outside does; without this the abandoned panel stays open over the page.
       onBlur={(e) => {
@@ -237,7 +321,7 @@ function NavDropdown({
         // aria-controls referencing a missing id is invalid ARIA. aria-expanded
         // is what carries the state either way.
         aria-controls={open ? panelId : undefined}
-        className={`flex items-center gap-1 ${navLinkClass(hasActiveChild)}`}
+        className={`flex items-center gap-1 whitespace-nowrap ${navLinkClass(hasActiveChild)}`}
       >
         {label}
         <svg
@@ -264,28 +348,41 @@ function NavDropdown({
           misleads a screen-reader user about how it behaves. The APG's own
           guidance is that site navigation should use a disclosure instead. */}
       {open && (
+        // The 8px offset between trigger and panel is `pt-2` on a transparent
+        // wrapper rather than `mt-2` on the panel itself, so the gap is part of
+        // this element's hover area. With a margin, crossing it counted as
+        // leaving the menu, and the panel closed under a pointer that was on
+        // its way into it.
         <div
-          id={panelId}
-          className={`absolute top-full z-20 mt-2 flex w-72 flex-col rounded-lg bg-panel py-1.5 ring-1 ring-panel-border shadow-lg shadow-black/5 ${
-            align === "right" ? "right-0" : "left-0"
-          }`}
+          className={`absolute top-full z-20 pt-2 ${align === "right" ? "right-0" : "left-0"}`}
         >
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setOpen(false)}
-              aria-current={isActive(link.href) ? "page" : undefined}
-              className={`flex flex-col gap-0.5 px-3.5 py-2 ${
-                isActive(link.href) ? "bg-panel-active" : "hover:bg-panel-raised"
-              }`}
-            >
-              <span className={isActive(link.href) ? "font-medium text-panel-fg" : "text-panel-fg"}>
-                {link.label}
-              </span>
-              <span className="text-xs text-panel-fg/68">{link.description}</span>
-            </Link>
-          ))}
+          <div
+            id={panelId}
+            className="animate-overlay-panel flex w-72 flex-col overflow-hidden rounded-lg bg-panel py-1.5 shadow-xl shadow-black/20 ring-1 ring-panel-border"
+          >
+            {links.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  // The accent rule on the left edge is the same marker the
+                  // market map's sidebar uses for its active filter, so
+                  // "you are here" reads identically in both places.
+                  className={`relative flex flex-col gap-0.5 px-3.5 py-2 transition-colors ${
+                    active
+                      ? "bg-panel-active before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-accent before:content-['']"
+                      : "hover:bg-panel-raised"
+                  }`}
+                >
+                  <span className={active ? "font-medium text-panel-fg" : "text-panel-fg"}>{link.label}</span>
+                  <span className="text-xs text-panel-fg/68">{link.description}</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

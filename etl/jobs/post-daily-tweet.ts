@@ -190,6 +190,16 @@ async function captureMarketMapScreenshot(siteUrl: string): Promise<Buffer> {
     // #market-map-canvas, that icon is out of scope too, so this needs a
     // selector that actually matches a tile).
     await page.waitForSelector(`${CAPTURE_SELECTOR} button[title]`, { timeout: 30_000 });
+
+    // The canvas carries a floating zoom cluster in its top-right corner
+    // (.map-zoom-controls in components/TreemapChart.tsx). It belongs on the
+    // live page and nowhere near a posted image, where a "− +" widget over the
+    // top-right sector panel just reads as a rendering artifact. Same for
+    // .map-live-only, the legend's "Click a band to highlight" line: an
+    // instruction to click something is noise in a static image.
+    await page.addStyleTag({
+      content: `${CAPTURE_SELECTOR} .map-zoom-controls, ${CAPTURE_SELECTOR} .map-live-only { display: none !important; }`,
+    });
     await page.waitForTimeout(500);
 
     // A manually-measured clip, not locator.screenshot() — confirmed live

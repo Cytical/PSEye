@@ -4,7 +4,7 @@ import { getDailyQuotes } from "@/lib/quotes";
 import {
   computeTreemapLayout,
   pctChangeToColor,
-  getContrastText,
+  TILE_INK,
   shouldShowLabel,
   SECTOR_HEADER_HEIGHT,
 } from "@pseye/treemap-layout";
@@ -92,7 +92,11 @@ export default async function Image() {
             const w = box.x1 - box.x0;
             const h = box.y1 - box.y0;
             const fill = pctChangeToColor(box.pctChange);
-            const ink = getContrastText(fill);
+            // Flat white, matching the live map (see TILE_INK) rather than
+            // per-tile contrast ink — the bright end of the green arm is light
+            // enough that getContrastText flips it to black, which made the
+            // share card's strongest gainers the only black-labelled tiles on it.
+            const ink = TILE_INK;
             const showLabel = shouldShowLabel(w, h);
             return (
               <div

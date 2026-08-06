@@ -62,7 +62,10 @@ export function MobileMarketSummary({ snapshot, foreignFlow, quotes, recapHref, 
   const total = withChange.length || 1;
 
   return (
-    <section className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:hidden">
+    // lg, not sm: the market map's sidebar (which carries these same numbers on
+    // desktop) only appears alongside the canvas from lg up now, so anything
+    // narrower needs this card or the PSEi level is nowhere on the page.
+    <section className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border lg:hidden">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           <div className="kicker text-panel-fg/72">PSEi</div>

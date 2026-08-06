@@ -104,4 +104,17 @@ describe("computeTreemapLayout", () => {
       expect(box.y0).toBeGreaterThanOrEqual(sector.y0 + SECTOR_HEADER_HEIGHT);
     }
   });
+
+  it("reserves a header band per sector only, never a second one at the canvas top", () => {
+    const stocks: TreemapInput[] = [
+      { ticker: "AAA", sector: "Financials", marketCap: 1000, pctChange: 1 },
+      { ticker: "BBB", sector: "Industrial", marketCap: 900, pctChange: -1 },
+    ];
+
+    const layout = computeTreemapLayout(stocks, WIDTH, HEIGHT);
+    // The topmost sector panel starts at the canvas's outer inset, not one
+    // header band below it — see the paddingTop note in computeLayout.ts.
+    const topSector = [...layout.sectors].sort((a, b) => a.y0 - b.y0)[0];
+    expect(topSector.y0).toBeLessThan(SECTOR_HEADER_HEIGHT);
+  });
 });

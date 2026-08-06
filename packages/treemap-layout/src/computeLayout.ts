@@ -73,8 +73,26 @@ interface HierarchyDatum {
   raw?: TreemapInput;
 }
 
-/** Height (px) reserved at the top of each sector block for its header bar. */
-export const SECTOR_HEADER_HEIGHT = 22;
+/**
+ * Height (px) reserved at the top of each sector block for its header.
+ *
+ * 16, not the original 22: seven sectors were spending 154px of a 760px canvas
+ * on header chrome. finviz gives its own sector band 14.5px and draws it
+ * transparently rather than as a filled bar, which is the treatment
+ * TreemapChart.tsx now matches.
+ */
+export const SECTOR_HEADER_HEIGHT = 16;
+
+/**
+ * Note on sector panel order: it is size-driven and already stable. The
+ * `.sort()` below applies at every level of the hierarchy, so sector panels are
+ * arranged by summed float-adjusted cap descending, not by the order rows
+ * happened to arrive from the database. Sector totals barely move day to day
+ * and do not move at all when the map's timeframe changes (that only recolors),
+ * so there is no need for finviz's "Fixed Sector Order" escape hatch here —
+ * and forcing an arbitrary order would cost squarify the descending-size input
+ * it needs to produce good aspect ratios.
+ */
 
 /**
  * Pure layout math shared by the interactive web treemap (hand-rolled, absolute-
@@ -114,7 +132,14 @@ export function computeTreemapLayout(
     .tile(treemapSquarify)
     .size([width, height])
     .paddingOuter(2)
-    .paddingTop(SECTOR_HEADER_HEIGHT)
+    // Depth-aware, not a flat SECTOR_HEADER_HEIGHT. d3 applies paddingTop to
+    // every internal node, the root included, so a constant here reserved a
+    // *second* 16px band across the very top of the canvas for a root-level
+    // header that nothing ever draws: measured live, the topmost tile started
+    // 32px down (2px outer + 16px phantom root header + 16px real sector
+    // header) and the map opened with a blank strip above its first sector
+    // name. The root falls back to the same inset as the other three edges.
+    .paddingTop((node) => (node.depth === 0 ? 2 : SECTOR_HEADER_HEIGHT))
     .paddingInner(1)
     .round(true);
 

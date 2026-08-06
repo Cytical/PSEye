@@ -30,6 +30,10 @@ const FAQ = [
     a: "Each box is a listed company, sized by market cap and colored by today's price change: green for up, red for down. A deeper shade means a bigger move. Boxes are grouped into panels by PSE sector, so you can see which parts of the market are leading or lagging at a glance.",
   },
   {
+    q: "What decides how big a box is?",
+    a: "Free-float market cap, meaning the company's market value counted only over the shares that actually trade on the PSE. That keeps a foreign dual-listing with a sliver of its global shares listed here from drawing a box the size of its worldwide business. A box drawn with diagonal hatching is a stock that did not trade at all that session, which is not the same as one that traded and closed flat.",
+  },
+  {
     q: "I'm new to investing: how do I actually buy a stock?",
     a: "PSEye is a tracker, not a brokerage, so it can't place an order for you. You'd open an account with a PSE-accredited stockbroker, then buy in whole board lots through their platform.",
     href: "/getting-started",
@@ -54,6 +58,28 @@ const FAQ = [
   {
     q: "What else can I track on PSEye?",
     a: "Market-cap and dividend-yield rankings, ex-dividend dates, net foreign buying and selling, block sales, disclosures, and a per-day market recap, all linked from the menu above.",
+  },
+];
+
+/** Closes the page out with somewhere to go next, since the FAQ is the last
+ * thing on it. One entry per audience the homepage actually has: someone who
+ * has never bought a share, someone who wants the whole list rather than a
+ * picture of it, and someone who wants today's session written up. */
+const FAQ_FOOTER_LINKS = [
+  {
+    href: "/getting-started",
+    label: "New to the PSE?",
+    description: "How the exchange works, what a broker does, and how to place your first order.",
+  },
+  {
+    href: "/screener",
+    label: "Explore every stock",
+    description: "Filter and sort all 282 tracked companies by price, sector, size, and yield.",
+  },
+  {
+    href: "/daily",
+    label: "Today's recap",
+    description: "What moved, what it means, and the day's breadth in plain English.",
   },
 ];
 
@@ -120,7 +146,11 @@ export default async function MarketMapPage() {
       {/* Target of the "Skip the market map" bypass link above; tabIndex -1 so
           the jump actually moves focus here rather than only scrolling. */}
       <div id="market-map-faq" tabIndex={-1} className="focus:outline-none">
-        <MarketMapFaq items={FAQ} />
+        <MarketMapFaq
+          items={FAQ}
+          intro="Everything on this page comes from the exchange's own public data. Here is what it is, where it comes from, and what it is not."
+          footerLinks={FAQ_FOOTER_LINKS}
+        />
       </div>
     </div>
   );

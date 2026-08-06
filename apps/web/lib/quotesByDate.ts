@@ -23,6 +23,17 @@ export async function getQuotesForDate(date: string): Promise<Quote[] | null> {
       price: r.price == null ? null : Number(r.price),
       pctChange: r.pctChange == null ? null : Number(r.pctChange),
       marketCap: r.marketCap == null ? 0 : Number(r.marketCap),
+      // Carried through deliberately: without it the time machine sized its
+      // boxes by RAW market cap while today's view sizes by float-adjusted cap
+      // (see lib/floatAdjustedCap.ts). The two dual-listed insurers, Manulife
+      // (0.20% float against a ₱4.15T reported cap) and Sun Life (0.62% against
+      // ₱2.66T), then swallowed the board on every past date while rendering as
+      // ordinary mid-caps on today's — the same map, the same data, two
+      // different sizing rules depending on which date you were looking at.
+      freeFloatPct: r.freeFloatPct == null ? null : Number(r.freeFloatPct),
+      // Turnover for the hover tooltip; same nullability contract as price.
+      volume: r.volume == null ? null : Number(r.volume),
+      value: r.value == null ? null : Number(r.value),
     }));
   } catch (err) {
     console.error("getQuotesForDate: DB read failed", err);

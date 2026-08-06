@@ -260,6 +260,46 @@ label[for] {
   animation: tooltip-in 120ms ease-out;
 }
 
+/* Market map tile paint, chosen by CSS rather than by JS.
+ *
+ * The treemap's fill colors are computed per data point (a 41-step scale, not a
+ * fixed swatch), so they can't be plain CSS variables — but they also can't be
+ * resolved on the server, because the visitor's theme only exists in
+ * localStorage. Since the map now renders in the server HTML rather than
+ * waiting for a client measurement, a JS-resolved fill meant every light-mode
+ * visitor got a flash of the dark palette before hydration.
+ *
+ * TreemapChart therefore emits BOTH palettes per tile as custom properties and
+ * lets these rules pick. `data-theme` is set by layout.tsx's pre-hydration
+ * inline script, so the correct palette is in place for the very first paint,
+ * with no JS involved at all. Colorblind mode has no such pre-paint script and
+ * stays a hydration-time override (an inline background-color, which outranks
+ * these rules).
+ *
+ * --fd/--fl: fill, dark/light. Ink no longer varies per tile — see TILE_INK in
+ * @pseye/treemap-layout for why every label is white — so it's a flat value
+ * here instead of a third and fourth custom property, with TILE_LABEL_HALO
+ * carrying the contrast a mid-tone fill can't.
+ */
+.treemap-tile {
+  background-color: var(--fd);
+  color: #ffffff;
+}
+
+.treemap-tile-label {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), -1px 0 1px rgba(0, 0, 0, 0.5), 1px 0 1px rgba(0, 0, 0, 0.5),
+    0 -1px 1px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .treemap-tile {
+  background-color: var(--fl);
+}
+
+[data-theme="light"] .treemap-tile-label {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), -1px 0 1px rgba(0, 0, 0, 0.75), 1px 0 1px rgba(0, 0, 0, 0.75),
+    0 -1px 1px rgba(0, 0, 0, 0.75);
+}
+
 /* RadialGauge's ring sweeps from empty to its reading on mount instead of
  * appearing pre-filled — the one chart on the stock page shaped enough to
  * read as a "gauge filling up" rather than decoration. The from/to values are

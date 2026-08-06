@@ -29,7 +29,10 @@ export function TopMovers({ quotes, count = 3 }: TopMoversProps) {
   if (gainers.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-3 px-3 py-2 text-sm">
+    // Side by side wherever the sidebar is a full-width strip (below lg), one
+    // above the other in the narrow column it becomes at lg. Stacked in strip
+    // mode the two three-row lists left most of the page empty beside them.
+    <div className="grid grid-cols-2 gap-x-6 gap-y-3 px-3 py-2 text-sm lg:grid-cols-1">
       <MoverList label="Top gainers" rows={gainers} />
       <MoverList label="Top losers" rows={losers} />
     </div>

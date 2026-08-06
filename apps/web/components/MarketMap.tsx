@@ -22,6 +22,7 @@ import { NASDAQ_100_STOCKS } from "@/lib/nasdaq100";
 import { useWatchlist } from "@/lib/watchlist";
 import { useColorblindMode, setColorblindMode } from "@/lib/colorblindMode";
 import { useNarrowViewport } from "@/lib/useNarrowViewport";
+import { useScrollSnapSections, type SnapTarget } from "@/lib/useScrollSnapSections";
 import type { CompanyProfile } from "@/lib/companyProfiles";
 import type { MarketSnapshot } from "@/lib/marketSnapshot";
 import type { LatestForeignFlow } from "@/lib/latestForeignFlow";
@@ -43,13 +44,41 @@ interface MarketMapProps {
 
 const FILTER_KEYS = new Set(MARKET_MAP_FILTERS.map((f) => f.key));
 
+/**
+ * One titled block in the market map's sidebar. Titles are desktop-only: at
+ * phone width the sidebar collapses to a horizontal strip below the map where
+ * section headings would cost more room than they explain.
+ */
+function SidebarSection({
+  title,
+  className = "",
+  children,
+}: {
+  title?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={`py-2 ${className}`}>
+      {/* Titles from sm up. Only a phone, where the sidebar collapses to a
+          cramped strip, is short enough on room that a section heading costs
+          more than it explains — the 640-1023px strip has the width for them. */}
+      {title && <h2 className="kicker hidden px-3 pb-1.5 text-panel-fg/68 sm:block">{title}</h2>}
+      {children}
+    </section>
+  );
+}
+
 /** Reserved pixels below the canvas in fullscreen — the "Day change" legend
  * and the fullscreen/share control bar, plus their gaps/padding — so the
  * computed fill height doesn't push either off the bottom of the screen.
  * (The control bar moved inside the fullscreen target so "Exit fullscreen"
  * stays reachable without the Esc key; that's the extra ~50px over the
  * legend-only reserve this used to be.) */
-const FULLSCREEN_CHROME_RESERVE = 190;
+/** 228, up from 190: the legend became a padded panel with 28px chips sitting
+ * a full 16px clear of the canvas, which is ~38px more than the strip it
+ * replaced. */
+const FULLSCREEN_CHROME_RESERVE = 228;
 
 /** Fired after history.replaceState so useSyncExternalStore knows to re-read the URL
  * (replaceState doesn't dispatch popstate on its own). */
@@ -172,6 +201,17 @@ export function MarketMap({
   const colorblind = useColorblindMode();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const mapAreaRef = useRef<HTMLDivElement>(null);
+
+  // The page scrolls in three whole views rather than freely: the headline
+  // (offset 0, implicit), the map framed on its own under the header, then the
+  // FAQ. Only ever with the pointer off the treemap, which keeps wheel-to-zoom
+  // for itself — see OWNS_WHEEL_ATTR.
+  //
+  // mapAreaRef is the canvas plus its "Day change" legend (see the div it's
+  // attached to below). The FAQ is addressed by id because it's rendered by
+  // app/page.tsx, a server component, which has no ref to hand down here.
+  const snapTargets = useMemo((): SnapTarget[] => [mapAreaRef, "market-map-faq"], []);
+  useScrollSnapSections(snapTargets);
 
   // The fullscreen target (see mapAreaRef below) is now just the canvas, not
   // the filter sidebar — so unlike its width (which TreemapChart already
@@ -342,11 +382,27 @@ export function MarketMap({
               horizontal scrollbar. Wrapping to two lines breaks naturally after
               the comma, which also lets the minimum size go up from 1.35rem to
               1.75rem — the headline is bigger on phones now, not smaller. */}
-          <h1 className="mt-2 font-serif text-[clamp(1.75rem,4.6vw,3.25rem)] font-semibold leading-[1.05] tracking-tight sm:whitespace-nowrap">
+          {/* Desktop ceiling was trimmed from 3.25rem to 2.5rem to stop the
+              headline block eating 233px above the canvas, then nudged back to
+              2.85rem: the map reclaimed that space elsewhere (the phantom
+              header band at the top of the canvas, the chrome row that used to
+              hold the legend), so the headline can carry a bit more weight
+              again without pushing the bottom sector rows below the fold. */}
+          {/* nowrap only from xl up. Below that the headline at its clamped
+              size plus the Fullscreen/Share pair is wider than the row, so
+              keeping it on one line pushed those two buttons down onto a
+              second line at the *left* margin — which is where they sat on
+              every laptop and tablet. Letting the headline break after the
+              comma instead keeps the actions where they belong. Below sm the
+              vw term bottoms out at the clamp minimum, so the line stops
+              scaling with the viewport and simply overflowed it: measured on a
+              390px phone, "Visualized." ended 42px past the right edge and gave
+              the whole homepage a horizontal scrollbar. */}
+          <h1 className="mt-1.5 font-serif text-[clamp(1.9rem,4.9vw,2.85rem)] font-semibold leading-[1.05] tracking-tight xl:whitespace-nowrap">
             The Philippine Stock Market, <span className="italic text-accent">Visualized.</span>
           </h1>
         </div>
-        <div className="flex shrink-0 items-center gap-2 pt-5">
+        <div className="ml-auto flex shrink-0 items-center gap-2 pt-3">
           <FullscreenButton targetRef={mapAreaRef} />
           <ShareButton getShareUrl={getMarketMapShareUrl} />
         </div>
@@ -400,89 +456,165 @@ export function MarketMap({
           </button>
         </div>
       )}
-      <div className="flex flex-col gap-4 sm:flex-row">
+      {/* lg, not sm. The sidebar is a fixed 208px, so at 640-1023px it was
+          taking a third of the page and leaving the treemap 497-753px to draw
+          280 boxes in: measured at 900px, the canvas was 629px wide and hit its
+          520px minimum height, i.e. the map was being squeezed into the worst
+          shape it can take by a column of controls. Below lg the sidebar
+          becomes a full-width strip under the map instead (its own contents
+          already lay out horizontally there) and the canvas gets the page. */}
+      <div className="flex flex-col gap-4 lg:flex-row">
         {/* `overflow-x-auto` is scoped to the filter chips rather than the whole
             nav: the date picker below opens an absolutely-positioned 260px
             popover, which a scroll container on the <nav> would clip on mobile
             (the desktop nav already opted out via sm:overflow-visible, so this
             only ever showed up at phone width). */}
+        {/* Sidebar order is deliberate, top to bottom: the market's headline
+            number, then what the map is showing, then what moved, then the
+            controls that change how you're looking at it. It used to lead with
+            the time machine (a control almost nobody opens) and bury the PSEi
+            level below the filter list and a stray checkbox, so the first thing
+            in the column was the least-used thing in it. Each block is a
+            titled section now rather than a run of dividers. */}
         <nav
-          className="order-2 flex shrink-0 flex-col gap-2 rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border sm:order-none sm:sticky sm:top-16 sm:w-48 sm:gap-0.5 sm:self-start"
-          aria-label="Market map filters"
+          // lg:mt-6 drops the column below the canvas's top edge rather than
+          // starting flush with it. Flush, the sidebar's own "PSEI" kicker sat
+          // on exactly the same line as the map's first sector header and the
+          // two read as one banded row spanning the page; the offset separates
+          // the controls from the thing they control.
+          //
+          // Sticky *and* independently scrollable: at 208px wide the column
+          // runs past the fold on a laptop, and a sticky element taller than
+          // the viewport simply pins its top and leaves the rest permanently
+          // out of reach — the date picker and colorblind toggle at the bottom
+          // were unreachable on a 900px-tall screen. Capping the height and
+          // letting it scroll on its own restores them without giving up the
+          // stickiness that keeps the filters beside the map.
+          //
+          // Deliberately no `overscroll-contain`: the map swallows every wheel
+          // event over it, so the sidebar is one of the few places left to
+          // scroll the page from, and containing overscroll here meant a wheel
+          // over the sidebar moved nothing at all once it had no scroll of its
+          // own to give. The page's snapper knows to leave an event alone while
+          // this box can still absorb it (scrollsAnInnerBox in
+          // lib/useScrollSnapSections.ts), so the handoff is clean either way.
+          className="order-2 flex shrink-0 flex-col rounded-xl bg-panel p-2 shadow-sm shadow-black/5 ring-1 ring-panel-border lg:sticky lg:top-16 lg:order-none lg:mt-6 lg:max-h-[calc(100vh-5.5rem)] lg:w-52 lg:self-start lg:overflow-y-auto xl:w-56"
+          aria-label="Market map controls"
         >
-          {availableDates.length > 0 && (
-            <div className="border-b border-panel-border px-2 pb-2">
-              <span className="kicker text-panel-fg/68">Time machine</span>
-              <CalendarDatePicker
-                className="mt-1.5"
-                align="right"
-                value={viewDate}
-                availableDates={availableDates}
-                onSelect={(iso) => selectDateInUrl(iso)}
-                onClear={() => selectDateInUrl(null)}
-                clearLabel="Today"
-                triggerLabel={viewDate ? formatPickerDate(viewDate) : "Today"}
-              />
+          {/* Today's PSEi snapshot — hidden in a past-date view rather than
+              shown next to a different day's map, and on phones, where
+              MobileMarketSummary carries the same numbers above the map. */}
+          {!isPastView && (
+            <div className="hidden lg:block">
+              <MarketSummaryBar snapshot={snapshot} foreignFlow={foreignFlow} status={status} />
+              {/* Same call to action MobileMarketSummary closes with, which
+                  desktop had no equivalent of: the daily recap was only
+                  reachable from the nav, so the numbers directly above this
+                  had nowhere to lead. */}
+              <Link
+                href={`/daily/${latestRecapDate}`}
+                className="mb-1 flex items-center justify-center gap-1.5 rounded-md bg-panel-active px-3 py-2 text-xs font-medium text-panel-fg transition-colors hover:brightness-110"
+              >
+                Full daily recap
+                <span aria-hidden>→</span>
+              </Link>
             </div>
           )}
 
-          <span className="kicker hidden border-b border-panel-border px-2 pb-2 text-panel-fg/68 sm:block">
-            Filters
-          </span>
-          <div className="flex gap-2 overflow-x-auto sm:flex-col sm:gap-0.5 sm:overflow-visible">
-            {MARKET_MAP_FILTERS.map((option) => {
-              const isActive = option.key === effectiveFilter;
-              return (
-                <button
-                  key={option.key}
-                  type="button"
-                  onClick={() => selectFilter(option.key)}
-                  aria-pressed={isActive}
-                  className={`group relative flex items-center justify-between gap-3 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-panel-active text-panel-fg before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-up before:content-['']"
-                      : "text-panel-fg/80 hover:bg-panel-raised hover:text-panel-fg"
-                  }`}
-                >
-                  <span>{option.label}</span>
-                  <span
-                    className={`text-[11px] tabular-nums transition-colors ${
-                      isActive ? "text-panel-fg/72" : "text-panel-fg/68 group-hover:text-panel-fg/70"
+          <SidebarSection title="Showing" className={isPastView ? undefined : "lg:border-t lg:border-panel-border"}>
+            <div className="flex gap-2 overflow-x-auto lg:flex-col lg:gap-0.5 lg:overflow-visible">
+              {MARKET_MAP_FILTERS.map((option) => {
+                const isActive = option.key === effectiveFilter;
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => selectFilter(option.key)}
+                    aria-pressed={isActive}
+                    className={`group relative flex items-center justify-between gap-3 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-panel-active text-panel-fg before:absolute before:inset-y-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-up before:content-['']"
+                        : "text-panel-fg/80 hover:bg-panel-raised hover:text-panel-fg"
                     }`}
                   >
-                    {countByFilter[option.key]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Matches finviz's own "Colorblind Mode" checkbox (same sidebar
-              placement) — swaps the treemap's red/green scale for orange/blue
-              (see packages/treemap-layout/color.ts's *_COLORBLIND_RANGE).
-              Scoped to just the map's box colors, not a sitewide --up/--down
-              override, same as finviz's own toggle. */}
-          <label className="flex items-center gap-2 border-t border-panel-border px-2 pt-2 text-xs font-medium text-panel-fg/70">
-            <input
-              type="checkbox"
-              checked={colorblind}
-              onChange={(e) => setColorblindMode(e.target.checked)}
-              className="h-3.5 w-3.5 accent-accent"
-            />
-            Colorblind mode
-          </label>
-
-          {/* The summary bar is today's PSEi/forex snapshot — hidden in a past-date
-              view rather than shown next to a different day's map. */}
-          {!isPastView && (
-            <div className="hidden border-t border-panel-border pt-2 sm:block">
-              <MarketSummaryBar snapshot={snapshot} foreignFlow={foreignFlow} status={status} />
+                    <span>{option.label}</span>
+                    {/* Pill rather than bare digits: at 11px against a 14px
+                        label the counts read as part of the label text, and
+                        "Top 50 50" is a confusing thing to read. */}
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums transition-colors ${
+                        isActive
+                          ? "bg-panel text-panel-fg/80"
+                          : "bg-panel-raised text-panel-fg/65 group-hover:text-panel-fg/80"
+                      }`}
+                    >
+                      {countByFilter[option.key]}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-          )}
+            {/* Screen readers otherwise get no feedback at all from a filter
+                press: the map's own contents change, but nothing announces
+                that, and the pressed state alone doesn't say what happened. */}
+            <p aria-live="polite" className="sr-only">
+              {`Showing ${filteredStocks.length} stock${filteredStocks.length === 1 ? "" : "s"} on the market map`}
+            </p>
+          </SidebarSection>
 
-          <div className="border-t border-panel-border pt-2">
+          {/* No section title: TopMovers already labels its own two lists, and
+              a "Movers" heading above "Top gainers" is a heading that says
+              nothing the next line doesn't. */}
+          <SidebarSection className="border-t border-panel-border">
             <TopMovers quotes={baseStocks} />
-          </div>
+          </SidebarSection>
+
+          {/* px-3 to line these two up with the section's own heading and with
+              every filter row above them. The date picker used to sit at the
+              panel's raw padding edge, 4px left of everything else in the
+              column and rendered as a small inline pill on a background the
+              same colour as its own, so it read as something dropped into the
+              sidebar rather than part of it. Full width, raised fill. */}
+          <SidebarSection title="View" className="border-t border-panel-border">
+            <div className="flex flex-col gap-1.5">
+              {availableDates.length > 0 && (
+                <CalendarDatePicker
+                  // Left-anchored, i.e. the default. It used to open leftward
+                  // to stay inside the sidebar, back when the popover was an
+                  // ordinary absolutely-positioned child that the sidebar
+                  // could clip. It's a portaled, viewport-positioned popup
+                  // now, so it can hang over the map like any other menu, and
+                  // opening from the trigger's own left edge reads as attached
+                  // to the control rather than pinned to the window edge.
+                  className="block w-full"
+                  // px-3 rather than the trigger's default px-2.5, so its label
+                  // starts on the same 20px line as the section heading above
+                  // it and every filter row in the column.
+                  triggerClassName="w-full px-3 bg-panel-raised text-xs hover:bg-panel-active"
+                  value={viewDate}
+                  availableDates={availableDates}
+                  onSelect={(iso) => selectDateInUrl(iso)}
+                  onClear={() => selectDateInUrl(null)}
+                  clearLabel="Today"
+                  triggerLabel={viewDate ? formatPickerDate(viewDate) : "Today"}
+                />
+              )}
+              {/* Matches finviz's own "Colorblind Mode" checkbox (same sidebar
+                  placement) — swaps the treemap's red/green scale for orange/blue
+                  (see packages/treemap-layout/color.ts's *_COLORBLIND_RANGE).
+                  Scoped to just the map's box colors, not a sitewide --up/--down
+                  override, same as finviz's own toggle. */}
+              <label className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-1 text-xs font-medium text-panel-fg/75 transition-colors hover:text-panel-fg">
+                <input
+                  type="checkbox"
+                  checked={colorblind}
+                  onChange={(e) => setColorblindMode(e.target.checked)}
+                  className="h-3.5 w-3.5 accent-accent"
+                />
+                Colorblind mode
+              </label>
+            </div>
+          </SidebarSection>
         </nav>
 
         {/* Fullscreen target for FullscreenButton above — deliberately just
@@ -504,7 +636,7 @@ export function MarketMap({
         <div
           ref={mapAreaRef}
           id="market-map-canvas"
-          className={`order-1 min-w-0 flex-1 bg-background sm:order-none ${isFullscreen ? "flex flex-col items-center justify-center gap-3 overflow-auto p-4" : ""}`}
+          className={`order-1 min-w-0 flex-1 bg-background lg:order-none ${isFullscreen ? "flex flex-col items-center justify-center gap-3 overflow-auto p-4" : ""}`}
         >
           {isSharedWatchlistView && (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-panel px-4 py-2.5 text-sm shadow-sm shadow-black/5 ring-1 ring-panel-border">

@@ -8,15 +8,35 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Logo } from "./Logo";
 
 /**
- * Nine nav links plus a search box no longer fit comfortably on a phone
- * screen without wrapping into a multi-row mess — collapses NavLinks +
- * TickerSearch behind a hamburger toggle below `sm`, same content shown
- * inline above it (matches the earlier project decision that wrapping was
- * fine when it was just nav links; adding search tipped the balance).
+ * Eight nav triggers plus a search box collapse behind a hamburger toggle
+ * below `lg`, with the same content shown inline above it.
+ *
+ * The cutoff was `sm` (640px), which was far too optimistic once the nav grew
+ * to four primary links plus four dropdowns: measured on the live homepage, the
+ * inline row wrapped to two lines at 1024px and 900px and to three at 768px,
+ * inside a header pinned to a fixed 64px. Every visitor on a small laptop or a
+ * landscape tablet got a nav spilling out of its own bar. The row is explicitly
+ * `flex-nowrap` now so that failure mode can't come back the next time a link
+ * is added: it will overflow visibly rather than silently restack.
  */
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+
+  // The header is sticky over a page that scrolls under it, but at the top of
+  // the page it is sitting on its own background with a hairline border, which
+  // is the same thing as not being sticky at all. Once anything has scrolled
+  // beneath it, it takes on a shadow and a more opaque backdrop so it reads as
+  // a layer above the page rather than part of it.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 4);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Same close-on-outside-click/Escape contract as NavLinks' NavDropdown and
   // CalendarDatePicker — without it, this was the one disclosure on the site
@@ -40,28 +60,38 @@ export function SiteHeader() {
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-30 border-b border-foreground/10 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/75"
+      className={`sticky top-0 z-30 border-b bg-background/90 backdrop-blur-md transition-shadow duration-200 supports-[backdrop-filter]:bg-background/75 ${
+        scrolled
+          ? "border-foreground/15 shadow-lg shadow-black/5 supports-[backdrop-filter]:bg-background/90"
+          : "border-foreground/10"
+      }`}
     >
       {/* max-w matches page.tsx's widest content container (the market map) so the
           header never reads as narrower than the page below it. Fixed h-16 (rather
           than py-N) so other pages can reliably offset sticky elements below the
           header's total height (64px, uniform across breakpoints now that the
           masthead strip is gone) — see MarketMap.tsx's filter sidebar `sm:top-16`. */}
-      <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-x-5 gap-y-1.5 px-4 text-sm">
+      <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-x-4 px-4 text-sm">
         <Link href="/" className="mr-1 shrink-0">
           <Logo />
         </Link>
 
-        <nav className="hidden flex-1 flex-wrap items-center gap-x-6 gap-y-1.5 sm:flex" aria-label="Main">
+        <nav className="hidden flex-1 flex-nowrap items-center gap-x-4 lg:flex xl:gap-x-6" aria-label="Main">
           <NavLinks />
         </nav>
 
-        <div className="ml-auto hidden items-center gap-3 sm:flex">
+        <div className="ml-auto hidden items-center gap-3 lg:flex">
+          {/* Hairline between the nav and the utility cluster, so the search
+              box and theme toggle read as header chrome rather than as two
+              more nav items. xl and up only: between lg and xl the row has no
+              spare pixels (see the wrap note above) and this would spend 13 of
+              them on decoration. */}
+          <span aria-hidden className="hidden h-5 w-px bg-foreground/12 xl:block" />
           <TickerSearch />
           <ThemeToggle />
         </div>
 
-        <div className="ml-auto flex items-center gap-3 sm:hidden">
+        <div className="ml-auto flex items-center gap-3 lg:hidden">
           {/* Quick link to Daily Recap, mobile only — on desktop it's already
               an inline nav link (see NavLinks' PRIMARY), but the mobile nav
               collapses everything behind the hamburger, which buried the
@@ -110,14 +140,17 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <div id="mobile-nav-panel" className="border-t border-foreground/10 px-4 py-3 sm:hidden">
+        <div
+          id="mobile-nav-panel"
+          className="animate-overlay-panel max-h-[calc(100vh-4rem)] origin-top overflow-y-auto border-t border-foreground/10 bg-background px-4 py-3 shadow-xl shadow-black/20 lg:hidden"
+        >
           <div className="mb-3">
             <TickerSearch />
           </div>
           {/* Distinct label from the desktop nav above: that one stays in the DOM
               (hidden sm:flex), so while this panel is open a screen reader would
               otherwise list two identically-named "Main" landmarks. */}
-          <nav className="flex flex-col gap-2.5 text-sm" aria-label="Mobile" onClick={() => setOpen(false)}>
+          <nav className="flex flex-col gap-2.5 pb-2 text-sm" aria-label="Mobile" onClick={() => setOpen(false)}>
             <NavLinks variant="stacked" />
           </nav>
         </div>
