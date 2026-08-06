@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { createDb, newsItems, getNewsOutletLogos, upsertNewsOutletLogo } from "@pseye/db";
 import { NEWS_SOURCES, fetchOgImage, fetchOutletLogo } from "@pseye/source-news";
 import { triggerRevalidate } from "../lib/triggerRevalidate";
+import { NEWS_REVALIDATE_PATHS } from "../lib/newsPaths";
 
 /**
  * Runs once/day via .github/workflows/fetch-daily.yml (see that file's
@@ -114,6 +115,9 @@ async function main() {
     publishedAt: item.publishedAt,
     tickers: item.tickers,
     sentiment: item.sentiment,
+    author: item.author,
+    topic: item.topic,
+    wordCount: item.wordCount,
   }));
 
   // onConflictDoUpdate (not onConflictDoNothing) so an already-seen article
@@ -123,8 +127,13 @@ async function main() {
   // image_url permanently null since the job only sees the same URL again
   // while it's still within an outlet's RSS feed window (same bug pattern
   // fixed for disclosures'/offerings' `url` column — see those jobs). Same
-  // reasoning applies to `sentiment` (migration 0013): a row inserted before
-  // that column existed only gets scored once this job sees its URL again.
+  // reasoning applies to `sentiment` (migration 0013) and to `author`/
+  // `topic`/`word_count` (migration 0020): a row inserted before those
+  // columns existed only gets them once this job sees its URL again.
+  // `snippet` matters more than it used to for the same reason — the stored
+  // value is now sentence-truncated rather than cut at a fixed 340
+  // characters, so refreshing it is what repairs the mid-word endings on
+  // rows already in the table.
   await db
     .insert(newsItems)
     .values(rows)
@@ -135,14 +144,26 @@ async function main() {
         title: sql`excluded.title`,
         snippet: sql`excluded.snippet`,
         imageUrl: sql`excluded.image_url`,
-        publishedAt: sql`excluded.published_at`,
+        // least(), not excluded. A feed item with no parseable date falls back
+        // to the wall clock (see parsePublishedAt in rssSource.ts), and a plain
+        // overwrite re-stamped that fallback to "now" on every single run — so
+        // a dateless item would stay permanently newer than every real story
+        // for as long as it sat in its outlet's feed window, which matters now
+        // that /news has a strictly chronological strip. least() freezes the
+        // fallback at first sighting, is a no-op for the overwhelming majority
+        // of items that do carry a real date, and still lets a genuine
+        // correction move a date earlier.
+        publishedAt: sql`least(${newsItems.publishedAt}, excluded.published_at)`,
         tickers: sql`excluded.tickers`,
         sentiment: sql`excluded.sentiment`,
+        author: sql`excluded.author`,
+        topic: sql`excluded.topic`,
+        wordCount: sql`excluded.word_count`,
       },
     });
 
   console.log(`Upserted up to ${rows.length} news items.`);
-  await triggerRevalidate(["news"], ["/news"]);
+  await triggerRevalidate(["news"], NEWS_REVALIDATE_PATHS);
 }
 
 function sleep(ms: number): Promise<void> {

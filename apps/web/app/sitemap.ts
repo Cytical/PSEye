@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
+import { NEWS_DESKS, topicToSlug } from "@pseye/source-news";
 import { getRecentRecapDates } from "@/lib/dailyRecap";
 import { sectorToSlug, VISIBLE_SECTORS } from "@/lib/sectorSlug";
 import { GLOSSARY_TERMS } from "@/lib/glossary";
@@ -106,5 +107,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.4,
   }));
 
-  return [...staticEntries, ...stockEntries, ...recapEntries, ...sectorEntries, ...glossaryEntries];
+  // One entry per news desk (see app/news/[topic]/page.tsx). `now`, not
+  // latestQuoteDate: a desk page's content turns over with the news cycle,
+  // which is independent of whether the market traded.
+  const newsDeskEntries = NEWS_DESKS.map((topic) => ({
+    url: `${SITE_URL}/news/${topicToSlug(topic)}`,
+    lastModified: now,
+    changeFrequency: "hourly" as const,
+    priority: 0.6,
+  }));
+
+  return [
+    ...staticEntries,
+    ...stockEntries,
+    ...recapEntries,
+    ...sectorEntries,
+    ...glossaryEntries,
+    ...newsDeskEntries,
+  ];
 }

@@ -5,3 +5,7 @@ export * from "./tickerTagger";
 export * from "./ogImage";
 export * from "./outletLogo";
 export * from "./sentiment";
+export * from "./topics";
+export * from "./relevance";
+export * from "./cluster";
+export * from "./readingTime";

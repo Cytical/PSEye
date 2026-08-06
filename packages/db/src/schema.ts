@@ -72,6 +72,26 @@ export const newsItems = pgTable("news_items", {
   // image_url above) — apps/web/lib/news.ts's aggregates treat null the same
   // as 'neutral'.
   sentiment: varchar("sentiment", { length: 8 }),
+  // The article's byline, straight from the feed's dc:creator (see
+  // extractAuthor in packages/sources/news/src/rssSource.ts). Nullable for
+  // two distinct reasons that look the same here: the outlet publishes no
+  // author field at all (Philstar, GMA and Manila Bulletin don't), or it
+  // published a CMS placeholder like "admin" that extractAuthor rejects.
+  // Frequently a wire service ("Reuters") rather than a person.
+  author: varchar("author", { length: 128 }),
+  // Which desk the story files under — one of NEWS_TOPICS or the
+  // "General Business" fallback (see classifyTopic in
+  // packages/sources/news/src/topics.ts). Derived from title+snippet at
+  // fetch time, NOT from the feed's own <category> tags, which half the
+  // configured outlets either omit or set to the constant string "Business".
+  // Nullable on the same "written before this column existed, backfills on
+  // the next natural re-fetch" basis as image_url and sentiment above.
+  topic: varchar("topic", { length: 32 }),
+  // Words in the full article body, present only for the feeds that ship
+  // content:encoded. Backs the "N min read" label; null means "the feed gave
+  // us only a lede", and the UI omits the estimate rather than computing a
+  // meaningless one off 340 characters.
+  wordCount: integer("word_count"),
 });
 
 // One row per outlet (keyed by the same `source` string as news_items.source

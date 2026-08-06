@@ -1,4 +1,5 @@
 import type { NewsSentiment } from "./sentiment";
+import type { FALLBACK_TOPIC, NewsTopic } from "./topics";
 
 export interface NewsItem {
   source: string;
@@ -8,6 +9,31 @@ export interface NewsItem {
   url: string;
   publishedAt: Date;
   tickers: string[];
+  /**
+   * The article's byline, from the feed's own dc:creator (see
+   * extractAuthor in rssSource.ts). Null where the outlet doesn't publish
+   * one: of the eight configured feeds, Manila Times, Rappler, Malaya and
+   * Inquirer carry it; Philstar, GMA and Manila Bulletin send no author
+   * field at all. Often a wire service ("Reuters", "Associated Press")
+   * rather than a person, which is itself worth showing.
+   */
+  author: string | null;
+  /**
+   * Which desk this story files under (see classifyTopic in topics.ts),
+   * derived from title+snippet at fetch time the same way tickers and
+   * sentiment are. Null only for rows written before the column existed and
+   * not yet re-fetched. Always a NewsTopic or FALLBACK_TOPIC otherwise,
+   * never an arbitrary string.
+   */
+  topic: NewsTopic | typeof FALLBACK_TOPIC | null;
+  /**
+   * Words in the article body, when the feed ships one (content:encoded).
+   * Backs the "4 min read" estimate. Null where the feed carries only a
+   * lede, which is most of them, and the UI then simply omits the estimate
+   * rather than guessing from the snippet: a reading time computed off 240
+   * characters would say "1 min read" for every article on the page.
+   */
+  wordCount: number | null;
   /**
    * Lexicon-based headline+snippet sentiment (see sentiment.ts), computed
    * once at RSS-fetch time (createRssSource, mirroring how tagTickers is
