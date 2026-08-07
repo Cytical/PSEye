@@ -1,0 +1,49 @@
+name: Reclassify news topics
+
+# Manual/one-off, like the backfill-* workflows: no schedule, and it must not
+# get one. See etl/jobs/reclassify-news-topics.ts.
+#
+# Recomputes news_items.topic for every stored row from its existing
+# title + snippet. DB-only (no feed fetches), so it takes seconds rather than
+# the ~20 minutes fetch-news does.
+#
+# Run it in two situations:
+#
+#  1. After editing TOPIC_KEYWORDS or NEWS_TOPICS in
+#     packages/sources/news/src/topics.ts. The lexicon is code, the column is
+#     data written once at fetch time, and a story is only re-fetched while it
+#     is still inside its outlet's RSS feed window. Without this, a lexicon
+#     improvement only ever reaches stories filed afterwards and /news shows
+#     two generations of classification side by side.
+#
+#  2. Right after the migration that added the column. This is why the
+#     workflow exists at all: migration 0020 landed on production with
+#     news_items.topic NULL across every existing row, and /news is organised
+#     entirely around that column, so until this runs the desk nav has one
+#     entry and ten of the eleven /news/[topic] pages are empty. fetch-news's
+#     next scheduled run only repairs the rows still sitting in a feed window,
+#     which is a fraction of the 7-day corpus the page reads.
+#
+# Calls /api/revalidate itself on success (see the job's triggerRevalidate),
+# so the desk pages pick the new classification up without waiting on their
+# own 6h ISR ceiling.
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  reclassify-news-topics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl reclassify-news-topics
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL }}
