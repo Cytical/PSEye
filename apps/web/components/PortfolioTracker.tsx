@@ -141,62 +141,64 @@ export function PortfolioTracker({ quotes, dividendRows }: { quotes: Quote[]; di
     <div>
       <TransactionForm transactions={transactions} onAdd={addTransaction} onImport={addTransactions} />
 
-      {!hydrated ? null : rows.length === 0 ? (
+      {!hydrated ? null : rows.length === 0 && transactions.length === 0 ? (
         <p className="mt-8 text-sm text-panel-fg/72">
           No holdings yet. Add a buy above to see live gain/loss. Stored only in your browser; nothing is sent anywhere.
         </p>
       ) : (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-            <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <div className="text-xs text-panel-fg/68">Cost basis</div>
-              <div className="mt-1 text-lg font-semibold tabular-nums text-panel-fg">{formatPeso(totalCost)}</div>
-            </div>
-            <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <div className="text-xs text-panel-fg/68">Market value</div>
-              <div className="mt-1 text-lg font-semibold tabular-nums text-panel-fg">{formatPeso(totalValue)}</div>
-            </div>
-            <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <div className="text-xs text-panel-fg/68">Gain / loss</div>
-              <div className={`mt-1 text-lg font-semibold tabular-nums ${changeColor(totalGainLoss)}`}>
-                {totalGainLoss >= 0 ? "+" : ""}
-                {formatPeso(totalGainLoss)}
+          {rows.length > 0 && (
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+              <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+                <div className="text-xs text-panel-fg/68">Cost basis</div>
+                <div className="mt-1 text-lg font-semibold tabular-nums text-panel-fg">{formatPeso(totalCost)}</div>
+              </div>
+              <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+                <div className="text-xs text-panel-fg/68">Market value</div>
+                <div className="mt-1 text-lg font-semibold tabular-nums text-panel-fg">{formatPeso(totalValue)}</div>
+              </div>
+              <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+                <div className="text-xs text-panel-fg/68">Gain / loss</div>
+                <div className={`mt-1 text-lg font-semibold tabular-nums ${changeColor(totalGainLoss)}`}>
+                  {totalGainLoss >= 0 ? "+" : ""}
+                  {formatPeso(totalGainLoss)}
+                </div>
+              </div>
+              <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+                <div className="text-xs text-panel-fg/68">Gain / loss %</div>
+                <div className={`mt-1 text-lg font-semibold tabular-nums ${totalGainLossPct == null ? "text-panel-fg/65" : changeColor(totalGainLossPct)}`}>
+                  {totalGainLossPct == null ? "N/A" : `${totalGainLossPct >= 0 ? "+" : ""}${totalGainLossPct.toFixed(2)}%`}
+                </div>
+              </div>
+              {/* Distinct from Gain/loss above: that's the move since avgCost, this
+                  is just today's move — the number a daily check-in actually wants. */}
+              <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+                <div className="text-xs text-panel-fg/68">Today&apos;s change</div>
+                <div className={`mt-1 text-lg font-semibold tabular-nums ${changeColor(totalDayChange)}`}>
+                  {totalDayChange >= 0 ? "+" : ""}
+                  {formatPeso(totalDayChange)}
+                </div>
+              </div>
+              <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+                <div className="text-xs text-panel-fg/68">Today&apos;s change %</div>
+                <div className={`mt-1 text-lg font-semibold tabular-nums ${totalDayChangePct == null ? "text-panel-fg/65" : changeColor(totalDayChangePct)}`}>
+                  {totalDayChangePct == null ? "N/A" : `${totalDayChangePct >= 0 ? "+" : ""}${totalDayChangePct.toFixed(2)}%`}
+                </div>
+              </div>
+              {/* From closed positions only (realizedGains, FIFO-matched) — separate
+                  from the unrealized Gain/loss tiles above, which are marked-to-market
+                  on what's still held. Always shown, even at 0, once there's a
+                  transaction log at all: a portfolio that's never sold anything has a
+                  real, meaningful ₱0 here, not a missing figure. */}
+              <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+                <div className="text-xs text-panel-fg/68">Realized gain (all-time)</div>
+                <div className={`mt-1 text-lg font-semibold tabular-nums ${changeColor(totalRealizedGain)}`}>
+                  {totalRealizedGain >= 0 ? "+" : ""}
+                  {formatPeso(totalRealizedGain)}
+                </div>
               </div>
             </div>
-            <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <div className="text-xs text-panel-fg/68">Gain / loss %</div>
-              <div className={`mt-1 text-lg font-semibold tabular-nums ${totalGainLossPct == null ? "text-panel-fg/65" : changeColor(totalGainLossPct)}`}>
-                {totalGainLossPct == null ? "N/A" : `${totalGainLossPct >= 0 ? "+" : ""}${totalGainLossPct.toFixed(2)}%`}
-              </div>
-            </div>
-            {/* Distinct from Gain/loss above: that's the move since avgCost, this
-                is just today's move — the number a daily check-in actually wants. */}
-            <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <div className="text-xs text-panel-fg/68">Today&apos;s change</div>
-              <div className={`mt-1 text-lg font-semibold tabular-nums ${changeColor(totalDayChange)}`}>
-                {totalDayChange >= 0 ? "+" : ""}
-                {formatPeso(totalDayChange)}
-              </div>
-            </div>
-            <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <div className="text-xs text-panel-fg/68">Today&apos;s change %</div>
-              <div className={`mt-1 text-lg font-semibold tabular-nums ${totalDayChangePct == null ? "text-panel-fg/65" : changeColor(totalDayChangePct)}`}>
-                {totalDayChangePct == null ? "N/A" : `${totalDayChangePct >= 0 ? "+" : ""}${totalDayChangePct.toFixed(2)}%`}
-              </div>
-            </div>
-            {/* From closed positions only (realizedGains, FIFO-matched) — separate
-                from the unrealized Gain/loss tiles above, which are marked-to-market
-                on what's still held. Always shown, even at 0, once there's a
-                transaction log at all: a portfolio that's never sold anything has a
-                real, meaningful ₱0 here, not a missing figure. */}
-            <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
-              <div className="text-xs text-panel-fg/68">Realized gain (all-time)</div>
-              <div className={`mt-1 text-lg font-semibold tabular-nums ${changeColor(totalRealizedGain)}`}>
-                {totalRealizedGain >= 0 ? "+" : ""}
-                {formatPeso(totalRealizedGain)}
-              </div>
-            </div>
-          </div>
+          )}
           {missingPriceCount > 0 && (
             <p className="mt-2 text-xs text-panel-fg/68">
               {missingPriceCount} {missingPriceCount === 1 ? "holding has" : "holdings have"} no current price
@@ -204,6 +206,29 @@ export function PortfolioTracker({ quotes, dividendRows }: { quotes: Quote[]; di
               totals above.
             </p>
           )}
+
+          {/* Holdings + transaction log lead the results, matching how brokerage
+              apps (Robinhood, Yahoo Finance) put the list right under the summary
+              bar rather than burying it under charts — the analytics panels below
+              (movers, sector mix, dividends, risk, benchmark) are supporting detail. */}
+          {rows.length > 0 ? (
+            <div className="mt-4">
+              <PortfolioPositionsTable
+                rows={rows}
+                notes={notes}
+                onEditNote={(ticker) => setEditingNoteTicker(ticker)}
+                onClosePosition={handleClosePosition}
+              />
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-panel-fg/72">
+              No open positions right now — everything you&apos;ve bought has since been sold. Your history is below.
+            </p>
+          )}
+
+          <div className="mt-4">
+            <TransactionLog transactions={transactions} onRemove={removeTransaction} />
+          </div>
 
           {(bestPerformer || worstPerformer || sectorAllocation.length > 0) && (
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -295,21 +320,8 @@ export function PortfolioTracker({ quotes, dividendRows }: { quotes: Quote[]; di
               </div>
             </div>
           )}
-
-          <div className="mt-6">
-            <PortfolioPositionsTable
-              rows={rows}
-              notes={notes}
-              onEditNote={(ticker) => setEditingNoteTicker(ticker)}
-              onClosePosition={handleClosePosition}
-            />
-          </div>
         </>
       )}
-
-      <div className="mt-6">
-        <TransactionLog transactions={transactions} onRemove={removeTransaction} />
-      </div>
 
       {editingNoteTicker && (
         <PositionNoteModal

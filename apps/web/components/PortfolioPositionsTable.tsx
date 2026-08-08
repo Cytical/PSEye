@@ -74,8 +74,9 @@ export function PortfolioPositionsTable({
                       <span className="text-panel-fg/65">N/A</span>
                     ) : (
                       <span className={changeColor(row.dayChange)}>
-                        {row.pctChange >= 0 ? "+" : ""}
-                        {row.pctChange.toFixed(2)}%
+                        {row.dayChange >= 0 ? "+" : ""}
+                        {formatPeso(row.dayChange)} ({row.pctChange >= 0 ? "+" : ""}
+                        {row.pctChange.toFixed(2)}%)
                       </span>
                     )}
                   </td>
