@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { ScreenerRow } from "@/lib/screener";
 import { useIsHydrated, useWatchlist } from "@/lib/watchlist";
-import { usePortfolioHoldings } from "@/lib/usePortfolioHoldings";
+import { usePortfolioTransactions } from "@/lib/usePortfolioTransactions";
 import { WatchlistStarButton } from "./WatchlistStarButton";
 
 type SortKey = "companyName" | "price" | "pctChange" | "marketCap" | "yieldPct" | "peRatio";
@@ -74,8 +74,8 @@ function SkeletonRows() {
 export function WatchlistView({ rows }: { rows: ScreenerRow[] }) {
   const hydrated = useIsHydrated();
   const { tickers } = useWatchlist();
-  const { holdings } = usePortfolioHoldings();
-  const heldTickers = useMemo(() => new Set(holdings.map((h) => h.ticker)), [holdings]);
+  const { positions } = usePortfolioTransactions();
+  const heldTickers = useMemo(() => new Set(positions.map((p) => p.ticker)), [positions]);
   // Defaults to today's move rather than by size: on a page you open to check
   // in on a handful of names, the useful ordering is "what happened", not
   // "which is biggest". Stocks that did not trade sink to the bottom instead
