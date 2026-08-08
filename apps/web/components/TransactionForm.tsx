@@ -141,7 +141,7 @@ export function TransactionForm({
             id="tx-type"
             value={type}
             onChange={(e) => setType(e.target.value as TransactionType)}
-            className="rounded-md border border-foreground/15 bg-transparent px-2.5 py-1.5 text-sm"
+            className="rounded-md border border-foreground/15 bg-panel px-2.5 py-1.5 text-sm text-panel-fg"
           >
             <option value="buy">Buy</option>
             <option value="sell">Sell</option>
@@ -208,41 +208,51 @@ export function TransactionForm({
         <button type="submit" className="rounded-md bg-foreground px-4 py-1.5 text-sm font-medium text-background hover:opacity-90">
           Add
         </button>
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="rounded-md px-3 py-1.5 text-sm font-medium text-panel-fg ring-1 ring-panel-border transition-colors hover:bg-panel-raised"
-        >
-          Import CSV
-        </button>
-        <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleFileChange} className="hidden" />
       </form>
       {error && <p className="text-xs text-down">{error}</p>}
-      {importSuccessCount != null && (
-        <p className="text-xs text-up">
-          Imported {importSuccessCount} transaction{importSuccessCount === 1 ? "" : "s"}.
-        </p>
-      )}
-      {importErrors.length > 0 && (
-        <div className="text-xs text-down">
-          <p>{importErrors.length} row{importErrors.length === 1 ? "" : "s"} skipped:</p>
-          <ul className="ml-4 list-disc">
-            {importErrors.slice(0, 5).map((err, i) => (
-              <li key={i}>{err}</li>
-            ))}
-            {importErrors.length > 5 && <li>and {importErrors.length - 5} more.</li>}
-          </ul>
+
+      <details className="rounded-xl bg-panel p-4 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+        <summary className="cursor-pointer text-xs font-medium text-panel-fg/72 hover:text-panel-fg">
+          Import transactions from a CSV file
+        </summary>
+        <div className="mt-3 flex flex-col gap-2">
+          <div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-panel-fg ring-1 ring-panel-border transition-colors hover:bg-panel-raised"
+            >
+              Choose CSV file
+            </button>
+            <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={handleFileChange} className="hidden" />
+          </div>
+          {importSuccessCount != null && (
+            <p className="text-xs text-up">
+              Imported {importSuccessCount} transaction{importSuccessCount === 1 ? "" : "s"}.
+            </p>
+          )}
+          {importErrors.length > 0 && (
+            <div className="text-xs text-down">
+              <p>{importErrors.length} row{importErrors.length === 1 ? "" : "s"} skipped:</p>
+              <ul className="ml-4 list-disc">
+                {importErrors.slice(0, 5).map((err, i) => (
+                  <li key={i}>{err}</li>
+                ))}
+                {importErrors.length > 5 && <li>and {importErrors.length - 5} more.</li>}
+              </ul>
+            </div>
+          )}
+          <p className="text-xs text-panel-fg/65">
+            Format: <code className="rounded bg-panel-raised px-1 py-0.5">ticker,type,shares,price,date,fee</code> (date as
+            YYYY-MM-DD, type as buy/sell, fee optional and defaults to 0). A header row is fine. Adding a buy also stars
+            that ticker on your{" "}
+            <a href="/watchlist" className="underline hover:text-panel-fg">
+              watchlist
+            </a>
+            ; selling does not un-star it.
+          </p>
         </div>
-      )}
-      <p className="text-xs text-panel-fg/65">
-        CSV format: <code className="rounded bg-panel-raised px-1 py-0.5">ticker,type,shares,price,date,fee</code> (date as
-        YYYY-MM-DD, type as buy/sell, fee optional and defaults to 0). A header row is fine. Adding a buy also stars that
-        ticker on your{" "}
-        <a href="/watchlist" className="underline hover:text-panel-fg">
-          watchlist
-        </a>
-        ; selling does not un-star it.
-      </p>
+      </details>
     </div>
   );
 }
