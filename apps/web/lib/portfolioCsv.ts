@@ -1,11 +1,13 @@
 import type { Transaction, TransactionType } from "./transactions";
 
-const CSV_HEADER = "ticker,type,shares,price,date";
+const CSV_HEADER = "ticker,type,shares,price,date,fee";
 
 /** Serializes the transaction log for backup/export. Column order matches
- * parseTransactionsCsv below, so the same file round-trips through import. */
+ * parseTransactionsCsv below, so the same file round-trips through import.
+ * fee always prints (as 0 when absent) rather than being an optional trailing
+ * column, so every exported row has the same shape. */
 export function transactionsToCsv(transactions: Transaction[]): string {
-  const rows = transactions.map((t) => `${t.ticker},${t.type},${t.shares},${t.price},${t.date}`);
+  const rows = transactions.map((t) => `${t.ticker},${t.type},${t.shares},${t.price},${t.date},${t.fee ?? 0}`);
   return [CSV_HEADER, ...rows].join("\n");
 }
 
@@ -19,7 +21,9 @@ export interface ParsedCsvResult {
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
- * Parses `ticker,type,shares,price,date` rows. A header row is recognized and
+ * Parses `ticker,type,shares,price,date[,fee]` rows — fee is a trailing
+ * OPTIONAL 6th column (blank or absent both mean 0), so files exported before
+ * fee tracking existed still import cleanly. A header row is recognized and
  * skipped by its first cell (case-insensitively "ticker"), not required.
  * Deliberately permissive about surrounding whitespace and blank lines, but
  * strict about each field's shape — a bad row is collected as an error and
@@ -40,14 +44,15 @@ export function parseTransactionsCsv(csv: string, validTickers: Set<string>): Pa
     if (cols[0]?.toLowerCase() === "ticker") return; // header row
 
     if (cols.length < 5) {
-      errors.push(`Line ${lineNo}: expected 5 columns (ticker,type,shares,price,date), got ${cols.length}`);
+      errors.push(`Line ${lineNo}: expected at least 5 columns (ticker,type,shares,price,date), got ${cols.length}`);
       return;
     }
-    const [tickerRaw, typeRaw, sharesRaw, priceRaw, date] = cols;
+    const [tickerRaw, typeRaw, sharesRaw, priceRaw, date, feeRaw] = cols;
     const ticker = tickerRaw.toUpperCase();
     const type = typeRaw.toLowerCase() as TransactionType;
     const shares = Number(sharesRaw);
     const price = Number(priceRaw);
+    const fee = feeRaw == null || feeRaw === "" ? 0 : Number(feeRaw);
 
     if (!validTickers.has(ticker)) {
       errors.push(`Line ${lineNo}: "${tickerRaw}" isn't a tracked PSE ticker`);
@@ -69,8 +74,12 @@ export function parseTransactionsCsv(csv: string, validTickers: Set<string>): Pa
       errors.push(`Line ${lineNo}: date must be YYYY-MM-DD, got "${date}"`);
       return;
     }
+    if (!Number.isFinite(fee) || fee < 0) {
+      errors.push(`Line ${lineNo}: fee must be a non-negative number, got "${feeRaw}"`);
+      return;
+    }
 
-    transactions.push({ ticker, type, shares, price, date });
+    transactions.push({ ticker, type, shares, price, date, fee });
   });
 
   return { transactions, errors };

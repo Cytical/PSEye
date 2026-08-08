@@ -83,6 +83,36 @@ describe("computePositions", () => {
       { ticker: "B", shares: 5, avgCost: 100 },
     ]);
   });
+
+  it("folds a buy's fee into cost basis (avgCost reflects what it actually cost to acquire)", () => {
+    const { positions } = computePositions([tx({ ticker: "A", type: "buy", shares: 100, price: 10, date: "2026-01-01", fee: 50 })]);
+    // (100*10 + 50) / 100 = 10.5
+    expect(positions).toEqual([{ ticker: "A", shares: 100, avgCost: 10.5 }]);
+  });
+
+  it("nets a sell's fee out of proceeds and realized gain", () => {
+    const { realizedGains } = computePositions([
+      tx({ ticker: "A", type: "buy", shares: 100, price: 10, date: "2026-01-01" }),
+      tx({ ticker: "A", type: "sell", shares: 100, price: 15, date: "2026-02-01", fee: 30 }),
+    ]);
+    // proceeds = 100*15 - 30 = 1470, cost 1000, gain 470 (not 500 if the fee were ignored).
+    expect(realizedGains[0]).toMatchObject({ proceeds: 1470, costBasis: 1000, gain: 470 });
+  });
+
+  it("treats a missing fee as 0, unchanged from before fee tracking existed", () => {
+    const { positions } = computePositions([tx({ ticker: "A", type: "buy", shares: 10, price: 10, date: "2026-01-01" })]);
+    expect(positions).toEqual([{ ticker: "A", shares: 10, avgCost: 10 }]);
+  });
+
+  it("prorates a sell's fee to the shares actually matched on an oversell", () => {
+    const { realizedGains } = computePositions([
+      tx({ ticker: "A", type: "buy", shares: 10, price: 10, date: "2026-01-01" }),
+      // Fee of 20 quoted against a 30-share sell, but only 10 shares are on record.
+      tx({ ticker: "A", type: "sell", shares: 30, price: 12, date: "2026-01-02", fee: 20 }),
+    ]);
+    // Only 1/3 of the fee (≈6.67) applies to the 10 matched shares.
+    expect(realizedGains[0].proceeds).toBeCloseTo(120 - 20 / 3);
+  });
 });
 
 describe("sharesHeld", () => {

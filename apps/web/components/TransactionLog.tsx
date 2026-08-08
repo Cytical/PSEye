@@ -54,6 +54,7 @@ export function TransactionLog({ transactions, onRemove }: { transactions: Trans
               <th className="py-1 pr-2 text-right font-medium">Shares</th>
               <th className="py-1 pr-2 text-right font-medium">Price</th>
               <th className="py-1 pr-2 text-right font-medium">Total</th>
+              <th className="py-1 pr-2 text-right font-medium">Fee</th>
               <th className="w-7 py-1" aria-label="Remove" />
             </tr>
           </thead>
@@ -68,6 +69,7 @@ export function TransactionLog({ transactions, onRemove }: { transactions: Trans
                 <td className="py-1.5 pr-2 text-right tabular-nums text-panel-fg">{t.shares.toLocaleString("en-PH")}</td>
                 <td className="py-1.5 pr-2 text-right tabular-nums text-panel-fg">{formatPeso(t.price)}</td>
                 <td className="py-1.5 pr-2 text-right tabular-nums text-panel-fg">{formatPeso(t.shares * t.price)}</td>
+                <td className="py-1.5 pr-2 text-right tabular-nums text-panel-fg/72">{t.fee ? formatPeso(t.fee) : "–"}</td>
                 <td className="py-1.5 pr-2 text-right">
                   <button
                     type="button"

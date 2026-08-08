@@ -12,23 +12,35 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** Add-transaction form (buy or sell, with date) plus a CSV bulk-import
- * control. A sell is capped at the ticker's currently-held share count —
- * computePositions' FIFO matcher would silently clip an oversell rather than
- * error, so the form is what actually stops it from being entered at all. */
+function formatPeso(value: number): string {
+  return `₱${value.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/** Add-transaction form (buy or sell, with date and an optional fee) plus a
+ * CSV bulk-import control. A sell is capped at the ticker's currently-held
+ * share count — computePositions' FIFO matcher would silently clip an
+ * oversell rather than error, so the form is what actually stops it from
+ * being entered at all. In practice ("paper trading") mode, a buy is
+ * similarly capped at the account's current virtual cash balance. */
 export function TransactionForm({
   transactions,
   onAdd,
   onImport,
+  cashBalance,
 }: {
   transactions: Transaction[];
   onAdd: (tx: NewTransaction) => void;
   onImport: (txs: NewTransaction[]) => void;
+  /** Present only for the practice-mode store — caps a buy's total cost
+   * (shares×price+fee) at this balance. Undefined for the real portfolio,
+   * which has no cash concept to cap against. */
+  cashBalance?: number;
 }) {
   const [ticker, setTicker] = useState("");
   const [type, setType] = useState<TransactionType>("buy");
   const [shares, setShares] = useState("");
   const [price, setPrice] = useState("");
+  const [fee, setFee] = useState("");
   const [date, setDate] = useState(todayIso);
   const [error, setError] = useState<string | null>(null);
   const [importErrors, setImportErrors] = useState<string[]>([]);
@@ -41,6 +53,7 @@ export function TransactionForm({
     const normalizedTicker = ticker.trim().toUpperCase();
     const sharesNum = Number(shares);
     const priceNum = Number(price);
+    const feeNum = fee.trim() === "" ? 0 : Number(fee);
 
     if (!TICKER_SET.has(normalizedTicker)) {
       setError(`"${ticker}" isn't a tracked PSE ticker.`);
@@ -54,6 +67,10 @@ export function TransactionForm({
       setError("Price must be a positive number.");
       return;
     }
+    if (!Number.isFinite(feeNum) || feeNum < 0) {
+      setError("Fee must be zero or a positive number.");
+      return;
+    }
     if (!date) {
       setError("Pick a date.");
       return;
@@ -64,12 +81,19 @@ export function TransactionForm({
         setError(`You only have ${held.toLocaleString("en-PH")} shares of ${normalizedTicker} on record.`);
         return;
       }
+    } else if (cashBalance != null) {
+      const cost = sharesNum * priceNum + feeNum;
+      if (cost > cashBalance) {
+        setError(`That costs ${formatPeso(cost)}, more than your ${formatPeso(cashBalance)} practice cash balance.`);
+        return;
+      }
     }
 
-    onAdd({ ticker: normalizedTicker, type, shares: sharesNum, price: priceNum, date });
+    onAdd({ ticker: normalizedTicker, type, shares: sharesNum, price: priceNum, date, fee: feeNum });
     setTicker("");
     setShares("");
     setPrice("");
+    setFee("");
     setError(null);
   }
 
@@ -154,6 +178,21 @@ export function TransactionForm({
           />
         </div>
         <div className="flex flex-col gap-1">
+          <label htmlFor="tx-fee" className="text-xs text-panel-fg/72">
+            Fee (₱)
+          </label>
+          <input
+            id="tx-fee"
+            type="number"
+            min="0"
+            step="0.01"
+            value={fee}
+            onChange={(e) => setFee(e.target.value)}
+            placeholder="0.00"
+            className="w-24 rounded-md border border-foreground/15 bg-transparent px-2.5 py-1.5 text-sm"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
           <label htmlFor="tx-date" className="text-xs text-panel-fg/72">
             Date
           </label>
@@ -196,8 +235,9 @@ export function TransactionForm({
         </div>
       )}
       <p className="text-xs text-panel-fg/65">
-        CSV format: <code className="rounded bg-panel-raised px-1 py-0.5">ticker,type,shares,price,date</code> (date as
-        YYYY-MM-DD, type as buy/sell). A header row is fine. Adding a buy also stars that ticker on your{" "}
+        CSV format: <code className="rounded bg-panel-raised px-1 py-0.5">ticker,type,shares,price,date,fee</code> (date as
+        YYYY-MM-DD, type as buy/sell, fee optional and defaults to 0). A header row is fine. Adding a buy also stars that
+        ticker on your{" "}
         <a href="/watchlist" className="underline hover:text-panel-fg">
           watchlist
         </a>

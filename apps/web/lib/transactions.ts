@@ -12,6 +12,12 @@ export interface Transaction {
   shares: number;
   price: number;
   date: string; // YYYY-MM-DD
+  /** Broker commission + tax + exchange fees for this trade, ₱ total (not
+   * per-share) — whatever the broker's confirmation slip actually shows.
+   * Optional for backward compat with transactions recorded before fee
+   * tracking existed (undefined ≡ 0 everywhere it's read). Folded into cost
+   * basis on a buy and netted out of proceeds on a sell, see computePositions. */
+  fee?: number;
 }
 
 /** Sentinel date for holdings migrated from the pre-transaction-log schema
@@ -83,6 +89,7 @@ export interface RealizedGainEntry {
   /** Date of the sell that realized this gain. */
   date: string;
   shares: number;
+  /** Net of the sell's fee — what actually landed, not the gross shares × price. */
   proceeds: number;
   costBasis: number;
   gain: number;
@@ -113,6 +120,12 @@ interface Lot {
  * short position — the unmatched remainder is silently dropped. The add-
  * transaction form is expected to prevent this case at entry time by capping
  * a sell at the currently-held share count.
+ *
+ * Fees are folded in rather than tracked separately: a buy's lot cost is
+ * shares×price+fee (so avgCost on the resulting position already reflects
+ * what it actually cost to acquire), and a sell's proceeds are shares×price−fee
+ * (so realized gain reflects what actually landed). This is the standard
+ * accounting treatment, not a PSEye-specific convention.
  */
 export function computePositions(transactions: Transaction[]): PositionsResult {
   const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
@@ -121,8 +134,10 @@ export function computePositions(transactions: Transaction[]): PositionsResult {
 
   for (const tx of sorted) {
     const lots = lotsByTicker.get(tx.ticker) ?? [];
+    const fee = tx.fee ?? 0;
     if (tx.type === "buy") {
-      lots.push({ shares: tx.shares, price: tx.price });
+      const costPerShare = (tx.shares * tx.price + fee) / tx.shares;
+      lots.push({ shares: tx.shares, price: costPerShare });
     } else {
       let remaining = tx.shares;
       let costBasis = 0;
@@ -137,7 +152,10 @@ export function computePositions(transactions: Transaction[]): PositionsResult {
         if (lot.shares <= 0) lots.shift();
       }
       if (matchedShares > 0) {
-        const proceeds = matchedShares * tx.price;
+        // Fee prorated to the shares actually matched, in case an oversell was
+        // capped just above — the full fee shouldn't land on a partial match.
+        const feeForMatched = fee * (matchedShares / tx.shares);
+        const proceeds = matchedShares * tx.price - feeForMatched;
         realizedGains.push({ ticker: tx.ticker, date: tx.date, shares: matchedShares, proceeds, costBasis, gain: proceeds - costBasis });
       }
     }

@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { HistoricalClose, Quote } from "@pseye/source-quotes";
 import { buildCompositeHistory } from "@/lib/dca";
 import { computePortfolioHistory, computePortfolioRows } from "@/lib/portfolio";
-import { usePortfolioTransactions } from "@/lib/usePortfolioTransactions";
+import { usePortfolioTransactions, usePaperPortfolioTransactions } from "@/lib/usePortfolioTransactions";
+import { computeCashBalance, PAPER_STARTING_CASH } from "@/lib/paperTrading";
 import { usePortfolioNotes } from "@/lib/usePortfolioNotes";
 import { useIsHydrated } from "@/lib/watchlist";
 import { computeDividendIncome } from "@/lib/dividendIncome";
@@ -58,7 +59,12 @@ async function fetchHistories(url: string): Promise<Record<string, HistoricalClo
  */
 export function PortfolioTracker({ quotes, dividendRows }: { quotes: Quote[]; dividendRows: DividendScreenerRow[] }) {
   const hydrated = useIsHydrated();
-  const { transactions, positions, totalRealizedGain, addTransaction, addTransactions, removeTransaction } = usePortfolioTransactions();
+  const real = usePortfolioTransactions();
+  const paper = usePaperPortfolioTransactions();
+  const [mode, setMode] = useState<"real" | "paper">("real");
+  const active = mode === "real" ? real : paper;
+  const { transactions, positions, totalRealizedGain, addTransaction, addTransactions, removeTransaction } = active;
+  const cashBalance = useMemo(() => computeCashBalance(paper.transactions), [paper.transactions]);
   const { notes, setNote } = usePortfolioNotes();
   const [editingNoteTicker, setEditingNoteTicker] = useState<string | null>(null);
 
@@ -137,18 +143,75 @@ export function PortfolioTracker({ quotes, dividendRows }: { quotes: Quote[]; di
     addTransaction({ ticker, type: "sell", shares, price, date: todayIso() });
   }
 
+  function handleResetPaper() {
+    if (window.confirm(`Reset your practice portfolio back to ${formatPeso(PAPER_STARTING_CASH)} cash? This deletes every practice trade you've logged.`)) {
+      paper.reset();
+    }
+  }
+
   return (
     <div>
-      <TransactionForm transactions={transactions} onAdd={addTransaction} onImport={addTransactions} />
+      <div className="mb-4 inline-flex rounded-lg bg-panel-raised p-1 text-sm ring-1 ring-panel-border">
+        <button
+          type="button"
+          onClick={() => setMode("real")}
+          className={`rounded-md px-3 py-1.5 font-medium transition-colors ${mode === "real" ? "bg-panel text-panel-fg shadow-sm" : "text-panel-fg/65 hover:text-panel-fg"}`}
+        >
+          My portfolio
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("paper")}
+          className={`rounded-md px-3 py-1.5 font-medium transition-colors ${mode === "paper" ? "bg-panel text-panel-fg shadow-sm" : "text-panel-fg/65 hover:text-panel-fg"}`}
+        >
+          Practice mode
+        </button>
+        {mode === "paper" && (
+          <button
+            type="button"
+            onClick={handleResetPaper}
+            className="ml-1 rounded-md px-3 py-1.5 font-medium text-panel-fg/65 underline-offset-2 hover:text-panel-fg hover:underline"
+          >
+            Reset to {formatPeso(PAPER_STARTING_CASH)}
+          </button>
+        )}
+      </div>
+      {mode === "paper" && (
+        <p className="mb-3 text-xs text-panel-fg/65">
+          Practice mode trades with {formatPeso(PAPER_STARTING_CASH)}{" "}
+          in simulated cash against real market prices. Nothing here is real money, and practice buys don&apos;t touch your{" "}
+          <a href="/watchlist" className="underline hover:text-panel-fg">
+            watchlist
+          </a>
+          .
+        </p>
+      )}
+
+      <TransactionForm transactions={transactions} onAdd={addTransaction} onImport={addTransactions} cashBalance={mode === "paper" ? cashBalance : undefined} />
 
       {!hydrated ? null : rows.length === 0 && transactions.length === 0 ? (
         <p className="mt-8 text-sm text-panel-fg/72">
-          No holdings yet. Add a buy above to see live gain/loss. Stored only in your browser; nothing is sent anywhere.
+          {mode === "paper"
+            ? `No practice trades yet. You're starting with ${formatPeso(PAPER_STARTING_CASH)} in simulated cash, tradeable against real market prices.`
+            : "No holdings yet. Add a buy above to see live gain/loss."}{" "}
+          Stored only in your browser; nothing is sent anywhere.
         </p>
       ) : (
         <>
           {rows.length > 0 && (
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+              {mode === "paper" && (
+                <>
+                  <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+                    <div className="text-xs text-panel-fg/68">Cash</div>
+                    <div className="mt-1 text-lg font-semibold tabular-nums text-panel-fg">{formatPeso(cashBalance)}</div>
+                  </div>
+                  <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
+                    <div className="text-xs text-panel-fg/68">Total account value</div>
+                    <div className="mt-1 text-lg font-semibold tabular-nums text-panel-fg">{formatPeso(cashBalance + totalValue)}</div>
+                  </div>
+                </>
+              )}
               <div className="rounded-xl bg-panel p-3 shadow-sm shadow-black/5 ring-1 ring-panel-border">
                 <div className="text-xs text-panel-fg/68">Cost basis</div>
                 <div className="mt-1 text-lg font-semibold tabular-nums text-panel-fg">{formatPeso(totalCost)}</div>
