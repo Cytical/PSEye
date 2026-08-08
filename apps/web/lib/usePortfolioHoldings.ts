@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import type { Holding } from "./portfolio";
+import { addWatched } from "./watchlist";
 
 /**
  * Anonymous, no-backend portfolio — same localStorage-only contract as
@@ -57,6 +58,10 @@ function upsertHolding(ticker: string, shares: number, avgCost: number): void {
   const next = current.filter((h) => h.ticker !== ticker);
   next.push({ ticker, shares, avgCost });
   writeHoldings(next);
+  // Buying something is a strong enough signal to watch it — one-directional
+  // by design: removing a holding (below) does NOT un-star it, since selling a
+  // position doesn't mean you've stopped wanting to see how it's doing.
+  addWatched([ticker]);
 }
 
 function removeHolding(ticker: string): void {

@@ -37,13 +37,13 @@ export default async function WatchlistPage() {
         My Watchlist
       </h1>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/65">
-        The stocks you&apos;ve starred, sorted by today&apos;s move. Your list is stored in this
-        browser only: there is no account, nothing is uploaded, and clearing your browser data
-        clears it. To track cost basis and gain/loss instead, use the{" "}
+        The stocks you&apos;ve starred, sorted by today&apos;s move, plus anything you hold in the{" "}
         <Link href="/portfolio" className="underline hover:text-panel-fg">
           portfolio tracker
-        </Link>
-        . Prices are end-of-day or delayed.
+        </Link>{" "}
+        (adding a holding there stars it here automatically, marked &quot;Held&quot;). Your list
+        is stored in this browser only: there is no account, nothing is uploaded, and clearing
+        your browser data clears it. Prices are end-of-day or delayed.
       </p>
 
       <div className="mt-8">

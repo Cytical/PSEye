@@ -110,6 +110,21 @@ export function SiteHeader() {
               <line x1="16" y1="2" x2="16" y2="6" />
             </svg>
           </Link>
+          {/* Same reasoning, same pattern (2026-08-08): Portfolio is now the
+              site's other high-retention page (see NavLinks' DROPDOWNS
+              comment), but it's the first item inside the "Tools" dropdown
+              rather than an inline PRIMARY link, which on mobile means one
+              extra tap through the hamburger. This puts it back to one tap. */}
+          <Link
+            href="/portfolio"
+            aria-label="Your portfolio"
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-foreground/15 transition-colors hover:bg-panel-raised"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" />
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+            </svg>
+          </Link>
           <ThemeToggle />
           <button
             type="button"

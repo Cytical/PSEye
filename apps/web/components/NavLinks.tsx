@@ -39,12 +39,33 @@ interface NavLink {
  * Analytics, Market Stats, Clusters, Regime, Rankings, Most Active,
  * Sectors...), which was itself the discoverability problem: even a visitor
  * who *did* open the dropdown had no easy way to scan it or tell what most
- * of those pages actually did. Splitting by what a page is *for* (raw PSE
- * reports vs. browsing/ranking vs. computed quant metrics vs. interactive
- * calculators) keeps every menu to 4-5 items, each with a one-line
+ * of those pages actually did. Splitting by what a page is *for* (personal
+ * holdings/watchlist vs. raw PSE reports vs. browsing/ranking vs. computed
+ * quant metrics) keeps every menu to 4-5 items, each with a one-line
  * description instead of a bare name.
+ *
+ * "Tools" leads the group (2026-08-08), not "Market Data": Portfolio and
+ * Watchlist are the two personalization features that make a visitor come
+ * back, so they get the first click after the primary row, not the fourth.
+ * Portfolio leads Tools' own list for the same reason — it's the flagship of
+ * the pair (adding a holding auto-stars it on the watchlist too, see
+ * usePortfolioHoldings.ts). Promoting Portfolio all the way into the PRIMARY
+ * row instead was considered and rejected: that row is already flex-nowrap
+ * and documented as having no spare width between `lg` and `xl` (see
+ * SiteHeader.tsx) — a portfolio quick-link lives there instead, mobile-only,
+ * next to the existing Daily Recap one.
  */
 const DROPDOWNS: { label: string; links: NavLink[] }[] = [
+  {
+    label: "Tools",
+    links: [
+      { href: "/portfolio", label: "Portfolio", description: "Track your holdings' live gain/loss" },
+      { href: "/watchlist", label: "My Watchlist", description: "The stocks you've starred, with today's move" },
+      { href: "/compare", label: "Compare", description: "Normalize % change across stocks" },
+      { href: "/dca", label: "DCA Calculator", description: "Simulate cost-averaging into a stock" },
+      { href: "/charts", label: "Charts", description: "TradingView charts (NASDAQ tickers)" },
+    ],
+  },
   {
     label: "Market Data",
     links: [
@@ -73,16 +94,6 @@ const DROPDOWNS: { label: string; links: NavLink[] }[] = [
       { href: "/market-stats", label: "Market Stats", description: "Market-wide breadth and dispersion" },
       { href: "/clusters", label: "Clusters", description: "Stocks grouped by how they actually trade" },
       { href: "/regime", label: "Regime", description: "Risk-on / risk-off market detection" },
-    ],
-  },
-  {
-    label: "Tools",
-    links: [
-      { href: "/watchlist", label: "My Watchlist", description: "The stocks you've starred, with today's move" },
-      { href: "/portfolio", label: "Portfolio", description: "Track your holdings' live gain/loss" },
-      { href: "/compare", label: "Compare", description: "Normalize % change across stocks" },
-      { href: "/dca", label: "DCA Calculator", description: "Simulate cost-averaging into a stock" },
-      { href: "/charts", label: "Charts", description: "TradingView charts (NASDAQ tickers)" },
     ],
   },
 ];

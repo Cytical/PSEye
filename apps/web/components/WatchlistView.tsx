@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { ScreenerRow } from "@/lib/screener";
 import { useIsHydrated, useWatchlist } from "@/lib/watchlist";
+import { usePortfolioHoldings } from "@/lib/usePortfolioHoldings";
 import { WatchlistStarButton } from "./WatchlistStarButton";
 
 type SortKey = "companyName" | "price" | "pctChange" | "marketCap" | "yieldPct" | "peRatio";
@@ -73,6 +74,8 @@ function SkeletonRows() {
 export function WatchlistView({ rows }: { rows: ScreenerRow[] }) {
   const hydrated = useIsHydrated();
   const { tickers } = useWatchlist();
+  const { holdings } = usePortfolioHoldings();
+  const heldTickers = useMemo(() => new Set(holdings.map((h) => h.ticker)), [holdings]);
   // Defaults to today's move rather than by size: on a page you open to check
   // in on a handful of names, the useful ordering is "what happened", not
   // "which is biggest". Stocks that did not trade sink to the bottom instead
@@ -200,6 +203,14 @@ export function WatchlistView({ rows }: { rows: ScreenerRow[] }) {
                     >
                       <span className="shrink-0 font-mono text-[10px] font-semibold sm:text-xs">{row.ticker}</span>
                       <span className="min-w-0 flex-1 truncate text-panel-fg/70">{row.companyName}</span>
+                      {heldTickers.has(row.ticker) && (
+                        <span
+                          title="You hold this in your portfolio"
+                          className="shrink-0 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-medium text-accent"
+                        >
+                          Held
+                        </span>
+                      )}
                     </Link>
                   </td>
                   <td className="py-2 pr-2 text-right tabular-nums text-panel-fg sm:py-2.5 sm:pr-4">

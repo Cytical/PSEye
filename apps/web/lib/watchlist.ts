@@ -56,6 +56,18 @@ export function toggleWatched(ticker: string): void {
   writeTickers(next);
 }
 
+/** Idempotent add, used by usePortfolioHoldings.ts to star a ticker the moment
+ * it's bought — unlike toggleWatched this never removes, so it's safe to call
+ * on every portfolio upsert (including edits to an existing holding) without
+ * un-starring anything. No-ops (and skips the write/event) when every ticker
+ * is already watched. */
+export function addWatched(tickers: string[]): void {
+  const current = readTickers();
+  const toAdd = tickers.filter((t) => !current.includes(t));
+  if (toAdd.length === 0) return;
+  writeTickers([...current, ...toAdd]);
+}
+
 function subscribe(callback: () => void) {
   window.addEventListener(CHANGE_EVENT, callback);
   window.addEventListener("storage", callback); // cross-tab sync
