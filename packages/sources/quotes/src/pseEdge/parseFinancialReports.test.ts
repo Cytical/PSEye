@@ -59,6 +59,23 @@ const NO_ANNUAL_SECTION_HTML = `
 <p class="textCont">Information in this page will become available upon submission...</p>
 `;
 
+/**
+ * Manulife's real currency line, which PSE Edge serves HTML-escaped as
+ * "CSM except EPS &amp; BV". These lines are read off .html() rather than
+ * .text() so the <br> survives long enough to become a line separator, which
+ * means nothing decodes entities on the way through and the raw "&amp;" used
+ * to reach the DB and render literally on the company page.
+ */
+const ENTITY_ESCAPED_HTML = `
+<h3>Annual</h3>
+<p class="textCont">For the fiscal year ended : Dec 31, 2025<br>Currency(and units, if applicable) : CSM except EPS &amp; BV</p>
+<table class="view">
+<caption>Income Statement</caption>
+<tr><th>Item</th><th class="alignC">Current Year</th><th class="alignC">Previous Year</th></tr>
+<tr><th>Earnings/(Loss) Per Share (Basic)</th><td class="alignR">3.08</td><td class="alignR">2.94</td></tr>
+</table>
+`;
+
 /** Mirrors a real loss-making company (MRC Allied), where negative figures
  * use a plain leading minus sign, not parentheses, and one company (CTS
  * Global) whose EPS row can literally be "-" rather than a number. */
@@ -112,5 +129,10 @@ describe("parseFinancialReportsHtml", () => {
   it("falls back to an empty figure for a row the table doesn't have", () => {
     const result = parseFinancialReportsHtml(NEGATIVE_AND_DASH_HTML)!;
     expect(result.totalAssets).toEqual({ current: null, previous: null });
+  });
+
+  it("decodes HTML entities in the currency line", () => {
+    const result = parseFinancialReportsHtml(ENTITY_ESCAPED_HTML)!;
+    expect(result.currencyUnit).toBe("CSM except EPS & BV");
   });
 });

@@ -21,10 +21,11 @@ export interface RankingRow {
 }
 
 /**
- * Ranks by float-adjusted market cap — the tradeable slice of each company,
- * not its whole share count. See lib/floatAdjustedCap.ts for why (short
- * version: two foreign dual-listings otherwise take the top two slots on the
- * strength of shares that don't trade here).
+ * Ranks by investableMarketCap: market cap for almost every ticker,
+ * float-adjusted (the tradeable slice, not the whole share count) only for
+ * MFC and SLF. See lib/floatAdjustedCap.ts for why (short version: those two
+ * foreign dual-listings otherwise take the top two slots on the strength of
+ * shares that don't trade here).
  *
  * This is the same size the treemap market map draws its boxes with and the
  * screener's default sort, so a company's position here agrees with both —

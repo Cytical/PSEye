@@ -47,7 +47,8 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
   const sectorRows = rows.filter((r) => r.sector === sector);
   if (sectorRows.length === 0) notFound();
 
-  // Float-adjusted, matching the order the rows are ranked in — see lib/floatAdjustedCap.ts.
+  // investableMarketCap, matching the order the rows are ranked in — equal to
+  // raw market cap except for MFC/SLF, see lib/floatAdjustedCap.ts.
   const totalMarketCap = sectorRows.reduce((sum, r) => sum + r.investableMarketCap, 0);
   const gainers = sectorRows.filter((r) => (r.pctChange ?? 0) > 0).length;
 
@@ -98,8 +99,8 @@ export default async function SectorPage({ params }: { params: Promise<{ sector:
       </div>
       <p className="mt-1.5 max-w-3xl text-sm text-panel-fg/72">
         {sectorRows.length} PSE-listed {sectorRows.length === 1 ? "company" : "companies"} in{" "}
-        {sector}, ranked by float-adjusted market capitalization. Combined float-adjusted market
-        cap: {formatMarketCap(totalMarketCap)}. {gainers} of {sectorRows.length}{" "}
+        {sector}, ranked by market capitalization. Combined market cap:{" "}
+        {formatMarketCap(totalMarketCap)}. {gainers} of {sectorRows.length}{" "}
         {gainers === 1 ? "is" : "are"} up today. Prices are end-of-day / delayed quotes from PSE
         Edge.
       </p>

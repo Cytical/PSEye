@@ -54,7 +54,25 @@ function Placeholder({ item, className }: { item: NewsItem; className: string })
  * component (not the server-rendered NewsCard) only because onError needs to
  * run in the browser.
  */
-export function NewsThumbnail({ item, className }: { item: NewsItem; className: string }) {
+export function NewsThumbnail({
+  item,
+  className,
+  priority = false,
+}: {
+  item: NewsItem;
+  className: string;
+  /**
+   * Set on the images that are above the fold on first paint (the hero, and
+   * the lead card of the first desk block). Everything below stays lazy.
+   *
+   * Without this every variant was `loading="lazy"`, including the hero, which
+   * is the LCP element of /news: the first paint of the section front was a
+   * blank rectangle where the lead story's photo goes, filled in only after
+   * the lazy-load threshold was evaluated. Deferring the one image the page is
+   * measured on is the opposite of what lazy loading is for.
+   */
+  priority?: boolean;
+}) {
   const [failed, setFailed] = useState(false);
 
   if (!item.imageUrl || failed) {
@@ -82,7 +100,8 @@ export function NewsThumbnail({ item, className }: { item: NewsItem; className: 
       <img
         src={item.imageUrl}
         alt=""
-        loading="lazy"
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : undefined}
         referrerPolicy="no-referrer"
         onError={() => setFailed(true)}
         className={imageClassName}

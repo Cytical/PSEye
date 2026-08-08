@@ -36,9 +36,13 @@ describe("buildRankings", () => {
     expect(rows.map((r) => r.ticker)).toEqual(["A", "Z"]);
   });
 
-  // The reason the ranking is float-adjusted at all: MFC reports a ~P4.15T
-  // market cap on a 0.20% free float, against PH large caps around P700B on
-  // ~45%. Ranked raw it takes #1 on shares that trade in Toronto.
+  // The reason MFC/SLF specifically are float-adjusted: MFC reports a
+  // ~P4.15T market cap on a 0.20% free float, against PH large caps around
+  // P700B on ~45%. Ranked raw it takes #1 on shares that trade in Toronto.
+  // BDO's own freeFloatPct is deliberately ignored here — only MFC/SLF get
+  // float-adjusted, every other ticker (however low or high its own free
+  // float) ranks on raw market cap. See @pseye/treemap-layout's
+  // FLOAT_ADJUSTED_TICKERS.
   it("ranks a huge low-float dual-listing below a smaller high-float company", () => {
     const rows = buildRankings([
       quote("MFC", "Financials", 4_150_000_000_000, 0.2),
@@ -46,13 +50,18 @@ describe("buildRankings", () => {
     ]);
 
     expect(rows.map((r) => r.ticker)).toEqual(["BDO", "MFC"]);
-    expect(rows[0].investableMarketCap).toBeCloseTo(299_702_480_000, -6);
+    expect(rows[0].investableMarketCap).toBeCloseTo(677_600_000_000, -6);
     expect(rows[1].investableMarketCap).toBeCloseTo(8_300_000_000, -6);
   });
 
-  it("reports the raw market cap alongside the float-adjusted one it ranks by", () => {
-    const [row] = buildRankings([quote("BDO", "Financials", 1_000, 40)]);
+  it("float-adjusts SLF (the other dual-listing) the same way as MFC", () => {
+    const [row] = buildRankings([quote("SLF", "Financials", 1_000, 40)]);
     expect(row).toMatchObject({ marketCap: 1_000, investableMarketCap: 400, freeFloatPct: 40 });
+  });
+
+  it("does not float-adjust an ordinary domestic ticker, even with a low free float on file", () => {
+    const [row] = buildRankings([quote("BDO", "Financials", 1_000, 40)]);
+    expect(row).toMatchObject({ marketCap: 1_000, investableMarketCap: 1_000, freeFloatPct: 40 });
   });
 
   // The mock quote source doesn't set freeFloatPct, so a DB-less dev build

@@ -17,9 +17,11 @@ export interface GlossaryTerm {
 /**
  * Every entry describes a term this site actually computes or displays
  * somewhere — no generic finance-textbook filler for concepts PSEye doesn't
- * touch (e.g. no options/futures terms, no P/B or ROE — see pe-ratio's own
- * entry for why a field being unavailable is itself worth documenting rather
- * than silently omitting). Ordering is alphabetical-ish by id so anchor links
+ * touch (e.g. no options/futures terms, no ROE). Where a figure is deliberately
+ * withheld rather than absent, the entry says so and says why: see pe-ratio,
+ * which documents both how the ratio is derived and the cases (a loss, no
+ * filing, a foreign-currency filer) that print N/A instead of a number.
+ * Ordering is alphabetical-ish by id so anchor links
  * stay stable as entries are added; each also gets its own indexable page at
  * /glossary/[term] (see app/glossary/[term]/page.tsx) — one URL per term is
  * the same "biggest indexable-page-count lever" pattern as /stocks/[ticker]
@@ -50,7 +52,7 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     definition:
       "Trailing-twelve-month cash dividends per share, divided by the current price, shown as a percentage. It's backward-looking — it tells you what a share paid out over the last year, not a guaranteed future payout.",
     related: [{ href: "/dividends", label: "Dividend screener" }],
-    seeAlso: ["ex-dividend-date"],
+    seeAlso: ["ex-dividend-date", "pe-ratio"],
   },
   {
     id: "ex-dividend-date",
@@ -94,16 +96,27 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     term: "Float-Adjusted Market Cap",
     question: "What Is Float-Adjusted Market Cap?",
     definition:
-      "Market capitalization multiplied by free float percentage — the portion of a company's value actually available for public trading. This, not raw market cap, is what every ranking and cap-weighted figure on PSEye sorts and sizes by (the same convention the PSEi itself, MSCI, and FTSE use): a company can report a huge raw market cap while trading only a sliver of its shares here, which raw cap alone would badly overstate.",
+      "Market capitalization multiplied by free float percentage, the portion of a company's value actually available for public trading (the same convention the PSEi itself, MSCI, and FTSE use to weight an index). Most rankings and cap-weighted figures on PSEye sort and size by plain, unadjusted market cap, matching how most public market-cap heatmaps work. The one exception is two foreign dual-listings, Manulife (MFC) and Sun Life (SLF), whose reported cap is mostly a Toronto share count that barely trades on the PSE: those two are sized and ranked by float-adjusted cap instead, so a huge raw number for a company that trades only a sliver of its shares here doesn't dominate the board.",
     related: [{ href: "/rankings", label: "Company rankings" }],
     seeAlso: ["market-capitalization", "free-float"],
+  },
+  {
+    id: "pb-ratio",
+    term: "P/B Ratio (Price-to-Book)",
+    question: "What Is the P/B Ratio?",
+    definition:
+      "Share price divided by book value per share, meaning what the company's own balance sheet says each share is worth after subtracting everything it owes. A P/B under 1 says the market values the company at less than its accounting net worth, which can mean it is cheap or that the market doubts those book values. PSEye computes this from the book value per share in each company's latest annual filing on PSE Edge, so it is as of that fiscal year rather than today. It shows N/A for a company with negative book value, for one with no annual filing on record, and for the handful of PSE issuers that report in US or Canadian dollars, where dividing a peso price by a foreign-currency figure would produce a number wrong by the exchange rate.",
+    related: [{ href: "/screener", label: "Explorer" }],
+    seeAlso: ["pe-ratio", "market-capitalization", "dividend-yield"],
   },
   {
     id: "pe-ratio",
     term: "P/E Ratio (Price-to-Earnings)",
     question: "What Is the P/E Ratio?",
     definition:
-      "Share price divided by earnings per share — a common measure of how expensive a stock is relative to its profit. PSEye doesn't display this: the exchange's own company pages have a P/E Ratio field, but it's left blank in practice for every company checked, and no other free, reliable source publishes it for PSE-listed stocks. Rather than estimate or guess a number, this site leaves it out.",
+      "Share price divided by earnings per share, a common measure of how expensive a stock is relative to its profit. The exchange's own company pages carry a P/E Ratio field, but it is blank in practice for every company checked, so PSEye derives the figure instead: price divided by the basic earnings per share in that company's latest annual filing, taken from a separate Financial Reports page on PSE Edge. Two things follow from that. It is an annual figure as of the fiscal year shown next to it, not a rolling trailing-twelve-month one, so it can be up to a year behind. And it shows N/A rather than a number for a company that reported a loss (there are no earnings to price against), one with no annual filing on record, and the handful of PSE issuers that report in US or Canadian dollars.",
+    related: [{ href: "/screener", label: "Explorer" }],
+    seeAlso: ["pb-ratio", "market-capitalization", "dividend-yield"],
   },
   {
     id: "psei",

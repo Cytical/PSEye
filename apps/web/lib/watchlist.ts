@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 /**
  * Anonymous, no-backend watchlist — tickers a visitor has starred, kept in
@@ -71,6 +71,41 @@ function subscribe(callback: () => void) {
  * every call, not a fresh `[]` literal — see readTickers' comment above. */
 function emptySnapshot(): string[] {
   return EMPTY_TICKERS;
+}
+
+/**
+ * Whether the browser has taken over from the server-rendered markup.
+ *
+ * Lives here because this store is the reason it's needed: the server snapshot
+ * above is always an empty list, so any UI that distinguishes "no starred
+ * stocks" from "we don't know yet" has to wait for hydration or it will flash
+ * an empty state at every visitor who has a watchlist.
+ *
+ * Deliberately NOT useSyncExternalStore, unlike everything else in this file.
+ * Two variants of it were tried and both left /watchlist stuck on its skeleton
+ * forever, with no error and no warning: the no-op-subscribe one-liner, and a
+ * real store that flipped a module flag in `subscribe` and notified its
+ * listeners. In both, the server snapshot stuck and the component never
+ * re-rendered, while a plain effect in the same component provably did run.
+ * Whatever the cause, an effect is the mechanism that actually works here.
+ *
+ * The setState is deferred to a microtask rather than called in the effect
+ * body only to satisfy the "no setState synchronously in an effect" lint rule
+ * (cascading renders). One extra microtask before the skeleton swaps for real
+ * content is not perceptible.
+ */
+export function useIsHydrated(): boolean {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setHydrated(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return hydrated;
 }
 
 export function useWatchlist(): { tickers: string[]; isWatched: (ticker: string) => boolean; toggle: (ticker: string) => void } {

@@ -6,6 +6,7 @@ import { getMarketStatus } from "@/lib/marketStatus";
 
 const FOOTER_LINKS = [
   { href: "/stocks", label: "All Stocks" },
+  { href: "/watchlist", label: "Watchlist" },
   { href: "/sectors", label: "Sectors" },
   { href: "/news", label: "News" },
   { href: "/glossary", label: "Glossary" },

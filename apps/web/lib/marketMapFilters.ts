@@ -54,8 +54,9 @@ export function filterMarketMapStocks<
 
   const limit = TOP_N[filter];
   if (limit == null) return stocks;
-  // Float-adjusted, matching the size the map already draws these same boxes
-  // with (see lib/floatAdjustedCap.ts). On raw cap the two foreign
+  // investableMarketCap, matching the size the map already draws these same
+  // boxes with (see lib/floatAdjustedCap.ts) — market cap for almost every
+  // ticker, float-adjusted only for MFC/SLF. On raw cap those two foreign
   // dual-listings took two of the thirty slots and then rendered as slivers,
   // because the cut and the sizing disagreed about how big they were.
   return [...stocks].sort(byInvestableCapDesc).slice(0, limit);

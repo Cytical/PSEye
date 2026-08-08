@@ -1,0 +1,35 @@
+name: Fetch Nasdaq 100 quotes (daily)
+
+# Real daily price/%change/market-cap for the market map's "Nasdaq 100"
+# filter (see apps/web/lib/nasdaq100.ts), sourced from Nasdaq's own public
+# quote API (api.nasdaq.com) — no API key needed. Stooq was the original
+# plan (also free, no key) but turned out to be a dead end live: its bulk
+# quote endpoint 404s and its CSV endpoint now sits behind a JS proof-of-work
+# anti-bot challenge a server-side fetch can't pass. See
+# etl/lib/nasdaqApi/nasdaqApiQuoteSource.ts's doc comment for the full story.
+#
+# Fires once daily after the US market close (20:30 UTC = 4:30pm ET,
+# comfortably past the 4:00pm ET close). Same workflow_dispatch-only,
+# no-`schedule:` pattern as every other cron in this repo (see
+# block-sales-daily.yml / CLAUDE.md's Triggering note) — a cron-job.org job
+# should call this workflow's `workflow_dispatch` REST endpoint at 20:30 UTC.
+# If cron-job.org goes down, this workflow simply stops firing.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  fetch-nasdaq100:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @pseye/etl fetch-nasdaq100
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}

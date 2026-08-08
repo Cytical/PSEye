@@ -58,6 +58,7 @@ const DROPDOWNS: { label: string; links: NavLink[] }[] = [
     label: "Browse",
     links: [
       { href: "/screener", label: "Explorer", description: "Filter and sort every tracked stock" },
+      { href: "/stocks", label: "All Companies", description: "A-Z directory of all 282 tracked companies" },
       { href: "/dividends", label: "Dividends", description: "Highest trailing-12-month dividend yields" },
       { href: "/rankings", label: "Rankings", description: "Every stock ranked by market cap" },
       { href: "/most-active", label: "Most Active", description: "Highest-turnover stocks today" },
@@ -77,6 +78,7 @@ const DROPDOWNS: { label: string; links: NavLink[] }[] = [
   {
     label: "Tools",
     links: [
+      { href: "/watchlist", label: "My Watchlist", description: "The stocks you've starred, with today's move" },
       { href: "/portfolio", label: "Portfolio", description: "Track your holdings' live gain/loss" },
       { href: "/compare", label: "Compare", description: "Normalize % change across stocks" },
       { href: "/dca", label: "DCA Calculator", description: "Simulate cost-averaging into a stock" },

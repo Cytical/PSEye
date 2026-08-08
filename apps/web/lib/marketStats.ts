@@ -108,9 +108,10 @@ export async function getMarketStats(): Promise<MarketStats> {
   };
 
   // --- Deeper stats over the large-cap universe (needs history) ---
-  // Float-adjusted (see lib/floatAdjustedCap.ts) for both the universe cut and
-  // the weights below. Breadth above is unaffected either way: it's one vote
-  // per stock, which no cap figure distorts.
+  // investableMarketCap (see lib/floatAdjustedCap.ts) for both the universe
+  // cut and the weights below: market cap for almost every ticker,
+  // float-adjusted only for MFC/SLF. Breadth above is unaffected either way:
+  // it's one vote per stock, which no cap figure distorts.
   const ranked = [...quotes].sort(byInvestableCapDesc).slice(0, LARGE_CAP_UNIVERSE);
   const fromDate = isoDaysAgo(LOOKBACK_DAYS);
   const { source, history } = await getHistoricalQuotesLenient(

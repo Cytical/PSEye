@@ -44,13 +44,19 @@ type RssExtraFields = RssImageFields & RssAuthorFields;
 // clears the challenge. This is the actual mechanism behind "sometimes the
 // news data doesn't get received" — not occasional flakiness, a 100%,
 // silent failure rate for that one outlet.
+// Shared with googleNewsSource.ts, which needs the same realistic
+// browser-shaped request (news.google.com hasn't been observed to WAF-block
+// this the way pse.com.ph/some PH outlets do, but there's no reason to send
+// rss-parser's fingerprintable literal default there either).
+export const FEED_REQUEST_HEADERS: Record<string, string> = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+  Accept: "application/rss+xml, application/xml, text/xml, */*",
+};
+
 const parser = new Parser<Record<string, unknown>, RssExtraFields>({
   timeout: 8_000,
-  headers: {
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    Accept: "application/rss+xml, application/xml, text/xml, */*",
-  },
+  headers: FEED_REQUEST_HEADERS,
   customFields: {
     item: ["media:content", "content:encoded", "dc:creator"],
   },

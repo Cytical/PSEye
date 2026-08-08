@@ -23,9 +23,10 @@ export async function getQuotesForDate(date: string): Promise<Quote[] | null> {
       price: r.price == null ? null : Number(r.price),
       pctChange: r.pctChange == null ? null : Number(r.pctChange),
       marketCap: r.marketCap == null ? 0 : Number(r.marketCap),
-      // Carried through deliberately: without it the time machine sized its
-      // boxes by RAW market cap while today's view sizes by float-adjusted cap
-      // (see lib/floatAdjustedCap.ts). The two dual-listed insurers, Manulife
+      // Carried through deliberately: without it the time machine would size
+      // MFC/SLF's boxes by their RAW market cap while today's view
+      // float-adjusts those same two tickers (see lib/floatAdjustedCap.ts).
+      // The two dual-listed insurers, Manulife
       // (0.20% float against a ₱4.15T reported cap) and Sun Life (0.62% against
       // ₱2.66T), then swallowed the board on every past date while rendering as
       // ordinary mid-caps on today's — the same map, the same data, two

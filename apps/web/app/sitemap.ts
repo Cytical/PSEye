@@ -36,8 +36,8 @@ const ROUTES: {
   { path: "/dividends", changeFrequency: "daily", priority: 0.7, quoteDated: true },
   { path: "/block-sales", changeFrequency: "monthly", priority: 0.5 },
   { path: "/disclosures", changeFrequency: "hourly", priority: 0.6 },
-  // /offerings deliberately excluded — hidden from nav (still mock-only, no
-  // real source found after two investigations), not worth indexing.
+  // /watchlist deliberately excluded — it's per-visitor localStorage, so the
+  // only version a crawler can ever see is the empty state. It's noindex too.
   { path: "/foreign-flow", changeFrequency: "weekly", priority: 0.5 },
   { path: "/dca", changeFrequency: "monthly", priority: 0.6 },
   // /daily deliberately excluded — it renders the same recap as

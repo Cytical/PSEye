@@ -26,6 +26,7 @@ import {
   type DividendSummary,
 } from "@/components/StockStatistics";
 import { parseDividendAmount } from "@/lib/dividends";
+import { computeValuation, dividendYieldPct } from "@/lib/valuation";
 import { WatchlistStarButton } from "@/components/WatchlistStarButton";
 import { RecordStockView } from "@/components/RecordStockView";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
@@ -52,25 +53,23 @@ const HISTORY_LOOKBACK_DAYS = 90;
 const STATS_LOOKBACK_DAYS = 365;
 
 /**
- * Height of each of the two above-the-fold dashboard rows. Sized so the whole
- * dashboard — title, hero strip, and both rows — lands inside roughly a
- * 1000px-tall viewport, which is the point of the layout: the panels scroll
- * internally so that adding a 30-item disclosure list can never push the row
- * below it off screen. Only applied from `lg` up; below that the rows collapse
- * to a single column and take their natural heights, since a fixed 20rem panel
- * on a phone would be almost entirely scrollbar.
+ * Height of the top dashboard row (Closing price / Analytics / Sector
+ * peers) — a *floor* (`min-h`), not a cap. Sized so the row looks the same
+ * as before on a ticker with a short peer list, but a ticker that actually
+ * needs more room (e.g. 10 sector peers) grows the row instead of clipping
+ * into an internal scrollbar: `align-items: stretch`'s default cross-axis
+ * behavior means every panel in the row still ends up the same height, it's
+ * just no longer a hardcoded one. Only applied from `lg` up; below that the
+ * row collapses to a single column and takes its natural height, since a
+ * fixed-height panel on a phone would be almost entirely dead space.
+ *
+ * Row 2 (Statistical profile / Recent disclosures / In the news) doesn't use
+ * this — Statistical profile drives that row's height directly via
+ * `MatchHeight` instead, since (unlike Sector peers) disclosures/news lists
+ * can run long enough that letting them set the row's height would be the
+ * wrong side driving it.
  */
-const DASH_ROW = "flex flex-col gap-3 lg:h-[19.5rem] lg:flex-row 2xl:h-[21rem]";
-/**
- * Row 2 only (Statistical profile / Recent disclosures / In the news):
- * shorter than `DASH_ROW` because Statistical profile's actual content —
- * two 4-KPI rows plus the histogram — only needs ~257px including the
- * header, so `DASH_ROW`'s height left a visibly empty gap beneath it. The
- * other two panels in the row (disclosures, news) already handle overflow
- * via `scroll`, so shortening the row just means fewer items show before
- * scrolling, same tradeoff `DASH_ROW` already makes everywhere else.
- */
-const STATS_ROW = "flex flex-col gap-3 lg:h-[16.5rem] lg:flex-row";
+const DASH_ROW = "flex flex-col gap-3 lg:min-h-[19.5rem] lg:flex-row 2xl:min-h-[21rem]";
 /**
  * Panel widths within a `DASH_ROW`. Flex basis + grow rather than a 12-column
  * grid's `col-span-*`, specifically so a row heals when a panel doesn't
@@ -118,6 +117,15 @@ export async function generateMetadata({
     },
     openGraph: { title, description },
   };
+}
+
+/** "Aug 2026" — month precision, since this data changes about once a year. */
+function formatFetchedAt(iso: string): string {
+  return new Date(iso + "T00:00:00Z").toLocaleDateString("en-PH", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 function formatPeso(n: number): string {
@@ -228,8 +236,9 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
   const companyDisclosures = disclosures.filter((d) => d.ticker === ticker).slice(0, 25);
 
   const sector = quote?.sector ?? company.sector;
-  // Float-adjusted, so the "#N of M" here matches the board /rankings
-  // publishes and the box sizes on the market map — see lib/floatAdjustedCap.ts.
+  // investableMarketCap, so the "#N of M" here matches the board /rankings
+  // publishes and the box sizes on the market map. Equal to raw market cap
+  // except for MFC/SLF — see lib/floatAdjustedCap.ts.
   const rankedByMarketCap = [...quotes].sort(byInvestableCapDesc);
   const rank = rankedByMarketCap.findIndex((q) => q.ticker === ticker) + 1;
   const sectorRanked = rankedByMarketCap.filter((q) => q.sector === sector);
@@ -301,14 +310,37 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
   const dividendSummary: DividendSummary | null =
     dividendPayoutCount > 0
       ? {
-          yieldPct:
-            quote?.price != null && quote.price > 0 && ttmDividend > 0
-              ? (ttmDividend / quote.price) * 100
-              : null,
+          yieldPct: dividendYieldPct(ttmDividend, quote?.price ?? null),
           ttm: ttmDividend,
           payoutCount: dividendPayoutCount,
         }
       : null;
+
+  // P/E and P/B, derived rather than read: PSE Edge's own Stock Data tab
+  // carries both fields and leaves both empty for every company, so these come
+  // from the Financial Reports tab's annual EPS/book value (company_financials)
+  // divided into the live price. See lib/valuation.ts for the unit
+  // cross-check that gates them, which is the whole reason this isn't a
+  // one-line division at the call site.
+  const valuation = computeValuation({
+    currencyUnit: companyFinancials?.currencyUnit ?? null,
+    price: quote?.price ?? null,
+    marketCap: quote?.marketCap ?? 0,
+    epsBasic: companyFinancials?.earningsPerShareBasic.current ?? null,
+    bookValuePerShare: companyFinancials?.bookValuePerShare.current ?? null,
+    netIncomeAttributableToParent: companyFinancials?.netIncomeAttributableToParent.current ?? null,
+    netIncomeAfterTax: companyFinancials?.netIncomeAfterTax.current ?? null,
+    stockholdersEquityParent: companyFinancials?.stockholdersEquityParent.current ?? null,
+    stockholdersEquity: companyFinancials?.stockholdersEquity.current ?? null,
+  });
+  // EPS here is annual and can be a year old (backfill-company-financials is a
+  // manual, roughly-yearly job that parses only the Annual section), so every
+  // derived tile is stamped with the fiscal year it came from. Never labeled
+  // TTM: the dividend yield above genuinely is trailing-twelve-month, these
+  // are not, and blurring the two would be the dishonest part.
+  const fiscalYearHint = companyFinancials?.fiscalYearEnded
+    ? `FY ${companyFinancials.fiscalYearEnded}`
+    : undefined;
 
   // Previous close is derivable from the two fields the quote already carries,
   // so the hero can show the peso move alongside the percentage without the
@@ -362,6 +394,33 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       info: "Trailing-twelve-month cash dividends per share, divided by the current price.",
       glossaryId: "dividend-yield",
     });
+  // The one place this rail renders "N/A" rather than dropping the tile: a
+  // loss-making company has no P/E, which is worth saying, and is a different
+  // fact from having no financials on file at all (which still drops it).
+  if (valuation.peRatio != null)
+    heroStats.push({
+      label: "P/E",
+      value: valuation.peRatio.toFixed(1),
+      hint: fiscalYearHint,
+      info: "Price divided by annual basic earnings per share, from the company's latest annual filing on PSE Edge.",
+      glossaryId: "pe-ratio",
+    });
+  else if (valuation.epsNegative)
+    heroStats.push({
+      label: "P/E",
+      value: "N/A",
+      hint: "loss-making",
+      info: "The company reported a loss in its latest annual filing, so there are no earnings to price against.",
+      glossaryId: "pe-ratio",
+    });
+  if (valuation.pbRatio != null)
+    heroStats.push({
+      label: "P/B",
+      value: valuation.pbRatio.toFixed(2),
+      hint: fiscalYearHint,
+      info: "Price divided by book value per share, from the company's latest annual filing on PSE Edge.",
+      glossaryId: "pb-ratio",
+    });
 
   const companyFacts = profile ? buildCompanyFacts(profile) : [];
   const statsSample = yearCloses.length > 0 ? statisticsSampleSize(yearCloses) : null;
@@ -408,6 +467,100 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
       },
     ],
   };
+
+  // Row 2's two live-feed panels: pulled out so the same JSX can sit either
+  // inside MatchHeight's `matched` slot (statsSample != null — Statistical
+  // profile sets the row's height) or in the plain fallback row (a ticker
+  // with under 30 closes has no Statistical profile to match against).
+  // `lg:h-full` only takes effect when a MatchHeight ancestor actually hands
+  // down `--match-height`; the fallback row has no explicit height, so it's
+  // a no-op there and both panels just take their natural height instead.
+  const recentDisclosuresPanel = (
+    <Panel
+      title="Recent disclosures"
+      meta={companyDisclosures.length > 0 ? `${companyDisclosures.length} filings` : undefined}
+      className="min-w-0 flex-1 lg:h-full"
+      scroll={companyDisclosures.length > 0}
+      flush={companyDisclosures.length > 0}
+      footer={
+        <Link href="/disclosures" className="text-panel-fg/68 hover:underline">
+          All disclosures →
+        </Link>
+      }
+    >
+      {companyDisclosures.length > 0 ? (
+        <ul className="divide-y divide-panel-border">
+          {companyDisclosures.map((d) => {
+            const accent = DISCLOSURE_TYPE_ACCENT[d.type];
+            return (
+              <li key={d.referenceNo} className="px-3 py-2 text-xs" style={{ boxShadow: `inset 3px 0 0 ${accent}` }}>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="type-badge truncate rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                    style={{ "--badge-accent": accent } as React.CSSProperties}
+                  >
+                    {DISCLOSURE_TYPE_LABELS[d.type]}
+                  </span>
+                  <span className="ml-auto shrink-0 text-[10.5px] text-panel-fg/72">{formatRelative(d.filedAt)}</span>
+                </div>
+                {d.url ? (
+                  <a
+                    href={d.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-0.5 block leading-snug text-panel-fg hover:underline"
+                  >
+                    {d.headline} <span aria-hidden="true">↗</span>
+                  </a>
+                ) : (
+                  <p className="mt-0.5 leading-snug text-panel-fg">{d.headline}</p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <PanelEmpty>No recent disclosures on record for {company.ticker}.</PanelEmpty>
+      )}
+    </Panel>
+  );
+
+  const inTheNewsPanel = (
+    <Panel
+      title="In the news"
+      meta={news.length > 0 ? `${news.length} mentions` : undefined}
+      className="min-w-0 flex-1 lg:h-full"
+      scroll={news.length > 0}
+      flush={news.length > 0}
+      footer={
+        <Link href="/news" className="text-panel-fg/68 hover:underline">
+          All PSE news →
+        </Link>
+      }
+    >
+      {news.length > 0 ? (
+        <ul className="divide-y divide-panel-border">
+          {news.map((item) => (
+            <li key={item.url} className="px-3 py-2 text-xs">
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block leading-snug text-panel-fg hover:underline"
+              >
+                {item.title}
+              </a>
+              <div className="mt-0.5 text-[10.5px] text-panel-fg/72">
+                {item.source} &middot; {formatRelative(item.publishedAt.toISOString())}
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <PanelEmpty>No recent news mentions {company.ticker}.</PanelEmpty>
+      )}
+    </Panel>
+  );
 
   return (
     <div className="mx-auto max-w-[1600px] px-4 pb-8 pt-4 sm:px-6">
@@ -468,8 +621,8 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             </span>
             <span>
               #{rank} of {rankedByMarketCap.length} by{" "}
-              <Link href="/glossary/float-adjusted-market-cap" className="hover:underline">
-                float-adjusted market cap
+              <Link href="/glossary/market-capitalization" className="hover:underline">
+                market cap
               </Link>
             </span>
             <span aria-hidden="true" className="mx-1 text-panel-fg/40">
@@ -595,12 +748,22 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
             title="Sector peers"
             meta={sector}
             className={SPAN_SIDE}
-            scroll
             flush
             footer={
-              <Link href={sectorHref} className="text-panel-fg/68 hover:underline">
-                See all {sectorRanked.length} in {sector} →
-              </Link>
+              <span className="flex flex-wrap gap-x-3 gap-y-1 text-panel-fg/68">
+                <Link href={sectorHref} className="hover:underline">
+                  See all {sectorRanked.length} in {sector} →
+                </Link>
+                {/* The one page that answers the question this list provokes:
+                    how has this stock done against these peers. It had no
+                    in-body link from anywhere on the site. */}
+                <Link
+                  href={`/compare?tickers=${[company.ticker, ...sectorPeers.slice(0, 2).map((p) => p.ticker)].join(",")}`}
+                  className="hover:underline"
+                >
+                  Compare performance →
+                </Link>
+              </span>
             }
           >
             <ul className="divide-y divide-panel-border">
@@ -630,108 +793,65 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
         )}
       </div>
 
-      {/* Dashboard row 2 — the quantitative profile beside the two live feeds. */}
-      <div className={`mt-3 ${STATS_ROW}`}>
-        {statsSample != null && (
-          <Panel
-            title="Statistical profile"
-            meta={`${statsSample} daily closes`}
-            className={SPAN_WIDE}
-            scroll
-          >
-            <StockStatistics closes={yearCloses} dividend={dividendSummary} />
-          </Panel>
-        )}
-
-        <Panel
-          title="Recent disclosures"
-          meta={companyDisclosures.length > 0 ? `${companyDisclosures.length} filings` : undefined}
-          className={SPAN_SIDE}
-          scroll
-          flush
-          footer={
-            <Link href="/disclosures" className="text-panel-fg/68 hover:underline">
-              All disclosures →
-            </Link>
-          }
-        >
-          {companyDisclosures.length > 0 ? (
-            <ul className="divide-y divide-panel-border">
-              {companyDisclosures.map((d) => {
-                const accent = DISCLOSURE_TYPE_ACCENT[d.type];
-                return (
-                  <li
-                    key={d.referenceNo}
-                    className="px-3 py-2 text-xs"
-                    style={{ boxShadow: `inset 3px 0 0 ${accent}` }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="type-badge truncate rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-                        style={{ "--badge-accent": accent } as React.CSSProperties}
-                      >
-                        {DISCLOSURE_TYPE_LABELS[d.type]}
-                      </span>
-                      <span className="ml-auto shrink-0 text-[10.5px] text-panel-fg/72">
-                        {formatRelative(d.filedAt)}
-                      </span>
-                    </div>
-                    {d.url ? (
-                      <a
-                        href={d.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-0.5 block leading-snug text-panel-fg hover:underline"
-                      >
-                        {d.headline} <span aria-hidden="true">↗</span>
-                      </a>
-                    ) : (
-                      <p className="mt-0.5 leading-snug text-panel-fg">{d.headline}</p>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <PanelEmpty>No recent disclosures on record for {company.ticker}.</PanelEmpty>
-          )}
-        </Panel>
-
-        <Panel
-          title="In the news"
-          meta={news.length > 0 ? `${news.length} mentions` : undefined}
-          className={SPAN_SIDE}
-          scroll
-          flush
-          footer={
-            <Link href="/news" className="text-panel-fg/68 hover:underline">
-              All PSE news →
-            </Link>
-          }
-        >
-          {news.length > 0 ? (
-            <ul className="divide-y divide-panel-border">
-              {news.map((item) => (
-                <li key={item.url} className="px-3 py-2 text-xs">
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block leading-snug text-panel-fg hover:underline"
-                  >
-                    {item.title}
-                  </a>
-                  <div className="mt-0.5 text-[10.5px] text-panel-fg/72">
-                    {item.source} &middot; {formatRelative(item.publishedAt.toISOString())}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <PanelEmpty>No recent news mentions {company.ticker}.</PanelEmpty>
-          )}
-        </Panel>
-      </div>
+      {/* Dashboard row 2 — the quantitative profile beside the two live feeds.
+          Statistical profile is the reference: it always renders at its own
+          natural height (no scroll — it's a fixed KPI/histogram layout, so
+          that height is predictable). Disclosures/news are `matched` to
+          whatever that comes out to, via MatchHeight's measured
+          --match-height, and scroll internally if their own list is longer
+          than that — the same "wrong side driving the height" avoidance as
+          the About/Balance sheet row below the fold, just with three panels
+          instead of two. Falls back to a plain row (no height matching) when
+          a ticker has under 30 closes and Statistical profile doesn't render
+          at all. */}
+      {statsSample != null ? (
+        <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-start">
+          <MatchHeight
+            referenceClassName={SPAN_WIDE}
+            reference={
+              <Panel
+                title="Statistical profile"
+                meta={`${statsSample} daily closes`}
+                // These four pages compute the market-wide version of what this
+                // panel shows for one stock, and until now nothing on the site
+                // linked to any of them from anywhere except a nav dropdown: a
+                // reader looking at this company's volatility had no path to the
+                // distribution it sits in.
+                footer={
+                  <span className="flex flex-wrap gap-x-3 gap-y-1 text-panel-fg/68">
+                    <Link href="/market-stats" className="hover:underline">
+                      Market-wide distribution →
+                    </Link>
+                    <Link href="/analytics" className="hover:underline">
+                      Volatility &amp; beta leaderboard →
+                    </Link>
+                    <Link href="/clusters" className="hover:underline">
+                      Stocks that trade like this →
+                    </Link>
+                    <Link href="/regime" className="hover:underline">
+                      Market regime →
+                    </Link>
+                  </span>
+                }
+              >
+                <StockStatistics closes={yearCloses} dividend={dividendSummary} />
+              </Panel>
+            }
+            matchedClassName="flex min-w-0 flex-col gap-3 lg:basis-1/2 lg:grow-[2] lg:h-[var(--match-height)] lg:flex-row"
+            matched={
+              <>
+                {recentDisclosuresPanel}
+                {inTheNewsPanel}
+              </>
+            }
+          />
+        </div>
+      ) : (
+        <div className="mt-3 flex flex-col gap-3 lg:flex-row">
+          {recentDisclosuresPanel}
+          {inTheNewsPanel}
+        </div>
+      )}
 
       {/* Below the fold: reference material rather than live market state. */}
       {/* items-stretch stays for the mobile flex-col layout (cross-axis there
@@ -748,7 +868,15 @@ export default async function StockPage({ params }: { params: Promise<{ ticker: 
           <MatchHeight
             referenceClassName="min-w-0 lg:basis-2/3 lg:grow-[2]"
             reference={
-              <Panel title={`About ${company.ticker}`} meta={profile.source} bodyClassName="flex flex-col gap-3">
+              <Panel
+                title={`About ${company.ticker}`}
+                // The scrape date matters here in a way it would not on live
+                // price data: backfill-company-profiles is a manual job that
+                // runs roughly yearly, so an undated director list and
+                // auditor name read as current when they can be a year old.
+                meta={profile.fetchedAt ? `${profile.source} · as of ${formatFetchedAt(profile.fetchedAt)}` : profile.source}
+                bodyClassName="flex flex-col gap-3"
+              >
                 {/* Block flow, not flex: CSS multi-column has no effect on a flex
                     container, so `columns-2` silently did nothing when this was a
                     `flex flex-col`. Paragraph spacing is margins for the same

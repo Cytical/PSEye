@@ -55,6 +55,16 @@ export interface NewsItem {
    * applies that fallback chain.
    */
   imageIsLogo?: boolean;
+  /**
+   * The outlet's own logo, from the news_outlet_logos cache, for the small
+   * mark rendered beside the masthead name in a card's byline.
+   *
+   * Distinct from imageUrl even when the two happen to be equal: that field is
+   * the story's picture (with the logo as a last-resort stand-in), this one is
+   * always the outlet's brand mark regardless of what illustrates the story.
+   * Undefined on the live-fetch fallback path, which has no logo cache to read.
+   */
+  outletLogoUrl?: string | null;
 }
 
 export interface NewsSource {

@@ -1,6 +1,6 @@
 import "../lib/loadEnv";
 import { eq } from "drizzle-orm";
-import { createDb, blockSales, stockForeignFlow } from "@pseye/db";
+import { createDb, blockSales, stockForeignFlow, upsertDailyIndexForeignFlow } from "@pseye/db";
 import { PSE_EDGE_COMPANIES } from "@pseye/source-quotes";
 import { PseQuotationReportBlockSaleSource } from "../lib/pseQuotationReport/pseQuotationReportBlockSaleSource";
 
@@ -30,6 +30,15 @@ const TOP_N = 10;
  * that isn't in that roster (e.g. a preferred share class, warrant, or SME
  * board issue we don't otherwise track) falls back to the ticker itself
  * rather than skipping the row — still a real trade/flow worth showing.
+ *
+ * 2026-08-07: also sums *every* row in report.stockForeignFlow (the full
+ * MAIN BOARD, before the top/bottom-10 slice below) into one daily total,
+ * upserted into daily_index_foreign_flow. This is what makes /foreign-flow's
+ * chart genuinely daily — the old index_foreign_flow table only gets a new
+ * row when PSE publishes its weekly Market Watch PDF (see
+ * etl/jobs/fetch-foreign-flow.ts), which is real but coarse (and has stalled
+ * before — see CLAUDE.md's foreign-flow AJAX fix entry). This total costs no
+ * extra fetch: it's the same PDF this job already downloads for block sales.
  */
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -68,6 +77,14 @@ async function main() {
       });
 
     console.log(`Upserted up to ${report.rows.length} block sale trades for ${report.tradeDate}.`);
+  }
+
+  if (report.stockForeignFlow.length === 0) {
+    console.log(`No per-stock foreign flow rows found for ${report.tradeDate}; skipping daily_index_foreign_flow (likely a parsing failure, not a real zero).`);
+  } else {
+    const totalNetForeignFlow = report.stockForeignFlow.reduce((sum, r) => sum + r.netForeignValue, 0);
+    await upsertDailyIndexForeignFlow(db, report.tradeDate, totalNetForeignFlow);
+    console.log(`Upserted daily net foreign flow for ${report.tradeDate}: ${totalNetForeignFlow.toLocaleString()} PHP across ${report.stockForeignFlow.length} stocks.`);
   }
 
   const traded = report.stockForeignFlow.filter((r) => r.netForeignValue !== 0);

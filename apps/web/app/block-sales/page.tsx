@@ -32,7 +32,16 @@ export default async function BlockSalesPage() {
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-panel-fg/65">
         Large negotiated trades (&quot;crosses&quot;) arranged directly between parties, outside
         the normal order book. From PSE&apos;s Daily Quotation Report, largest value first, over
-        the last 30 days.
+        the last 30 days. These do not appear in a stock&apos;s regular turnover, so a company can
+        change hands in size here without showing up in{" "}
+        <Link href="/most-active" className="underline hover:text-panel-fg">
+          today&apos;s most active
+        </Link>
+        . For the same report&apos;s per-stock foreign buying and selling, see{" "}
+        <Link href="/foreign-flow" className="underline hover:text-panel-fg">
+          foreign fund flow
+        </Link>
+        .
       </p>
 
       {trades.length > 0 ? (

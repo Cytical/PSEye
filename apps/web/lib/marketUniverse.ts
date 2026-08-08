@@ -35,9 +35,11 @@ export async function loadUniverse({
   lookbackDays = 400,
 }: { size?: number; minCloses?: number; lookbackDays?: number } = {}): Promise<LoadedUniverse> {
   const quotes = await getDailyQuotes();
-  // Float-adjusted for both the top-N cut and the weights below — a benchmark
-  // weighted on shares that don't trade on this exchange isn't tracking this
-  // market. Same convention the real PSEi uses; see lib/floatAdjustedCap.ts.
+  // investableMarketCap for both the top-N cut and the weights below: market
+  // cap for almost every ticker, float-adjusted only for the two names (MFC,
+  // SLF) whose shares mostly don't trade on this exchange, so a benchmark
+  // weighted on their raw cap wouldn't be tracking this market. See
+  // lib/floatAdjustedCap.ts.
   const ranked = [...quotes].sort(byInvestableCapDesc).slice(0, size);
 
   const from = new Date();

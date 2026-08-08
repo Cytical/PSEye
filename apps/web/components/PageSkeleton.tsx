@@ -24,7 +24,7 @@ export function SkeletonHeader({
   );
 }
 
-/** Matches the disclosures/calendar/offerings "grouped card" list shape. Caller controls top spacing. */
+/** Matches the disclosures/calendar "grouped card" list shape. Caller controls top spacing. */
 export function SkeletonCardList({ count = 4 }: { count?: number }) {
   return (
     <div className="flex flex-col gap-4">

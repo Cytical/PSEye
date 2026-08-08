@@ -1,7 +1,7 @@
 import "../lib/loadEnv";
 import { sql } from "drizzle-orm";
 import { createDb, newsItems, getNewsOutletLogos, upsertNewsOutletLogo } from "@pseye/db";
-import { NEWS_SOURCES, fetchOgImage, fetchOutletLogo } from "@pseye/source-news";
+import { NEWS_SOURCES, fetchOgImage, fetchOutletLogo, isGoogleNewsRedirectUrl } from "@pseye/source-news";
 import { triggerRevalidate } from "../lib/triggerRevalidate";
 import { NEWS_REVALIDATE_PATHS } from "../lib/newsPaths";
 
@@ -56,6 +56,13 @@ async function main() {
   let ogImagesFound = 0;
   for (const item of items) {
     if (item.imageUrl) continue;
+    // Google-News-sourced items (googleNewsSource.ts) store that redirect
+    // link as `url`, not the resolved publisher URL (see outlets.ts's
+    // Google News section for why) — fetching its og:image returns Google
+    // News' own generic masthead image on every item, live-confirmed, not
+    // the real article's. Skipped so these items fall straight through to
+    // the outlet-logo fallback below instead of getting that wrong image.
+    if (isGoogleNewsRedirectUrl(item.url)) continue;
     const ogImage = await fetchOgImage(item.url);
     if (ogImage) {
       item.imageUrl = ogImage;

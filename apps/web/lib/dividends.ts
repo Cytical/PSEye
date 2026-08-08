@@ -3,6 +3,7 @@ import { MockCorporateActionSource } from "@pseye/source-corporate-actions";
 import type { Quote } from "@pseye/source-quotes";
 import { getDailyQuotes } from "./quotes";
 import { manilaToday } from "./manilaDate";
+import { dividendYieldPct } from "./valuation";
 
 /** One cash-dividend declaration, as stored by the corporate-actions ETL. */
 export interface CashDividendInput {
@@ -112,10 +113,7 @@ export function buildDividendScreener(
 
     if (payoutCount === 0 && nextExDate === null) continue;
 
-    const yieldPct =
-      quote.price != null && quote.price > 0 && ttmDividend > 0
-        ? (ttmDividend / quote.price) * 100
-        : null;
+    const yieldPct = dividendYieldPct(ttmDividend, quote.price);
 
     rows.push({
       ticker,

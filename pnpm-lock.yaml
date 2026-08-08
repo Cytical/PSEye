@@ -35,9 +35,6 @@ importers:
       '@pseye/source-news':
         specifier: workspace:*
         version: link:../../packages/sources/news
-      '@pseye/source-offerings':
-        specifier: workspace:*
-        version: link:../../packages/sources/offerings
       '@pseye/source-quotes':
         specifier: workspace:*
         version: link:../../packages/sources/quotes
@@ -235,19 +232,6 @@ importers:
       vitest:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@20.19.43)(lightningcss@1.32.0)
-
-  packages/sources/offerings:
-    dependencies:
-      '@pseye/source-quotes':
-        specifier: workspace:*
-        version: link:../quotes
-    devDependencies:
-      '@pseye/config':
-        specifier: workspace:*
-        version: link:../../config
-      typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
 
   packages/sources/quotes:
     dependencies:

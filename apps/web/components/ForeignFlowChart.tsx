@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { IndexForeignFlow } from "@pseye/source-foreign-flow";
+import type { IndexFlowPoint } from "@/lib/foreignFlow";
 
 // Same finance-convention green/red diverging pair as TreemapChart's color.ts
 // (green=net buying, red=net selling) — this is a polarity metric too.
@@ -24,7 +24,7 @@ function formatPeso(n: number): string {
   return `${sign}₱${(abs / 1_000_000).toFixed(0)}M`;
 }
 
-function formatWeek(iso: string): string {
+function formatDate(iso: string): string {
   return new Date(iso + "T00:00:00Z").toLocaleDateString("en-PH", {
     month: "short",
     day: "numeric",
@@ -32,7 +32,23 @@ function formatWeek(iso: string): string {
   });
 }
 
-export function ForeignFlowChart({ periods }: { periods: IndexForeignFlow[] }) {
+/**
+ * Max x-axis labels to draw regardless of how many bars there are. The old
+ * fixed `i % 2 === 0` stride was tuned for the handful of weekly bars this
+ * chart used to always have — with up to 30 daily bars (see
+ * getDailyIndexForeignFlowHistory) that stride crams 15 overlapping labels
+ * into 720px, so the stride is now computed from periods.length instead.
+ */
+const MAX_LABELS = 10;
+
+export function ForeignFlowChart({
+  periods,
+  granularity = "weekly",
+}: {
+  periods: IndexFlowPoint[];
+  /** Changes only the aria-label/hover-title wording ("day"/"week") — the geometry below already works for any period count. */
+  granularity?: "daily" | "weekly" | "mock";
+}) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   const plotWidth = WIDTH - PAD_LEFT - PAD_RIGHT;
@@ -40,6 +56,8 @@ export function ForeignFlowChart({ periods }: { periods: IndexForeignFlow[] }) {
   const maxAbs = Math.max(...periods.map((p) => Math.abs(p.netValue)), 1);
   const zeroY = PAD_TOP + plotHeight / 2;
   const barWidth = Math.min(36, (plotWidth / periods.length) * 0.6);
+  const labelStride = Math.max(1, Math.ceil(periods.length / MAX_LABELS));
+  const unit = granularity === "daily" ? "day" : "week";
 
   const xForIndex = (i: number) =>
     PAD_LEFT + ((i + 0.5) / periods.length) * plotWidth;
@@ -47,7 +65,7 @@ export function ForeignFlowChart({ periods }: { periods: IndexForeignFlow[] }) {
 
   return (
     <div className="relative">
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full" role="img" aria-label="Weekly net foreign fund flow">
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full" role="img" aria-label={`Net foreign fund flow by ${unit}`}>
         <line x1={PAD_LEFT} x2={WIDTH - PAD_RIGHT} y1={zeroY} y2={zeroY} className="stroke-panel-fg/20" strokeWidth={1} />
         <text x={PAD_LEFT - 8} y={zeroY} textAnchor="end" dominantBaseline="middle" fontSize={10} className="fill-panel-fg/65">
           ₱0
@@ -67,9 +85,9 @@ export function ForeignFlowChart({ periods }: { periods: IndexForeignFlow[] }) {
         })}
 
         {periods.map((p, i) =>
-          i % 2 === 0 ? (
+          i % labelStride === 0 ? (
             <text key={p.periodEnd} x={xForIndex(i)} y={HEIGHT - 6} textAnchor="middle" fontSize={9} className="fill-panel-fg/65">
-              {formatWeek(p.periodEnd)}
+              {formatDate(p.periodEnd)}
             </text>
           ) : null
         )}
@@ -84,7 +102,7 @@ export function ForeignFlowChart({ periods }: { periods: IndexForeignFlow[] }) {
             transform: "translateX(-50%)",
           }}
         >
-          <div className="font-medium">{formatWeek(periods[hoverIndex].periodEnd)}</div>
+          <div className="font-medium">{formatDate(periods[hoverIndex].periodEnd)}</div>
           <div className={periods[hoverIndex].netValue >= 0 ? "text-up" : "text-down"}>
             Net {periods[hoverIndex].netValue >= 0 ? "buying" : "selling"}: {formatPeso(periods[hoverIndex].netValue)}
           </div>

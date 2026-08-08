@@ -29,9 +29,11 @@ export default function AboutPage() {
           The data is real, not a demo. Prices, dividends, disclosures, block sales, and
           foreign flow are scraped on a schedule from the exchange&apos;s own public pages and
           PSE&apos;s published daily reports, not a licensed real-time feed, so figures are
-          delayed or end-of-day, never live intraday data. A few features (the IPO/offerings
-          tracker and non-PSE charts) still run on placeholder data since no free, reliable
-          public source exists yet.
+          delayed or end-of-day, never live intraday data. The one exception is the charts page,
+          which covers non-PSE tickers because TradingView does not license PSE data for
+          third-party embeds. An IPO and follow-on offering tracker was built and then removed
+          rather than left running on invented companies, since no free, reliable public source
+          for it exists.
         </p>
         <p>
           PSEye is a solo, spare-time project, built and maintained by{" "}

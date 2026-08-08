@@ -61,8 +61,9 @@ export async function getMarketAnalytics(): Promise<MarketAnalytics> {
   // leaderboard rows. Requesting a superset (we filter to those with real
   // history after the read) keeps the leaderboard full even if a few of the
   // very top names have thin series.
-  // Float-adjusted (see lib/floatAdjustedCap.ts) for both the leaderboard cut
-  // and the benchmark's weights below.
+  // investableMarketCap (see lib/floatAdjustedCap.ts) for both the leaderboard
+  // cut and the benchmark's weights below — market cap for almost every
+  // ticker, float-adjusted only for MFC/SLF.
   const ranked = [...quotes].sort(byInvestableCapDesc);
   const candidates = ranked.slice(0, LEADERBOARD_SIZE + 20);
 

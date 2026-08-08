@@ -186,6 +186,7 @@ function Byline({
           <span aria-hidden>&middot;</span>
         </>
       )}
+      <OutletMark item={item} />
       <span>{item.source}</span>
       <span aria-hidden>&middot;</span>
       <span>{formatTimeAgo(item.publishedAt)}</span>
@@ -200,6 +201,34 @@ function Byline({
         <TickerChip key={ticker} ticker={ticker} reaction={reactions?.get(ticker)} />
       ))}
     </div>
+  );
+}
+
+/**
+ * The outlet's brand mark, beside its name in a byline.
+ *
+ * fetch-news.ts has been caching these logos in news_outlet_logos since the
+ * table existed, but the URL was only ever read to decide how to *crop* a
+ * story image (imageIsLogo), never rendered as a mark of its own — so a page
+ * aggregating eight mastheads identified all of them in identical grey caps.
+ *
+ * Deliberately tiny and unlabelled: this is a recognition aid next to text
+ * that already names the outlet, not a logo showcase. aria-hidden for exactly
+ * that reason, since the name is right there. A missing logo renders nothing
+ * rather than a placeholder box, matching every other "omit rather than fake
+ * it" call on this page.
+ */
+function OutletMark({ item }: { item: NewsItem }) {
+  if (!item.outletLogoUrl) return null;
+  return (
+    <img
+      src={item.outletLogoUrl}
+      alt=""
+      aria-hidden
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      className="h-3.5 w-3.5 shrink-0 rounded-[2px] object-contain"
+    />
   );
 }
 
@@ -250,7 +279,10 @@ function HeroCard({ item, others, reactions }: CardProps) {
   return (
     <article className="group">
       <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">
-        <NewsThumbnail item={item} className="aspect-video w-full" />
+        {/* The only eager image on the page: this is the section front's LCP
+            element, and it sits above the fold on every viewport. Every other
+            variant stays lazy. */}
+        <NewsThumbnail item={item} className="aspect-video w-full" priority />
         <Kicker text={kickerFor(item)} className="mt-4" />
         <h3 className="font-news-serif mt-1.5 text-3xl font-bold leading-[1.08] tracking-tight group-hover:underline sm:text-4xl">
           {item.title}

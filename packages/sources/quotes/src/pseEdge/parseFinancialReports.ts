@@ -37,6 +37,25 @@ export interface ParsedAnnualFinancials {
   earningsPerShareDiluted: FinancialStatementFigure;
 }
 
+/**
+ * The period/currency lines below are read off `.html()` rather than `.text()`
+ * (the <br> has to survive long enough to become a newline separator), which
+ * means cheerio never decodes entities for us and a raw `&amp;` reaches the
+ * DB. That string is displayed verbatim on the per-company page, so Manulife's
+ * "CSM except EPS &amp; BV" rendered with the entity showing. Only the five
+ * predefined XML entities plus &nbsp; are handled: PSE Edge's own escaping is
+ * the source here and it emits nothing more exotic.
+ */
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0*39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&"); // last, so "&amp;lt;" decodes to "&lt;" and not "<"
+}
+
 /** "1,234,567" / "-1,234" / "0.06" -> number; "-" (PSE Edge's own
  * not-reported marker) or blank -> null. No parentheses-as-negative case has
  * been observed on this page — losses use a plain leading minus sign. */
@@ -105,7 +124,7 @@ export function parseFinancialReportsHtml(html: string): ParsedAnnualFinancials 
   const periodHtml = (periodParagraph.html() ?? "").replace(/<br\s*\/?>/gi, "\n");
   const periodLines = periodHtml
     .split("\n")
-    .map((line) => line.replace(/<[^>]+>/g, "").trim())
+    .map((line) => decodeEntities(line.replace(/<[^>]+>/g, "")).trim())
     .filter(Boolean);
 
   const fiscalYearEnded =

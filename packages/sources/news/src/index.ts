@@ -1,5 +1,6 @@
 export * from "./types";
 export * from "./rssSource";
+export * from "./googleNewsSource";
 export * from "./outlets";
 export * from "./tickerTagger";
 export * from "./ogImage";

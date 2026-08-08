@@ -15,19 +15,31 @@ export interface TreemapInput {
 }
 
 /**
- * PSE Edge's "Market Capitalization" is Last Traded Price × total Outstanding
- * Shares. For an ordinary PH-listed company Outstanding Shares ≈ its PSE
- * float, so that number is a reasonable proxy for sizing. For a foreign
- * dual-listing with only a sliver of its global shares actually trading here
- * (e.g. MFC/Manulife, 0.20% free float — confirmed live 2026-07-22: reports a
+ * Tickers sized/ranked by free float instead of total market cap — see
+ * `floatAdjustedMarketCap` below. Both are Canadian insurers cross-listed on
+ * the PSE with only a sliver of their global shares actually trading here:
+ * MFC/Manulife (0.20% free float, confirmed live 2026-07-22: reports a
  * ₱4.15T "Market Capitalization" against real PH large caps in the
- * ₱300-700B range), that raw number conflates the company's entire global
- * cap with what's actually listed on the PSE, making its treemap box wildly
- * oversized relative to its real weight on this market. Adjusting by free
- * float (the same convention real float-adjusted indices use) fixes that
- * without needing to special-case any specific ticker. Falls back to raw
- * marketCap when freeFloatPct isn't known, so this is a no-op for the vast
- * majority of normal, high-float PH stocks.
+ * ₱300-700B range) and SLF/Sun Life (0.62% float, ₱2.66T reported cap). 2026-08:
+ * narrowed from a blanket free-float adjustment applied to every stock down
+ * to just these two names, since most public market-cap treemaps (finviz,
+ * TradingView) size by plain total market cap and there was no reason to
+ * diverge from that convention for the other 280 PH-domestic tickers, whose
+ * outstanding-share count already is their real PSE float. These two are the
+ * only tickers where "shares outstanding" and "shares actually tradeable
+ * here" meaningfully diverge.
+ */
+const FLOAT_ADJUSTED_TICKERS = new Set(["MFC", "SLF"]);
+
+/**
+ * PSE Edge's "Market Capitalization" is Last Traded Price × total Outstanding
+ * Shares — used as-is for every stock except the two in
+ * `FLOAT_ADJUSTED_TICKERS`, whose reported cap is mostly a foreign listing's
+ * global share count rather than anything that trades on the PSE (see that
+ * set's own comment for the numbers). For those two, adjusting by free float
+ * (the same convention real float-adjusted indices use) sizes their box by
+ * what's actually on this exchange instead. Falls back to raw marketCap when
+ * freeFloatPct isn't known.
  *
  * Exported because the site's market-cap *rankings* size stocks the same way
  * (see apps/web/lib/floatAdjustedCap.ts) — they hit the identical distortion,
@@ -36,6 +48,7 @@ export interface TreemapInput {
  * dependency, so both callers share one definition and one rationale.
  */
 export function floatAdjustedMarketCap(stock: TreemapInput): number {
+  if (!FLOAT_ADJUSTED_TICKERS.has(stock.ticker)) return stock.marketCap;
   if (stock.freeFloatPct == null) return stock.marketCap;
   return stock.marketCap * (stock.freeFloatPct / 100);
 }

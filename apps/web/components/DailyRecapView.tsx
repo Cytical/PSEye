@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { DailyRecap } from "@/lib/dailyRecap";
+import type { BotPostLink } from "@/lib/botPost";
 import { ShareButton } from "@/components/ShareButton";
 import { MarketHistogram } from "@/components/MarketHistogram";
 import { DailyRecapDateNav } from "@/components/DailyRecapDateNav";
@@ -50,9 +51,12 @@ function formatShortDate(iso: string): string {
 export function DailyRecapView({
   recap,
   availableDates,
+  botPost = null,
 }: {
   recap: DailyRecap;
   availableDates: string[];
+  /** The day's @PSEyeDaily post, when one exists. Null on most days: see lib/botPost.ts. */
+  botPost?: BotPostLink | null;
 }) {
   const { snapshot, breadth } = recap;
 
@@ -64,6 +68,17 @@ export function DailyRecapView({
           <h1 className="mt-0.5 font-serif text-xl font-semibold tracking-tight text-panel-fg sm:text-2xl">
             {formatLongDate(recap.date)}
           </h1>
+          {botPost && (
+            <a
+              href={botPost.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex items-center gap-1 text-xs text-panel-fg/65 underline decoration-panel-fg/25 underline-offset-2 transition-colors hover:text-panel-fg"
+            >
+              Posted to @{botPost.handle}
+              <span aria-hidden>↗</span>
+            </a>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {recap.prevDate && (

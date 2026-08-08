@@ -11,12 +11,17 @@ const FOCUSABLE_SELECTOR =
 
 interface CompanyDetailPanelProps {
   stock: TreemapStock;
-  profile: CompanyProfile | null;
+  /** Full DB-backed profile for PSE stocks, or just description/source for
+   * datasets with no profileByTicker entry (see TreemapChart's Nasdaq 100
+   * fallback) — this panel only ever reads those two fields. */
+  profile: Pick<CompanyProfile, "description" | "source"> | null;
   /**
-   * 1-based position by float-adjusted market cap among the stocks currently
-   * shown (respects the active filter) — the same size the treemap draws boxes
-   * with, see lib/floatAdjustedCap.ts. Null only if the selected ticker somehow
-   * isn't in the ranked set, which the rank line then omits rather than guessing.
+   * 1-based position by investableMarketCap among the stocks currently shown
+   * (respects the active filter) — the same size the treemap draws boxes
+   * with, see lib/floatAdjustedCap.ts (market cap for almost every ticker,
+   * float-adjusted only for MFC/SLF). Null only if the selected ticker
+   * somehow isn't in the ranked set, which the rank line then omits rather
+   * than guessing.
    */
   rank: number | null;
   totalCount: number;

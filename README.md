@@ -23,7 +23,7 @@ Full product/technical planning brief: [`docs/PLANNING.md`](docs/PLANNING.md).
 | `/compare` | Overlay closing-price performance across multiple tickers on one chart |
 | `/block-sales` | Large negotiated "cross" trades from PSE's daily Quotation Report |
 | `/disclosures` | PSE Edge filings distilled into a per-company digest |
-| `/offerings` | IPO / follow-on / rights offer tracker with subscription countdowns — unlinked from nav/sitemap for now, still mock-only (see "Data sources") |
+| `/watchlist` | The stocks you've starred, with today's move — kept in your browser, no account |
 | `/foreign-flow` | Index-level (weekly) and per-stock (daily) net foreign buying/selling |
 | `/dca` | Cost-averaging calculator — simulate DCA into a stock or an equal-weighted market proxy |
 | `/charts` | Interactive candlestick charts via TradingView's free embed (NASDAQ names only — see "Data sources") |
@@ -116,7 +116,8 @@ Current status per feature:
 | Foreign flow — index-level | Real | PSE's free weekly Market Watch PDF |
 | Foreign flow — per-stock rankings | Real | PSE's free daily Quotation Report PDF (the "Net Foreign Buying/(Selling)" column, top/bottom 10 by value) |
 | Block sales | Real | PSE's free daily Quotation Report PDF (BLOCK SALES table) |
-| Offerings / IPO tracker | Sample data | the one free feed found ("Listing Applicants") is currently empty and lacks the subscription-window dates this feature needs; re-investigated twice, no viable source found |
+| Offerings / IPO tracker | Removed | the one free feed found ("Listing Applicants") is empty and lacks the subscription-window dates the feature needed; re-investigated twice, no viable source found, so the page and its mock source were deleted rather than left showing invented companies |
+| P/E and P/B ratios | Real, partial coverage | derived from basic EPS and book value per share on PSE Edge's Financial Reports tab (the Stock Data tab's own P/E field is blank for every company); annual, so as of each company's latest filed fiscal year |
 | Charts (TradingView embed) | Real, but NASDAQ only | TradingView's free widgets refuse PSE-listed symbols (verified) |
 
 PSE's published reports (Monthly Report, Market Watch PDF, daily Quotation Report)

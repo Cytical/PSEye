@@ -536,6 +536,7 @@ const fetchCachedNewsRows = unstable_cache(
         // against that same cache here is how NewsThumbnail.tsx knows to
         // render it with object-contain instead of a cropping object-cover.
         imageIsLogo: r.imageUrl != null && outletLogos.get(r.source) === r.imageUrl,
+        outletLogoUrl: outletLogos.get(r.source) ?? null,
         sentiment: isNewsSentiment(r.sentiment) ? r.sentiment : null,
       }));
     } catch (err) {

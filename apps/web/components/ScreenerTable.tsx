@@ -14,14 +14,23 @@ type SortKey =
   | "pctChange"
   | "marketCap"
   | "investableMarketCap"
-  | "yieldPct";
+  | "yieldPct"
+  | "peRatio"
+  | "pbRatio";
 
 interface SortState {
   key: SortKey;
   dir: "asc" | "desc";
 }
 
-/** Numeric columns default to descending on first click (biggest first is what a screener is for); text to ascending. */
+/**
+ * Numeric columns default to descending on first click (biggest first is what
+ * a screener is for); text to ascending.
+ *
+ * The valuation multiples are the deliberate exception. "Biggest first" on a
+ * P/E surfaces the most expensive stocks on the board, which nobody opens a
+ * screener to find; cheapest first is the entire point of sorting by one.
+ */
 const DEFAULT_DIR: Record<SortKey, "asc" | "desc"> = {
   ticker: "asc",
   sector: "asc",
@@ -30,6 +39,8 @@ const DEFAULT_DIR: Record<SortKey, "asc" | "desc"> = {
   marketCap: "desc",
   investableMarketCap: "desc",
   yieldPct: "desc",
+  peRatio: "asc",
+  pbRatio: "asc",
 };
 
 const COLUMNS: { key: SortKey; label: string; numeric: boolean; hideOnMobile?: boolean }[] = [
@@ -37,17 +48,26 @@ const COLUMNS: { key: SortKey; label: string; numeric: boolean; hideOnMobile?: b
   { key: "sector", label: "Sector", numeric: false, hideOnMobile: true },
   { key: "price", label: "Price", numeric: true },
   { key: "pctChange", label: "Change", numeric: true },
-  // Hidden below sm: with Float-adj. already visible (and sortable) there's no
+  // Hidden below sm: with PSE cap already visible (and sortable) there's no
   // room to also show raw market cap on a phone without forcing horizontal
   // scroll just to reach it — still there, and still sortable via this same
   // header, once the viewport is wide enough to show the column.
   { key: "marketCap", label: "Market cap", numeric: true, hideOnMobile: true },
   // Kept alongside raw market cap rather than replacing it: this is a data
-  // table, so both are legitimately sortable — but the float-adjusted figure is
-  // the default (see the initial `sort` state), matching /rankings and the
-  // market map. See lib/floatAdjustedCap.ts.
-  { key: "investableMarketCap", label: "Float-adj.", numeric: true },
+  // table, so both are legitimately sortable. investableMarketCap now equals
+  // raw marketCap for every ticker except MFC/SLF (see lib/floatAdjustedCap.ts)
+  // — "PSE cap" over "Float-adj." since that's no longer an accurate
+  // description of what's in most of this column's cells. It's still the
+  // default sort (see the initial `sort` state), matching /rankings and the
+  // market map.
+  { key: "investableMarketCap", label: "PSE cap", numeric: true },
   { key: "yieldPct", label: "Div yield", numeric: true, hideOnMobile: true },
+  // Both hidden below sm for the same reason as Market cap above: the table is
+  // already at its width budget on a phone. Deliberately not color-coded — a
+  // low P/E is not automatically "good" (it is just as often a value trap),
+  // and this table reports rather than recommends.
+  { key: "peRatio", label: "P/E", numeric: true, hideOnMobile: true },
+  { key: "pbRatio", label: "P/B", numeric: true, hideOnMobile: true },
 ];
 
 /** Peso market cap, abbreviated — PSE caps run to the trillions, so a raw number is unreadable. */
@@ -218,7 +238,11 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
                   </td>
                   <td className="py-2 pr-2 text-right tabular-nums text-panel-fg sm:py-2.5 sm:pr-4">
                     {formatMarketCap(row.investableMarketCap)}
-                    {row.freeFloatPct != null && (
+                    {/* Only shown when this row is actually float-adjusted (MFC/SLF) —
+                        for everyone else investableMarketCap now equals marketCap, so a
+                        free-float % badge next to an unadjusted number would misleadingly
+                        imply this row was scaled down too. */}
+                    {row.freeFloatPct != null && row.investableMarketCap !== row.marketCap && (
                       <span className="ml-1.5 hidden text-[11px] text-panel-fg/60 sm:inline">
                         {formatFreeFloat(row.freeFloatPct)}
                       </span>
@@ -231,6 +255,20 @@ export function ScreenerTable({ rows }: { rows: ScreenerRow[] }) {
                       <span className={row.yieldPct >= 4 ? "text-up" : "text-panel-fg"}>
                         {row.yieldPct.toFixed(2)}%
                       </span>
+                    )}
+                  </td>
+                  <td className="hidden py-2.5 pr-4 text-right tabular-nums text-panel-fg sm:table-cell">
+                    {row.peRatio == null ? (
+                      <span className="text-panel-fg/65">N/A</span>
+                    ) : (
+                      row.peRatio.toFixed(1)
+                    )}
+                  </td>
+                  <td className="hidden py-2.5 pr-4 text-right tabular-nums text-panel-fg sm:table-cell">
+                    {row.pbRatio == null ? (
+                      <span className="text-panel-fg/65">N/A</span>
+                    ) : (
+                      row.pbRatio.toFixed(2)
                     )}
                   </td>
                 </tr>

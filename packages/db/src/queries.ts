@@ -6,6 +6,7 @@ import {
   companyFinancials,
   marketSnapshot,
   indexForeignFlow,
+  dailyIndexForeignFlow,
   stockForeignFlow,
   disclosures,
   corporateActions,
@@ -14,6 +15,7 @@ import {
   newsItems,
   newsOutletLogos,
   botPosts,
+  nasdaqQuotes,
 } from "./schema";
 
 /** All rows for the most recent trade_date on record, or [] if the table is empty. */
@@ -59,6 +61,31 @@ export async function getLatestIndexForeignFlow(db: Db) {
 export async function getIndexForeignFlowHistory(db: Db, limit = 12) {
   const rows = await db.select().from(indexForeignFlow).orderBy(desc(indexForeignFlow.periodEnd)).limit(limit);
   return rows.reverse();
+}
+
+/** The most recent `limit` *daily* index-level net foreign flow rows, oldest first (for charting) — see dailyIndexForeignFlow's schema comment for why this only carries netValue, not a buy/sell split. */
+export async function getDailyIndexForeignFlowHistory(db: Db, limit = 30) {
+  const rows = await db.select().from(dailyIndexForeignFlow).orderBy(desc(dailyIndexForeignFlow.periodEnd)).limit(limit);
+  return rows.reverse();
+}
+
+/** The single most recent daily net foreign flow row, or undefined if none recorded yet. */
+export async function getLatestDailyIndexForeignFlow(db: Db) {
+  const [row] = await db.select().from(dailyIndexForeignFlow).orderBy(desc(dailyIndexForeignFlow.periodEnd)).limit(1);
+  return row;
+}
+
+/**
+ * Upserts one trading day's total net foreign flow. onConflictDoUpdate (not
+ * onConflictDoNothing) so re-running the same day's ETL job — e.g. after a
+ * fix, or PSE republishing a revised report — corrects that day's figure
+ * rather than leaving the first-seen value stuck.
+ */
+export async function upsertDailyIndexForeignFlow(db: Db, periodEnd: string, netValue: number) {
+  await db
+    .insert(dailyIndexForeignFlow)
+    .values({ periodEnd, netValue: Math.round(netValue) })
+    .onConflictDoUpdate({ target: dailyIndexForeignFlow.periodEnd, set: { netValue: Math.round(netValue) } });
 }
 
 /** Most recent 200 disclosures on record, newest first — plenty for a single-page digest. */
@@ -262,4 +289,43 @@ export async function upsertNewsOutletLogo(db: Db, source: string, logoUrl: stri
 export async function getBotPostByDate(db: Db, date: string) {
   const [row] = await db.select().from(botPosts).where(eq(botPosts.postDate, date)).limit(1);
   return row;
+}
+
+/** Every nasdaq_quotes row — same one-query-for-everything shape as getCompanyProfiles; apps/web/lib/nasdaq100.ts indexes by ticker client-side. */
+export async function getNasdaqQuotes(db: Db) {
+  return db.select().from(nasdaqQuotes);
+}
+
+/**
+ * Bulk upsert, one call for the whole day's fetch rather than one round-trip
+ * per ticker. onConflictDoUpdate (not onConflictDoNothing): a ticker that
+ * already has a row from a previous run should have its price/change/cap
+ * corrected, not left stuck on the first value ever fetched.
+ */
+export async function upsertNasdaqQuotes(
+  db: Db,
+  rows: { ticker: string; price: number; pctChange: number; marketCap: number }[]
+) {
+  if (rows.length === 0) return;
+  const fetchedAt = new Date();
+  await db
+    .insert(nasdaqQuotes)
+    .values(
+      rows.map((r) => ({
+        ticker: r.ticker,
+        price: r.price.toString(),
+        pctChange: r.pctChange.toString(),
+        marketCap: r.marketCap.toString(),
+        fetchedAt,
+      }))
+    )
+    .onConflictDoUpdate({
+      target: nasdaqQuotes.ticker,
+      set: {
+        price: sql`excluded.price`,
+        pctChange: sql`excluded.pct_change`,
+        marketCap: sql`excluded.market_cap`,
+        fetchedAt: sql`excluded.fetched_at`,
+      },
+    });
 }

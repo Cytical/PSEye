@@ -37,7 +37,12 @@ export default async function MostActivePage() {
         </Link>{" "}
         (turnover), not raw share volume. A low-priced stock trading millions of shares and a
         high-priced stock trading a few hundred both move real money, but only value puts them on
-        the same scale. Prices are end-of-day / delayed quotes.
+        the same scale. This counts regular order-book trading only: large institutional deals
+        negotiated away from the book are reported separately as{" "}
+        <Link href="/block-sales" className="underline hover:text-panel-fg">
+          block sales
+        </Link>
+        . Prices are end-of-day / delayed quotes.
         {excludedCount > 0
           ? ` ${excludedCount} tracked ${excludedCount === 1 ? "ticker has" : "tickers have"} no trading activity on record today and ${excludedCount === 1 ? "is" : "are"} excluded.`
           : ""}

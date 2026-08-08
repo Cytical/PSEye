@@ -24,6 +24,15 @@ export interface CompanyProfile {
   wikipediaTitle: string | null;
   wikipediaSummary: string | null;
   wikipediaUrl: string | null;
+  /**
+   * When the backfill last scraped this company, as an ISO date.
+   *
+   * Written since the table existed and read by nothing until now. It matters
+   * because backfill-company-profiles is a manual, roughly-yearly job: a
+   * profile here can legitimately be a year old, and a page that shows a
+   * director list with no date implies it is current.
+   */
+  fetchedAt: string | null;
 }
 
 /**
@@ -69,6 +78,9 @@ async function fetchCompanyProfiles(): Promise<Record<string, CompanyProfile>> {
         wikipediaTitle: row.wikipediaTitle,
         wikipediaSummary: row.wikipediaSummary,
         wikipediaUrl: row.wikipediaUrl,
+        // Date only: the exact minute a scraper ran is noise to a reader, and
+        // the useful question this answers is "which year is this from".
+        fetchedAt: row.fetchedAt ? row.fetchedAt.toISOString().slice(0, 10) : null,
       };
     }
     return byTicker;

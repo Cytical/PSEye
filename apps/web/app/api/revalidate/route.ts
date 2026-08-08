@@ -36,6 +36,7 @@ const KNOWN_TAGS = new Set([
   "corporate-actions",
   "historical-quotes",
   "daily-recap",
+  "nasdaq-quotes",
 ]);
 
 export async function GET(request: Request) {

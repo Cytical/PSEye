@@ -40,6 +40,8 @@ interface MarketMapProps {
   latestRecapDate: string;
   /** Server's reading of market open/closed, for the headline badge — see MarketStatusBadge. */
   status: MarketStatus;
+  /** Real DB-backed (with mock fallback) Nasdaq 100 roster, pre-fetched server-side — see lib/nasdaq100.ts's getNasdaq100Stocks. Falls back to the static NASDAQ_100_STOCKS mock if the caller doesn't pass one. */
+  nasdaq100Stocks?: TreemapStock[];
 }
 
 const FILTER_KEYS = new Set(MARKET_MAP_FILTERS.map((f) => f.key));
@@ -181,6 +183,7 @@ export function MarketMap({
   sparklineByTicker,
   latestRecapDate,
   status,
+  nasdaq100Stocks = NASDAQ_100_STOCKS,
 }: MarketMapProps) {
   const filter = useSyncExternalStore(subscribeToFilterUrl, getFilterFromUrl, (): MarketMapFilter => "all");
   const filterIsExplicit = useSyncExternalStore(subscribeToFilterUrl, hasFilterParamInUrl, (): boolean => false);
@@ -314,13 +317,13 @@ export function MarketMap({
   }
 
   const filteredStocks = useMemo(() => {
-    if (effectiveFilter === "nasdaq100") return NASDAQ_100_STOCKS;
+    if (effectiveFilter === "nasdaq100") return nasdaq100Stocks;
     if (effectiveFilter === "watchlist") {
       const tickers = isSharedWatchlistView ? sharedTickers : watchedTickers;
       return baseStocks.filter((s) => tickers.includes(s.ticker));
     }
     return filterMarketMapStocks(baseStocks, effectiveFilter);
-  }, [baseStocks, effectiveFilter, watchedTickers, isSharedWatchlistView, sharedTickers]);
+  }, [baseStocks, effectiveFilter, watchedTickers, isSharedWatchlistView, sharedTickers, nasdaq100Stocks]);
 
   /** Stock count per filter, shown as a badge so the choice between e.g. "Top 50" and "Top 100" is informed rather than a guess.
    * "All PSE" is the one exception: it shows the full tracked-company roster
@@ -334,12 +337,12 @@ export function MarketMap({
     const counts = {} as Record<MarketMapFilter, number>;
     for (const { key } of MARKET_MAP_FILTERS) {
       if (key === "all") counts[key] = PSE_EDGE_COMPANIES.length;
-      else if (key === "nasdaq100") counts[key] = NASDAQ_100_STOCKS.length;
+      else if (key === "nasdaq100") counts[key] = nasdaq100Stocks.length;
       else if (key === "watchlist") counts[key] = baseStocks.filter((s) => watchedTickers.includes(s.ticker)).length;
       else counts[key] = filterMarketMapStocks(baseStocks, key).length;
     }
     return counts;
-  }, [baseStocks, watchedTickers]);
+  }, [baseStocks, watchedTickers, nasdaq100Stocks]);
 
   function getMarketMapShareUrl(): string {
     const url = new URL(window.location.href);

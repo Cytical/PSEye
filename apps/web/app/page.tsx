@@ -5,6 +5,7 @@ import { getMarketSnapshot } from "@/lib/marketSnapshot";
 import { getLatestForeignFlow } from "@/lib/latestForeignFlow";
 import { getRealSparklines } from "@/lib/sparklines";
 import { getRecentRecapDates } from "@/lib/dailyRecap";
+import { getNasdaq100Stocks } from "@/lib/nasdaq100";
 import { manilaToday } from "@/lib/manilaDate";
 import { MarketMap } from "@/components/MarketMap";
 import { MarketMapFaq } from "@/components/MarketMapFaq";
@@ -94,7 +95,7 @@ const FAQ_JSON_LD = {
 };
 
 export default async function MarketMapPage() {
-  const [quotes, profileByTicker, snapshot, foreignFlow, recapDates] = await Promise.all([
+  const [quotes, profileByTicker, snapshot, foreignFlow, recapDates, nasdaq100Stocks] = await Promise.all([
     getDailyQuotes(),
     getCompanyProfiles(),
     getMarketSnapshot(),
@@ -103,6 +104,7 @@ export default async function MarketMapPage() {
     // /api/market-map date list so the mobile summary's "Full daily recap"
     // link is present in the first paint instead of popping in after a fetch.
     getRecentRecapDates(1),
+    getNasdaq100Stocks(),
   ]);
   const sparklineByTicker = await getRealSparklines(quotes.map((q) => q.ticker));
   const status = getMarketStatus();
@@ -140,6 +142,7 @@ export default async function MarketMapPage() {
           sparklineByTicker={sparklineByTicker}
           latestRecapDate={latestRecapDate}
           status={status}
+          nasdaq100Stocks={nasdaq100Stocks}
         />
       </div>
 

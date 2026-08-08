@@ -33,6 +33,11 @@ export interface TreemapStock extends TreemapInput {
    * hover tooltip. Same "not every source populates it" contract as
    * freeFloatPct: MockQuoteSource leaves it unset and the tooltip omits the row. */
   value?: number | null;
+  /** One-line company description carried directly on the stock, for datasets
+   * with no DB-backed profileByTicker entry (currently just Nasdaq 100 — see
+   * lib/nasdaq100.ts). Only used as a fallback when profileByTicker has
+   * nothing for this ticker; see the CompanyDetailPanel wiring below. */
+  description?: string;
 }
 
 /** Copy for a stock the source had no trade to report for. Paired with
@@ -447,10 +452,11 @@ export function TreemapChart({
    * 1-based market-cap rank among the stocks currently shown (respects the
    * active filter) — shown in the detail panel.
    *
-   * Ordered by the same float-adjusted size the boxes are drawn with (see
-   * lib/floatAdjustedCap.ts), so the rank agrees with what the visitor is
-   * looking at. On raw cap it didn't: Manulife rendered as a sliver whose own
-   * detail panel called it the largest company on the board.
+   * Ordered by the same investableMarketCap size the boxes are drawn with
+   * (see lib/floatAdjustedCap.ts) — market cap for almost every stock,
+   * float-adjusted only for MFC/SLF — so the rank agrees with what the
+   * visitor is looking at. Unadjusted, Manulife rendered as a sliver whose
+   * own detail panel called it the largest company on the board.
    */
   const rankByTicker = useMemo(() => {
     const ranked = [...stocks].sort(byInvestableCapDesc);
@@ -462,8 +468,8 @@ export function TreemapChart({
    *
    * The header band used to carry only a name, spending 22px of a 760px canvas
    * on a label that said nothing about the market. Weighting by the same
-   * float-adjusted cap the boxes are sized with (rather than a plain mean over
-   * constituents) keeps the number consistent with what the panel looks like:
+   * investableMarketCap the boxes are sized with (rather than a plain mean
+   * over constituents) keeps the number consistent with what the panel looks like:
    * a sector whose one mega-cap fell reads as down even if a dozen slivers
    * ticked up. Untraded names are skipped rather than counted as zero, for the
    * same reason they get their own fill.
@@ -1281,7 +1287,10 @@ export function TreemapChart({
       {selected && (
         <CompanyDetailPanel
           stock={selected}
-          profile={profileByTicker?.[selected.ticker] ?? null}
+          profile={
+            profileByTicker?.[selected.ticker] ??
+            (selected.description ? { description: selected.description, source: "Company profile" } : null)
+          }
           rank={rankByTicker.get(selected.ticker) ?? null}
           totalCount={stocks.length}
           onClose={() => selectTickerInUrl(null)}

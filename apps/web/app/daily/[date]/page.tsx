@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDailyRecap, getRecentRecapDates } from "@/lib/dailyRecap";
+import { getBotPostForDate } from "@/lib/botPost";
 import { DailyRecapView, formatLongDate } from "@/components/DailyRecapView";
 
 // 2026-08-03: switched off ISR entirely (was revalidate = 3600, briefly 21600,
@@ -31,8 +32,12 @@ export default async function DailyRecapPage({ params }: { params: Promise<{ dat
   const { date } = await params;
   if (!DATE_RE.test(date)) notFound();
 
-  const [recap, availableDates] = await Promise.all([getDailyRecap(date), getRecentRecapDates(400)]);
+  const [recap, availableDates, botPost] = await Promise.all([
+    getDailyRecap(date),
+    getRecentRecapDates(400),
+    getBotPostForDate(date),
+  ]);
   if (!recap) notFound();
 
-  return <DailyRecapView recap={recap} availableDates={availableDates} />;
+  return <DailyRecapView recap={recap} availableDates={availableDates} botPost={botPost} />;
 }

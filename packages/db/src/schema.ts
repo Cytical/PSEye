@@ -239,6 +239,27 @@ export const indexForeignFlow = pgTable(
   }
 );
 
+/**
+ * Real *daily* index-level net foreign flow — the sum of every stock's Net
+ * Foreign Buying/(Selling) figure on one MAIN BOARD page of the Daily
+ * Quotation Report (see parseQuotationReportForeignFlow's doc comment),
+ * computed in fetch-block-sales.ts from the same full per-stock array that
+ * job already parses for stock_foreign_flow's top/bottom-10 leaderboard,
+ * before it gets sliced down. Net-only: the report gives one signed net
+ * figure per stock, never separate gross buy/sell totals, so unlike
+ * index_foreign_flow (the older weekly Market Watch source, which does carry
+ * true gross buy/sell) there is nothing honest to put in a foreignBuyValue/
+ * foreignSellValue column here — unlike that table, only netValue exists.
+ */
+export const dailyIndexForeignFlow = pgTable(
+  "daily_index_foreign_flow",
+  {
+    id: serial("id").primaryKey(),
+    periodEnd: date("period_end").notNull().unique(),
+    netValue: bigint("net_value", { mode: "number" }).notNull(),
+  }
+);
+
 export const stockForeignFlow = pgTable(
   "stock_foreign_flow",
   {
@@ -252,24 +273,14 @@ export const stockForeignFlow = pgTable(
   (table) => [unique().on(table.periodEnd, table.ticker)]
 );
 
-export const offerings = pgTable(
-  "offerings",
-  {
-    id: serial("id").primaryKey(),
-    ticker: varchar("ticker", { length: 16 }),
-    companyName: text("company_name").notNull(),
-    sector: varchar("sector", { length: 64 }).notNull(),
-    type: varchar("type", { length: 32 }).notNull(),
-    offerPrice: numeric("offer_price", { precision: 12, scale: 4 }).notNull(),
-    subscriptionStart: date("subscription_start").notNull(),
-    subscriptionEnd: date("subscription_end").notNull(),
-    listingDate: date("listing_date"),
-    summary: text("summary").notNull(),
-    /** Link to the real PSE Edge company page for offerings with a real ticker; null otherwise. */
-    url: text("url"),
-  },
-  (table) => [unique().on(table.companyName, table.type, table.subscriptionStart)]
-);
+// The `offerings` table was dropped in 2026-08. It was the only table in this
+// schema with neither a writer nor a reader: no ETL job ever inserted a row,
+// and /offerings rendered MockOfferingSource's fabricated pre-IPO companies
+// instead. Two separate investigations (PSE disclosure search, SEC Philippines,
+// PSE's own IPO/SRO pages and its "Listing Applicants" feed) found no free
+// source carrying the subscription-window dates the feature needed, so the
+// page, the @pseye/source-offerings package and this table all went rather
+// than stay as scaffolding around invented data.
 
 export const disclosures = pgTable("disclosures", {
   id: serial("id").primaryKey(),
@@ -325,6 +336,22 @@ export const historicalQuotes = pgTable(
   },
   (table) => [unique().on(table.ticker, table.tradeDate)]
 );
+
+// Real daily quotes for the Nasdaq 100 market-map filter (see
+// apps/web/lib/nasdaq100.ts, which still owns ticker/companyName/sector/
+// description as static metadata — this table only carries what actually
+// moves day to day). One row per ticker, always upserted in place rather
+// than kept as a time series: fetchedAt is the freshness signal, not a
+// history. Sourced from Nasdaq's own public quote API (api.nasdaq.com),
+// not PSE Edge — see etl/lib/nasdaqApi/nasdaqApiQuoteSource.ts for why
+// Stooq (the originally planned source) turned out to be bot-gated.
+export const nasdaqQuotes = pgTable("nasdaq_quotes", {
+  ticker: varchar("ticker", { length: 16 }).primaryKey(),
+  price: numeric("price", { precision: 12, scale: 4 }).notNull(),
+  pctChange: numeric("pct_change", { precision: 8, scale: 4 }).notNull(),
+  marketCap: numeric("market_cap", { precision: 20, scale: 2 }).notNull(),
+  fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull(),
+});
 
 // One row per trading day the X/Twitter bot has posted a market-map screenshot
 // + recap reply (see etl/jobs/post-daily-tweet.ts) — the natural-key guard

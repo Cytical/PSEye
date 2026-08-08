@@ -39,7 +39,7 @@ export default async function RankingsPage() {
       },
       {
         "@type": "ItemList",
-        name: "Top 100 PSE Stocks by Float-Adjusted Market Cap",
+        name: "Top 100 PSE Stocks by Market Cap",
         itemListElement: top100.map((r) => ({
           "@type": "ListItem",
           position: r.overallRank,
@@ -80,13 +80,14 @@ export default async function RankingsPage() {
         Company Rankings
       </h1>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-panel-fg/72">
-        Every tracked PSE-listed company ranked by free-float-adjusted{" "}
+        Every tracked PSE-listed company ranked by{" "}
         <Link href="/glossary#market-capitalization" className="underline hover:text-panel-fg">
           market capitalization
         </Link>{" "}
-        (the share of each company actually available to trade on the PSE, which is also how the
-        PSEi itself is weighted). The top 100 across the whole exchange, plus a full ranking
-        within each of its{" "}
+        (price × shares outstanding), except two foreign dual-listings, Manulife (MFC) and Sun
+        Life (SLF), which are ranked instead by free-float-adjusted cap, since almost all of their
+        shares trade in Toronto rather than here. The top 100 across the whole exchange, plus a
+        full ranking within each of its{" "}
         {bySector.length}{" "}
         <Link href="/sectors" className="underline hover:text-panel-fg">
           sectors
@@ -113,7 +114,7 @@ export default async function RankingsPage() {
 
       <section className="mt-8">
         <h2 className="font-serif text-lg font-semibold tracking-tight text-panel-fg">
-          Top {Math.min(TOP_N, top100.length)} by Float-Adjusted Market Cap
+          Top {Math.min(TOP_N, top100.length)} by Market Cap
         </h2>
         <div className="mt-3">
           <RankingsTable rows={top100} rankKey="overallRank" />
@@ -145,12 +146,13 @@ export default async function RankingsPage() {
       </section>
 
       <p className="mt-8 text-xs text-panel-fg/72">
-        Ranked by free-float-adjusted market capitalization: PSE Edge&apos;s reported market cap
-        (price × shares outstanding) multiplied by its published Free Float Level, both shown per
-        row above. The unadjusted figure would put two foreign dual-listings, Manulife and Sun
-        Life, in the top two places on shares that trade in Toronto, not here; float-adjusting is
-        also how the PSEi and the major index providers weight their own constituents. Not
-        financial advice, a stock pick, or a buy/sell signal.
+        Ranked by market capitalization: PSE Edge&apos;s reported market cap (price × shares
+        outstanding), same convention most public market-cap heatmaps use. The two exceptions are
+        Manulife (MFC) and Sun Life (SLF), foreign dual-listings whose reported cap is mostly a
+        Toronto share count rather than anything that trades here, so they&apos;re ranked instead
+        by that figure multiplied by PSE Edge&apos;s published Free Float Level (shown alongside
+        their row above), the same convention the PSEi and the major index providers use for their
+        own constituents. Not financial advice, a stock pick, or a buy/sell signal.
       </p>
     </div>
   );
